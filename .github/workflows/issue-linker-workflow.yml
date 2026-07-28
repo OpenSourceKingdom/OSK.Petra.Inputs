@@ -1,0 +1,9 @@
+name: Attach Issue Link
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  attach-issue-link:
+    uses: OpenSourceKingdom/OSK.Github.Workflows/.github/workflows/issue-linker-workflow.yml@main
