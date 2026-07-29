@@ -1,0 +1,76 @@
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using OSK.Hexagonal.MetaData;
+using OSK.Operations.Outputs.Models;
+using OSK.Petra.Inputs.Abstractions.Configuration;
+using OSK.Petra.Inputs.Abstractions.Inputs;
+
+namespace OSK.Petra.Inputs.Ports;
+
+/// <summary>
+/// The core input system that consumers will use when wanting to manage and handle input
+/// </summary>
+[HexagonalIntegration(HexagonalIntegrationType.LibraryProvided, HexagonalIntegrationType.ConsumerPointOfEntry)]
+public interface IInputSystem
+{
+    /// <summary>
+    /// The current input system configuration used by the system
+    /// </summary>
+    InputSystemConfiguration Configuration { get; }
+
+    /// <summary>
+    /// The notifier that transmits notifications events
+    /// </summary>
+    IInputSystemNotifier Notifier { get; }
+
+    /// <summary>
+    /// The user manager the input system is using
+    /// </summary>
+    IUserManager UserManager { get; }
+
+    /// <summary>
+    /// Describes if the input system is capable of handling custom input schemes or not
+    /// </summary>
+    bool AllowCustomSchemes { get; }
+
+    /// <summary>
+    /// Pauses or resumes input processing
+    /// </summary>
+    bool PauseInput { get; set; }
+
+    /// <summary>
+    /// Initializes the input system
+    /// </summary>
+    /// <param name="configuration">The configuration to apply to the manager</param>
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    /// <returns>An output that describes whether the configuration was fully initialized with the input system</returns>
+    Task<Output> InitializeAsync(InputSystemConfiguration configuration, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a scheme editor that targets the provided user
+    /// </summary>
+    /// <param name="userId">The id of the user to target</param>
+    /// <returns>A scheme editor that is targeted to the user id</returns>
+    IInputSchemeEditor? GetSchemeEditor(int userId);
+
+    /// <summary>
+    /// Get the glyph for the user that is associated with the given action name
+    /// </summary>
+    /// <param name="userId">The user to get the glyph for</param>
+    /// <param name="actionName">The action the glyph is associated with</param>
+    /// <returns>The glyph that can be shown to a user</returns>
+    InputGlyph? GetGlyph(int userId, string actionName);
+
+    /// <summary>
+    /// Updates the input system using the specified delta time
+    /// </summary>
+    /// <remarks>
+    /// 💡Notes:
+    /// <list type="bullet">
+    /// <item>This process method may be ignored by the input system if the input system is pausing input</item>
+    /// </list>
+    /// </remarks>
+    /// <param name="deltaTime">the time that has passed since the last update</param>
+    void Update(TimeSpan deltaTime);
+}
