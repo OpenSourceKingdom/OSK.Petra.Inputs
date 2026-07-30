@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using OSK.Hexagonal.MetaData;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions;
@@ -72,17 +70,4 @@ public interface IUserManager
     /// <param name="definitionName">The name of the definition to set to active</param>
     /// <returns>An output that describes if the switch successded</returns>
     Output SetActiveDefinition(int userId, string definitionName);
-
-    /// <summary>
-    /// Updates and loads the input system configuration with user specified data.
-    /// </summary>
-    /// <remarks>
-    /// 💡Notes:
-    /// <list type="bullet">
-    /// <item> It is important that this is run after a user saves, deletes, or performs any changes to persistent storage to ensure that the changes are reflected in the input system</item>
-    /// </list>
-    /// </remarks>
-    /// <param name="cancellationToken">A token to cancel the operation</param>
-    /// <returns>An output that describes if hte load succeeded</returns>
-    Task<Output> LoadUserConfigurationAsync(CancellationToken cancellationToken = default);
 }

@@ -15,5 +15,5 @@ public interface IInputSystemBuilder
     /// <typeparam name="TSchemeRepository">The input scheme repository that is desired</typeparam>
     /// <returns>The builder for chaining</returns>
     IInputSystemBuilder UseSchemeRepository<TSchemeRepository>()
-        where TSchemeRepository: class, IInputSchemeRepository;
+        where TSchemeRepository: class, ISchemeRepository;
 }

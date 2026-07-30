@@ -1,4 +1,6 @@
-﻿namespace OSK.Petra.Inputs.Abstractions.Configuration;
+﻿using System;
+
+namespace OSK.Petra.Inputs.Abstractions.Configuration;
 
 public readonly struct InputMap
 {
@@ -6,16 +8,21 @@ public readonly struct InputMap
 
     public string ActionName { get; init; }
 
-    public int InputId { get; init; }
+    public int[] InputIds { get; init; }
 
     #endregion
 
     #region Constructors
 
-    public InputMap(int inputId, string actionName)
+    public InputMap()
+        : this([], string.Empty)
     {
-        InputId = inputId;
-        ActionName = actionName;
+    }
+
+    public InputMap(int[] inputIds, string actionName)
+    {
+        InputIds = inputIds ?? throw new ArgumentNullException(nameof(inputIds));
+        ActionName = actionName ?? throw new ArgumentNullException(nameof(actionName));
     }
 
     #endregion

@@ -9,9 +9,9 @@ namespace OSK.Petra.Inputs.Abstractions.Configuration;
 /// The very necessary configuration utilized with the input system. This is the 'source of truth' for all interactions 
 /// and decisions made by the input system
 /// </summary>
-/// <param name="supportedConfigurations">The device topologies the input system is able to support</param>
+/// <param name="deviceTopologies">The device topologies the input system is able to support</param>
+/// <param name="supportedConfigurations">The configurations of topologies that is supported</param>
 /// <param name="definitions">The input definitions the input system will use to map inputs and actions</param>
-/// <param name="processorConfiguration">The configuration for the internal input processing</param>
 /// <param name="joinPolicy">The policy the input system uses for new users, devices, and the like</param>
 public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopologies, IEnumerable<InputConfiguration> supportedConfigurations, IEnumerable<ActionDefinition> definitions, InputSystemJoinPolicy joinPolicy)
 {

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using OSK.Hexagonal.MetaData;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 
 namespace OSK.Petra.Inputs.Ports;
 
@@ -23,6 +22,8 @@ public interface IInputSystem
     /// The notifier that transmits notifications events
     /// </summary>
     IInputSystemNotifier Notifier { get; }
+
+    ISchemeService SchemeService { get; }
 
     /// <summary>
     /// The user manager the input system is using
@@ -46,21 +47,6 @@ public interface IInputSystem
     /// <param name="cancellationToken">A token to cancel the operation</param>
     /// <returns>An output that describes whether the configuration was fully initialized with the input system</returns>
     Task<Output> InitializeAsync(InputSystemConfiguration configuration, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a scheme editor that targets the provided user
-    /// </summary>
-    /// <param name="userId">The id of the user to target</param>
-    /// <returns>A scheme editor that is targeted to the user id</returns>
-    IInputSchemeEditor? GetSchemeEditor(int userId);
-
-    /// <summary>
-    /// Get the glyph for the user that is associated with the given action name
-    /// </summary>
-    /// <param name="userId">The user to get the glyph for</param>
-    /// <param name="actionName">The action the glyph is associated with</param>
-    /// <returns>The glyph that can be shown to a user</returns>
-    InputGlyph? GetGlyph(int userId, string actionName);
 
     /// <summary>
     /// Updates the input system using the specified delta time

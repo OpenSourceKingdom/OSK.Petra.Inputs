@@ -26,7 +26,7 @@ public interface IEditableInputScheme
     /// <summary>
     /// The pairs of map input glyphs to actions
     /// </summary>
-    IReadOnlyCollection<InputActionGlyphPair> ActionGlyphPairs { get; }
+    IReadOnlyCollection<InputMap> InputMaps { get; }
 
     /// <summary>
     /// The list of unpaired actions that must be paired before saving

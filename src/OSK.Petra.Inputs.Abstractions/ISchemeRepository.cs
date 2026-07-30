@@ -12,7 +12,7 @@ namespace OSK.Petra.Inputs.Abstractions;
 /// A repository that is able to store and retrieve persistent data related to user schemes for preferences and custom schemes.
 /// </summary>
 [HexagonalIntegration(HexagonalIntegrationType.ConsumerOptional, HexagonalIntegrationType.LibraryProvided)]
-public interface IInputSchemeRepository
+public interface ISchemeRepository
 {
     /// <summary>
     /// Informs the Input System whether attempts to save custom schemes by users can be made

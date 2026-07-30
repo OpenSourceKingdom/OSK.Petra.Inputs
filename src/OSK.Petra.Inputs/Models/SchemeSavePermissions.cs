@@ -1,12 +1,6 @@
-﻿using System;
+﻿namespace OSK.Petra.Inputs.Models;
 
-namespace OSK.Petra.Inputs.Models;
-
-/// <summary>
-/// A set of flags that determines how saving an input scheme should be handled
-/// </summary>
-[Flags]
-public enum SchemeSaveFlags
+public enum SchemeSavePermissions
 {
     /// <summary>
     /// No special save behavior. If a file already exists, the save will fail.
