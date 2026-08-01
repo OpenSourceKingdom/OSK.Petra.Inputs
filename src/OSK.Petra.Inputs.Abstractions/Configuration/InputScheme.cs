@@ -4,7 +4,7 @@ using OSK.Petra.Inputs.Abstractions.Inputs;
 
 namespace OSK.Petra.Inputs.Abstractions.Configuration;
 
-public class InputScheme(string definitionId, string name, IEnumerable<DeviceInputMap> deviceMaps, bool isDefault, bool isCustom)
+public class InputScheme(string definitionName, string name, IEnumerable<DeviceInputMap> deviceMaps, bool isDefault, bool isCustom)
 {
     #region Variables
 
@@ -15,7 +15,7 @@ public class InputScheme(string definitionId, string name, IEnumerable<DeviceInp
 
     #region Api
 
-    public string DefinitionId => definitionId;
+    public string DefinitionName => definitionName;
 
     /// <summary>
     /// A unique name for the scheme

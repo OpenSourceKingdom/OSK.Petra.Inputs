@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 
@@ -12,7 +10,6 @@ internal class InputUser(int id): IInputUser
 
     private string _activeDefinitionName = string.Empty;
     private Dictionary<int, PairedDevice> _pairedDevices = [];
-    private Dictionary<string, Dictionary<string, PreferredInputScheme>> _preferredSchemeLookup = [];
 
     #endregion
 
@@ -43,14 +40,7 @@ internal class InputUser(int id): IInputUser
         }
     }
 
-    public ActiveInputScheme? ActiveScheme { get; internal set; }
-
-    public PreferredInputScheme? GetPreferredInputScheme(string definitionName, string combinationId)
-        => string.IsNullOrWhiteSpace(definitionName) || string.IsNullOrWhiteSpace(combinationId)
-            || !(_preferredSchemeLookup.TryGetValue(definitionName, out var definitionSchemeLookup)
-                && definitionSchemeLookup.TryGetValue(combinationId, out var scheme))
-            ? null
-            : scheme;
+    public ActiveSchemeDetails? ActiveScheme { get; internal set; }
 
     public IReadOnlyCollection<PairedDevice> PairedDevices => _pairedDevices.Values;
 
@@ -62,18 +52,6 @@ internal class InputUser(int id): IInputUser
     #endregion
 
     #region Helpers
-
-    public void SetPreferredSchemes(IEnumerable<PreferredInputScheme> preferredInputSchemes)
-    {
-        // Create our lookup using only one preferred scheme per definition per combination, if there are mulitples, we'll ignore them
-        _preferredSchemeLookup = preferredInputSchemes.GroupBy(scheme
-            => new { scheme.DefinitionName, scheme.ConfigurationId, scheme.SchemeName })
-            .Select(schemeDuplicates => schemeDuplicates.First())
-            .GroupBy(scheme => new { scheme.DefinitionName })
-            .ToDictionary(schemeGroup => schemeGroup.Key.DefinitionName, 
-                            schemeGroup => schemeGroup.ToDictionary(scheme => scheme.ConfigurationId, StringComparer.OrdinalIgnoreCase),
-                            StringComparer.OrdinalIgnoreCase);
-    }
 
     public void AddDevice(RuntimeDeviceIdentifier deviceIdentifier)
     {

@@ -8,6 +8,4 @@ public interface IDeviceTopology
     DeviceTopologyName Name { get; }
 
     IReadOnlyCollection<IInput> Inputs { get; }
-
-    bool TryGetInput(int inputId, [NotNullWhen(true)] out IInput? input);
 }

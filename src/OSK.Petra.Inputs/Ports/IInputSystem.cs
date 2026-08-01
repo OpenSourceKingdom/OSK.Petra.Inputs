@@ -1,4 +1,4 @@
-﻿using System;
+﻿    using System;
 using System.Threading;
 using System.Threading.Tasks;
 using OSK.Hexagonal.MetaData;
@@ -23,6 +23,9 @@ public interface IInputSystem
     /// </summary>
     IInputSystemNotifier Notifier { get; }
 
+    /// <summary>
+    /// Handles scheme management related APIs
+    /// </summary>
     ISchemeService SchemeService { get; }
 
     /// <summary>

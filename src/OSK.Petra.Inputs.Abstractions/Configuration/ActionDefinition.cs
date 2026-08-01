@@ -9,9 +9,8 @@ namespace OSK.Petra.Inputs.Abstractions.Configuration;
 /// </summary>
 /// <param name="name">The name for the definition</param>
 /// <param name="actions">The list of actions</param>
-/// <param name="schemes">The input schemes the definition will use</param>
 /// <param name="isDefault">If this is the default definition to use</param>
-public class ActionDefinition(string name, IEnumerable<InputAction> actions, IEnumerable<InputScheme> schemes, bool isDefault)
+public class ActionDefinition(string name, IEnumerable<InputAction> actions, bool isDefault)
 {
     #region Variables
 

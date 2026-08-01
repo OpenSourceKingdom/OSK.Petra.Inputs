@@ -37,11 +37,12 @@ public static class ServiceCollectionExtensions
             throw new ArgumentNullException(nameof(configurator));
         }
 
-        services.TryAddScoped<IInputService, InputService>();
-        services.TryAddScoped<IUserManager, UserManager>();
-        services.TryAddScoped<IInputSystem, InputSystem>();
-        services.TryAddScoped<IInputSystemNotifier, InputSystemNotifier>();
-
+        services.TryAddSingleton<IDeviceDescriptorProvider, DeviceDescriptorProvider>();
+        services.TryAddSingleton<ISchemeService, SchemeService>();
+        services.TryAddSingleton<IInputService, InputService>();
+        services.TryAddSingleton<IUserManager, UserManager>();
+        services.TryAddSingleton<IInputSystem, InputSystem>();
+        services.TryAddSingleton<IInputSystemNotifier, InputSystemNotifier>();
         services.TryAddSingleton<IInputConfigurationProvider, InputConfigurationProvider>();
 
        // var builder = new InputSystemBuilder(services);

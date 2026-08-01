@@ -3,7 +3,7 @@ using OSK.Petra.Inputs.Abstractions.Runtime;
 
 namespace OSK.Petra.Inputs.Notifications;
 
-public class UserActiveSchemeChangeNotification(IInputUser user, ActiveInputScheme scheme): UserNotification(user)
+public class UserActiveSchemeChangeNotification(IInputUser user, ActiveSchemeDetails scheme): UserNotification(user)
 {
-    public ActiveInputScheme NewScheme => scheme;
+    public ActiveSchemeDetails NewScheme => scheme;
 }

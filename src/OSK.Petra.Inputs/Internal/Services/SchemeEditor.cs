@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -12,6 +11,8 @@ using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.Internal.Models;
+using System.Diagnostics;
+using OSK.Petra.Inputs.Abstractions.Runtime;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
@@ -22,6 +23,7 @@ internal class SchemeEditor: ISchemeEditor
     private readonly IInputUser _user;
     private readonly IInputConfigurationProvider _inputConfigurationProvider;
     private readonly SchemeService _schemeService;
+    private SelectedScheme _selectedScheme;
 
     #endregion
 
@@ -33,14 +35,17 @@ internal class SchemeEditor: ISchemeEditor
         _inputConfigurationProvider = inputConfigurationProvider ?? throw new ArgumentNullException(nameof(inputConfigurationProvider));
         _schemeService = schemeService ?? throw new ArgumentNullException(nameof(schemeService));
 
-        UpdateEditableScheme();
+        UpdateNavigators();
+        UpdateSelectedScheme(isNew: false);
     }
 
     #endregion
 
     #region ISchemeEditor
 
-    public IEditableInputScheme EditableScheme { get; private set; }
+    public event Action? EditorUpdated;
+
+    public ISelectedScheme SelectedScheme => _selectedScheme;
 
     public bool AllowCustomScheme { get; }
 
@@ -50,79 +55,145 @@ internal class SchemeEditor: ISchemeEditor
 
     public ICollectionNavigator<InputScheme> SchemeNavigator { get; private set; }
 
-    public Output CreateNewScheme(int? deviceCombinationId = null)
+    public Output CreateNewScheme(int? inputConfigurationId = null)
     {
         if (!AllowCustomScheme)
         {
             return Out.InvalidRequest("Unable to create an input scheme as it is not supported.");
         }
-        if (CurrentScheme is not null)
-        {
-            CurrentSchemeId += 1;
-        }
 
-        UpdateEditableScheme();
+        UpdateSelectedScheme(isNew: true);
         return Out.Created();
     }
 
     public async Task<Output> DeleteSchemeAsync(CancellationToken cancellationToken = default)
     {
-        if (CurrentScheme is null)
+        if (SelectedScheme.IsReadonly)
         {
-            CurrentSchemeId -= 1;
-            SetScheme(CurrentSchemeId);
+            return Out.InvalidRequest($"Unable to delete the input scheme '{_selectedScheme.Name}', that is associated with action definition '{DefinitionNavigator.Current!.Name}' and input configuration '{InputConfigurationNavigator.Current!.GetDisplayName()}' because it is read-only.");
+        }
+
+        var deleteOutput = await _schemeService.DeleteCustomSchemeAsync(DefinitionNavigator.Current!.Name, SelectedScheme.Name, cancellationToken);
+        if (!deleteOutput.IsSuccessful)
+        {
+            return deleteOutput;
+        }
+
+        UpdateNavigators();
+        UpdateSelectedScheme(isNew: false); 
+        TryPubishEditorEvent();
+
+        return Out.Success();
+    }
+
+    public async Task<Output> SaveSchemeAsync(CancellationToken cancellationToken = default)
+    {
+        if (!AllowCustomScheme)
+        {
+            return Out.InvalidRequest("Unable to save a custom scheme since the backing repository does not allow it.");
+        }
+        if (SelectedScheme.IsReadonly)
+        {
+            if (_selectedScheme.InitiallyPreferred != _selectedScheme.IsPreferred)
+            {
+                return await _schemeService.SavePreferredSchemeAsync(new PreferredInputScheme()
+                {
+                    ConfigurationId = InputConfigurationNavigator.Current!.Id,
+                    DefinitionName = DefinitionNavigator.Current!.Name,
+                    SchemeName = _selectedScheme.Name,
+                    UserId = _user.Id
+                });
+            }
+
             return Out.Success();
         }
 
-        throw new NotImplementedException();
-    }
+        var scheme = new CustomInputScheme()
+        {
+            DefinitionName = DefinitionNavigator.Current!.Name,
+            Name = SelectedScheme.Name,
+            DeviceMaps = []
+        };
 
-    public Task<Output> SaveSchemeAsync(CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
+        var saveOutput = await _schemeService.SaveCustomSchemeAsync(scheme, SchemeSavePermissions.Overwrite, cancellationToken);
+        if (!saveOutput.IsSuccessful)
+        {
+            return saveOutput;
+        }
+
+        UpdateNavigators();
+        UpdateSelectedScheme(isNew: false); 
+        TryPubishEditorEvent();
+
+        return Out.Success();
     }
 
     #endregion
 
     #region Helpers
 
-    private int FindInitialInputDefinitionIndex(IReadOnlyCollection<ActionDefinition> definitions, IInputUser user)
+    [MemberNotNull(nameof(InputConfigurationNavigator), nameof(DefinitionNavigator), nameof(SchemeNavigator))]
+    private void UpdateNavigators()
     {
-        var indexDefinitionPair = definitions.Select((definition, index) => new { Definition = definition, Index = index })
-                                             .FirstOrDefault(pair => pair.Definition.Name.Equals(user.ActiveInputDefinitionName, StringComparison.OrdinalIgnoreCase));
-
-        indexDefinitionPair ??= definitions.Select((definition, index) => new { Definition = definition, Index = index }).FirstOrDefault(definition => definition.Definition.IsDefault);
-        return indexDefinitionPair?.Index ?? 0;
+        SetupConfigurationNavigator();
+        SetupDefinitionNavigator();
+        SetupSchemeNavigator();
     }
 
-    private int FindInitialInputSchemeIndex(IReadOnlyCollection<InputScheme> schemes, IInputUser user)
+    [MemberNotNull(nameof(InputConfigurationNavigator))]
+    private void SetupConfigurationNavigator()
     {
-        var indexSchemePair = user.ActiveScheme.HasValue
-                ? schemes.Select((scheme, index) => new { Scheme = scheme, Index = index }).FirstOrDefault(pair => pair.Scheme.Name.Equals(user.ActiveScheme.Value.SchemeName, StringComparison.OrdinalIgnoreCase))
-                : schemes.Select((scheme, index) => new { Scheme = scheme, Index = index }).FirstOrDefault(pair => pair.Scheme.IsDefault);
+        InputConfigurationNavigator = new CollectionNavigator<InputConfiguration>(_inputConfigurationProvider.Configuration.InputConfigurations, wrapNavigation: true);
+        InputConfigurationNavigator.Navigated += navigationEvent =>
+        {
+            SetupDefinitionNavigator();
 
-        return indexSchemePair?.Index ?? 0;
+            TryPubishEditorEvent();
+        };
     }
 
-    private int FindInitialDeviceCombinationIndex(IReadOnlyList<InputConfiguration> deviceCombinations, IInputUser user)
+    [MemberNotNull(nameof(DefinitionNavigator))]
+    private void SetupDefinitionNavigator()
     {
-        return user.ActiveScheme.HasValue
-                ? deviceCombinations.Select((combination, index) => new { DeviceCombination = combination, Index = index }).FirstOrDefault(pair => pair.DeviceCombination.Id.Equals(user.ActiveScheme.Value.DeviceCombinationId))?.Index ?? 0
-                : 0;
+        DefinitionNavigator = new CollectionNavigator<ActionDefinition>(_inputConfigurationProvider.Configuration.Definitions, wrapNavigation: true);
+        DefinitionNavigator.Navigated += _ =>
+        {
+            SchemeNavigator = new CollectionNavigator<InputScheme>(InputConfigurationNavigator.Current!.Schemes.Where(scheme => scheme.DefinitionName.Equals(DefinitionNavigator.Current!.Name)), wrapNavigation: true);
+            SchemeNavigator.Navigated += _ =>
+
+            UpdateSelectedScheme(isNew: false);
+
+            TryPubishEditorEvent();
+        };
     }
 
-    [MemberNotNull(nameof(EditableScheme))]
-    private void UpdateEditableScheme()
+    [MemberNotNull(nameof(SchemeNavigator))]
+    private void SetupSchemeNavigator()
     {
-        var preferredScheme = _user.GetPreferredInputScheme(, CurrentTopologyGroup.Id);
-        var name = CurrentScheme is null
-            ? "New Scheme"
-            : CurrentScheme.Name;
-        var readOnly = !CurrentScheme?.IsCustom ?? false;
-        var isPreferred = CurrentScheme is not null && preferredScheme.HasValue && preferredScheme.Value.SchemeName.Equals(CurrentScheme.Name, StringComparison.OrdinalIgnoreCase);
+        SchemeNavigator = new CollectionNavigator<InputScheme>(InputConfigurationNavigator.Current!.Schemes.Where(scheme => scheme.DefinitionName.Equals(DefinitionNavigator.Current!.Name)), wrapNavigation: true);
+        SchemeNavigator.Navigated += _ =>
+        {
+            UpdateSelectedScheme(isNew: false);
+            TryPubishEditorEvent();
+        };
+    }
 
-        // TODO: Get the data
-        EditableScheme = new EditableScheme(name, readOnly, isPreferred, CurrentDefinition.Actions, [], []);
+    [MemberNotNull(nameof(_selectedScheme))]
+    private void UpdateSelectedScheme(bool isNew)
+    {
+        Debug.Assert(InputConfigurationNavigator.Current is not null);
+        Debug.Assert(DefinitionNavigator.Current is not null);
+        Debug.Assert(SchemeNavigator.Current is not null);
+
+        var preferredScheme = _schemeService.GetPreferredInputScheme(_user.Id, InputConfigurationNavigator.Current.Id, DefinitionNavigator.Current.Name);
+        var isPreferred = preferredScheme is not null && preferredScheme.Value.SchemeName.Equals(SchemeNavigator.Current.Name);
+
+        _selectedScheme = new SelectedScheme(SchemeNavigator.Current.Name, SchemeNavigator.Current.IsCustom, isPreferred, DefinitionNavigator.Current.Actions, [], []);
+    }
+
+    private void TryPubishEditorEvent()
+    {
+        EditorUpdated?.Invoke();
     }
 
     #endregion

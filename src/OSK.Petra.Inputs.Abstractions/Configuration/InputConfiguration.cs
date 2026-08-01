@@ -46,7 +46,7 @@ public class InputConfiguration
     #region Api
 
     /// <summary>
-    /// A unique combination id that is based on the device families this combination refers to
+    /// A unique id that is based on the device topologies this configuration refers to
     /// </summary>
     public string Id { get; }
 
@@ -57,19 +57,19 @@ public class InputConfiguration
     /// </summary>
     public IReadOnlyList<InputScheme> Schemes => [.. _inputSchemeLookup.Values.SelectMany(schemeLookup => schemeLookup.Values)];
 
-    public InputScheme? GetScheme(string definitionId, string schemeName)
-        => _inputSchemeLookup.TryGetValue(definitionId, out var schemeLookup)
+    public InputScheme? GetScheme(string definitionName, string schemeName)
+        => _inputSchemeLookup.TryGetValue(definitionName, out var schemeLookup)
             ? schemeLookup.TryGetValue(schemeName, out var scheme) ? scheme : null
             : null;
 
     /// <summary>
     /// Calculates a device support confidence score based on the topology provided. The output of this function can be used to order lists of supported 
-    /// combinations to get the first 'strongest' combination that matches the family. If there are multiple combinations that provide support to a given
-    /// device family, the score is determined then by how many devices the combination needs. For example, a keyboard only combination should match a keyboard
-    /// family at 1 whereas a keyboard + mouse combination should match at .5
+    /// input configurations to get the first 'strongest' configuration that matches the family. If there are multiple configurations that provide support to a given
+    /// device identity, the score is determined then by how many devices the configuration needs. For example, a keyboard only configuration should match a keyboard
+    /// family at 1 whereas a keyboard + mouse configuration should match at .5
     /// </summary>
     /// <param name="deviceIdentity">The type to get a support confidence for</param>
-    /// <returns>A score between 0 and 1 that represents the confidence level this combination will support a given device family</returns>
+    /// <returns>A score between 0 and 1 that represents the confidence level this input configuration will support a given device family</returns>
     public float GetDeviceSupportConfidence(DeviceIdentity deviceIdentity)
     {
         if (Schemes.Count is 0)
@@ -85,15 +85,15 @@ public class InputConfiguration
     /// <summary>
     /// Determines if the provided device identity is in the group
     /// </summary>
-    /// <param name="identity">The identity to check the combination for</param>
-    /// <returns>Whether this combination includes the device in question</returns>
+    /// <param name="identity">The identity to check the configuration for</param>
+    /// <returns>Whether this configuration includes the device in question</returns>
     public bool Contains(DeviceIdentity identity) 
         => TopologyNames.Contains(identity.TopologyName);
 
     /// <summary>
     /// Attempts to create a display name for the topologies that is more readable: "Keyboard", "Keyboard and Mouse", etc.
     /// </summary>
-    /// <returns>A displayable text name for the combination</returns>
+    /// <returns>A displayable text name for the configuration</returns>
     public string GetDisplayName()
     {
         return TopologyNames.Count switch

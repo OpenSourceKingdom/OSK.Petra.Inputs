@@ -2,9 +2,11 @@
 
 namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
-public interface IInputProcessingContext
+public interface IUserInputContext
 {
     #region Variables
+
+    int UserId { get; }
 
     RuntimeDeviceIdentifier DeviceIdentifier { get; }
 

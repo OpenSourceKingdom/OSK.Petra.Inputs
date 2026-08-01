@@ -26,7 +26,7 @@ internal partial class SchemeService(IInputConfigurationProvider configurationPr
     /// </summary>
     private readonly Dictionary<string, Dictionary<string, Dictionary<string, InputScheme>>> _customSchemeLookup = [];
 
-    private readonly Dictionary<int, PreferredInputScheme[]> _userPreferredSchemesLookup = [];
+    private readonly Dictionary<int, Dictionary<string, Dictionary<string, PreferredInputScheme>>> _userPreferredSchemesLookup = [];
 
     #endregion
 
@@ -34,9 +34,116 @@ internal partial class SchemeService(IInputConfigurationProvider configurationPr
 
     public bool AllowCustomSchemes => schemeRepository.AllowCustomSchemes;
 
-    public async Task<Output> LoadConfigurationAsync(CancellationToken cancellationToken = default)
+    public PreferredInputScheme? GetPreferredInputScheme(int userId, string inputConfigurationId, string definitionName)
+        => !string.IsNullOrWhiteSpace(inputConfigurationId) && !string.IsNullOrWhiteSpace(definitionName)
+            && _userPreferredSchemesLookup.TryGetValue(userId, out var inputConfigurationSchemeLookup) && inputConfigurationSchemeLookup.TryGetValue(inputConfigurationId, out var definitionSchemeLookup)
+            && definitionSchemeLookup.TryGetValue(definitionName, out var scheme)
+            ? scheme
+            : null;
+
+    public IEnumerable<InputScheme> GetInputSchemes(string inputConfigurationId, string definitionName)
+        => (configurationProvider.Configuration.GetInputConfiguration(inputConfigurationId)?.Schemes.Where(scheme => scheme.DefinitionName.Equals(definitionName, StringComparison.OrdinalIgnoreCase)) ?? [])
+            .Concat(GetCustomInputSchemes(inputConfigurationId, definitionName));
+
+    public ISchemeEditor? GetSchemeEditor(int userId)
+    {
+        var user = userManager.GetUser(userId);
+        if (user is null)
+        {
+            return null;
+        }
+
+        return new SchemeEditor(user, configurationProvider, this);
+    }
+
+    public async Task<Output> SavePreferredSchemeAsync(PreferredInputScheme scheme, CancellationToken cancellationToken = default)
+    {
+        if (scheme.UserId < 0 || scheme.UserId >= configurationProvider.Configuration.JoinPolicy.MaxUsers)
+        {
+            return Out.InvalidRequest($"The provided user id must be non-zero and less than the max users ({configurationProvider.Configuration.JoinPolicy.MaxUsers}) for the input system.");
+        }
+
+        if (string.IsNullOrWhiteSpace(scheme.DefinitionName))
+        {
+            return Out.InvalidRequest("Definition name can not be empty.");
+        }
+
+        var definition = configurationProvider.Configuration.GetDefinition(scheme.DefinitionName);
+        if (definition is null)
+        {
+            return Out.DataNotFound($"No input definition with the name '{scheme.DefinitionName}' exists.");
+        }
+
+        if (string.IsNullOrWhiteSpace(scheme.SchemeName))
+        {
+            return Out.InvalidRequest("Scheme name can not be empty.");
+        }
+
+        if (configurationProvider.Configuration.GetInputConfiguration(scheme.ConfigurationId) is null)
+        {
+            return Out.DataNotFound($"No input scheme named '{scheme.SchemeName}' exists for the definition '{scheme.DefinitionName}' for the input  '{scheme.ConfigurationId}'");
+        }
+
+        // Fix scheme not taking effect
+        return await schemeRepository.SavePreferredSchemeAsync(scheme, cancellationToken);
+    }
+
+    public async Task<Output> SaveCustomSchemeAsync(CustomInputScheme scheme, SchemeSavePermissions savePermissions, CancellationToken cancellationToken = default)
+    {
+        if (scheme is null)
+        {
+            throw new ArgumentNullException(nameof(scheme));
+        }
+
+        if (!AllowCustomSchemes)
+        {
+            return Out.InvalidRequest("Custom input schemes are not allowed with the input system. If it is desired, please register a scheme repository that can support it.");
+        }
+
+        var schemeValidation = InputSystemConfigurationValidator.ValidateCustomScheme(configurationProvider.Configuration, scheme, allowDuplicateCustomScheme: savePermissions is SchemeSavePermissions.Overwrite);
+        if (!schemeValidation.IsValid)
+        {
+            return schemeValidation.Result is InputConfigurationValidation.DuplicateData
+                ? Out.DuplicateData($"The scheme name {scheme.Name} already exists on input definition {scheme.DefinitionName}, if overwriting is desired then ensure the save flag is set correctly.")
+                : Out.InvalidRequest($"There was a validation error with the custom scheme: {Environment.NewLine}{schemeValidation.Message}");
+        }
+
+        var saveOutput = await schemeRepository.SaveCustomInputScheme(scheme, cancellationToken);
+        if (!saveOutput.IsSuccessful)
+        {
+            return saveOutput;
+        }
+
+        _customSchemeLookup[InputConfiguration.GetConfigurationId(scheme.DeviceMaps.Select(map => map.DeviceIdentity))][scheme.DefinitionName][scheme.Name] = scheme.ToInputScheme();
+        return Out.Success();
+    }
+
+    public async Task<Output> DeleteCustomSchemeAsync(string definitionName, string schemeName, CancellationToken cancellationToken = default)
+    {
+        if (!AllowCustomSchemes
+            || string.IsNullOrWhiteSpace(definitionName)
+            || string.IsNullOrWhiteSpace(schemeName)
+            || configurationProvider.Configuration.GetDefinition(definitionName) is null)
+        {
+            return Out.Success();
+        }
+
+        return await schemeRepository.DeleteCustomSchemeAsync(definitionName, schemeName, cancellationToken);
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private IEnumerable<InputScheme> GetCustomInputSchemes(string inputConfigurationId, string definitionName)
+        => _customSchemeLookup.TryGetValue(inputConfigurationId, out var definitionSchemeLookup) && definitionSchemeLookup.TryGetValue(definitionName, out var schemeLookup)
+            ? schemeLookup.Values
+            : [];
+
+    internal async Task<Output> LoadSchemeConfigurationAsync(CancellationToken cancellationToken = default)
     {
         _customSchemeLookup.Clear();
+        _userPreferredSchemesLookup.Clear();
 
         var getUserPreferredSchemes = await schemeRepository.GetPreferredSchemesAsync(cancellationToken);
         if (getUserPreferredSchemes.IsSuccessful)
@@ -44,27 +151,34 @@ internal partial class SchemeService(IInputConfigurationProvider configurationPr
             // Only take one preferred scheme for each definition, even if the repository returns multiples.
             // There should only ever be 1 preferred scheme per definition, so multiples would indicate either a
             // mistake in the repository or some malicious intent
-            foreach (var userPreferredSchemes in getUserPreferredSchemes.Data.Where(preferredScheme =>
-                {
-                    if (preferredScheme.UserId < 0 || preferredScheme.UserId > configurationProvider.Configuration.JoinPolicy.MaxUsers)
-                    {
-                        return false;
-                    }
-
-                    var inputConfiguration = configurationProvider.Configuration.GetInputConfiguration(preferredScheme.ConfigurationId);
-                    if (inputConfiguration is null)
-                    {
-                        return false;
-                    }
-
-                    return inputConfiguration.GetScheme(preferredScheme.DefinitionName, preferredScheme.SchemeName) is not null;
-                })
-                .GroupBy(scheme => scheme.UserId))
+            foreach (var userPreferredScheme in getUserPreferredSchemes.Data.Where(preferredScheme =>
             {
-                _userPreferredSchemesLookup[userPreferredSchemes.Key] =
-                    userPreferredSchemes.GroupBy(scheme => new { scheme.ConfigurationId, scheme.DefinitionName, scheme.SchemeName })
-                                        .Select(schemeGroup => schemeGroup.First())
-                                        .ToArray();
+                if (preferredScheme.UserId < 0 || preferredScheme.UserId > configurationProvider.Configuration.JoinPolicy.MaxUsers)
+                {
+                    return false;
+                }
+
+                var inputConfiguration = configurationProvider.Configuration.GetInputConfiguration(preferredScheme.ConfigurationId);
+                if (inputConfiguration is null)
+                {
+                    return false;
+                }
+
+                return inputConfiguration.GetScheme(preferredScheme.DefinitionName, preferredScheme.SchemeName) is not null;
+            }))
+            {
+                if (!_userPreferredSchemesLookup.TryGetValue(userPreferredScheme.UserId, out var inputConfigurationSchemeLookup))
+                {
+                    inputConfigurationSchemeLookup = [];
+                    _userPreferredSchemesLookup[userPreferredScheme.UserId] = inputConfigurationSchemeLookup;
+                }
+                if (!inputConfigurationSchemeLookup.TryGetValue(userPreferredScheme.ConfigurationId, out var definitionSchemeLookup))
+                {
+                    definitionSchemeLookup = [];
+                    inputConfigurationSchemeLookup[userPreferredScheme.ConfigurationId] = definitionSchemeLookup;
+                }
+
+                definitionSchemeLookup[userPreferredScheme.DefinitionName] = userPreferredScheme;
             }
         }
         else
@@ -102,97 +216,6 @@ internal partial class SchemeService(IInputConfigurationProvider configurationPr
 
         return Out.Success();
     }
-
-    public async Task<Output> SavePreferredSchemeAsync(PreferredInputScheme scheme, CancellationToken cancellationToken = default)
-    {
-        if (scheme.UserId < 0 || scheme.UserId >= configurationProvider.Configuration.JoinPolicy.MaxUsers)
-        {
-            return Out.InvalidRequest($"The provided user id must be non-zero and less than the max users ({configurationProvider.Configuration.JoinPolicy.MaxUsers}) for the input system.");
-        }
-
-        if (string.IsNullOrWhiteSpace(scheme.DefinitionName))
-        {
-            return Out.InvalidRequest("Definition name can not be empty.");
-        }
-
-        var definition = configurationProvider.Configuration.GetDefinition(scheme.DefinitionName);
-        if (definition is null)
-        {
-            return Out.DataNotFound($"No input definition with the name '{scheme.DefinitionName}' exists.");
-        }
-
-        if (string.IsNullOrWhiteSpace(scheme.SchemeName))
-        {
-            return Out.InvalidRequest("Scheme name can not be empty.");
-        }
-
-        if (configurationProvider.Configuration.GetInputConfiguration(scheme.ConfigurationId) is null)
-        {
-            return Out.DataNotFound($"No input scheme named '{scheme.SchemeName}' exists for the definition '{scheme.DefinitionName}' for the input  '{scheme.ConfigurationId}'");
-        }
-
-        // Fix scheme not taking effect
-        return await schemeRepository.SavePreferredSchemeAsync(scheme, cancellationToken);
-    }
-
-    public ISchemeEditor? GetSchemeEditor(int userId)
-    {
-        var user = userManager.GetUser(userId);
-        if (user is null)
-        {
-            return null;
-        }
-
-        return new SchemeEditor(user, configurationProvider, this);
-    }
-
-    #endregion
-
-    #region Helpers
-
-    internal async Task<Output> DeleteCustomSchemeAsync(string definitionName, string schemeName, CancellationToken cancellationToken = default)
-    {
-        if (!AllowCustomSchemes
-            || string.IsNullOrWhiteSpace(definitionName)
-            || string.IsNullOrWhiteSpace(schemeName)
-            || configurationProvider.Configuration.GetDefinition(definitionName) is null)
-        {
-            return Out.Success();
-        }
-
-        return await schemeRepository.DeleteCustomSchemeAsync(definitionName, schemeName, cancellationToken);
-    }
-
-    internal async Task<Output> SaveCustomSchemeAsync(CustomInputScheme scheme, SchemeSavePermissions savePermissions, CancellationToken cancellationToken = default)
-    {
-        if (scheme is null)
-        {
-            throw new ArgumentNullException(nameof(scheme));
-        }
-
-        if (!AllowCustomSchemes)
-        {
-            return Out.InvalidRequest("Custom input schemes are not allowed with the input system. If it is desired, please register a scheme repository that can support it.");
-        }
-
-        var schemeValidation = InputSystemConfigurationValidator.ValidateCustomScheme(configurationProvider.Configuration, scheme, allowDuplicateCustomScheme: savePermissions is SchemeSavePermissions.Overwrite);
-        if (!schemeValidation.IsValid)
-        {
-            return schemeValidation.Result is InputConfigurationValidation.DuplicateData
-                ? Out.DuplicateData($"The scheme name {scheme.Name} already exists on input definition {scheme.DefinitionName}, if overwriting is desired then ensure the save flag is set correctly.")
-                : Out.InvalidRequest($"There was a validation error with the custom scheme: {Environment.NewLine}{schemeValidation.Message}");
-        }
-
-        var saveOutput = await schemeRepository.SaveCustomInputScheme(scheme, cancellationToken);
-        if (!saveOutput.IsSuccessful)
-        {
-            return saveOutput;
-        }
-
-        _customSchemeLookup[InputConfiguration.GetConfigurationId(scheme.DeviceMaps.Select(map => map.DeviceIdentity))][scheme.DefinitionName][scheme.Name] = scheme.ToInputScheme();
-        return Out.Success();
-    }
-
 
     #endregion
 

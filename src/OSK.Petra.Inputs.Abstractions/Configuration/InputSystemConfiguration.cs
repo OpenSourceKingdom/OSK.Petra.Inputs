@@ -36,7 +36,7 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
     public IReadOnlyList<IDeviceTopology> SupportedDeviceTopologies => [.. _deviceTopologyLookup.Values];
 
     /// <summary>
-    /// The collection of supported input device combinations for built in and custom schemes to use.
+    /// The collection of supported input device configurations for built in and custom schemes to use.
     /// </summary>
     public IReadOnlyList<InputConfiguration> InputConfigurations 
         => [.. _inputConfigurationLookup.Values];
@@ -53,15 +53,19 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
     /// <param name="deviceIdentity">The identity of the device to get a topology for</param>
     /// <returns>The specific topology for the device identity if it is supported, otherwise null</returns>
     public InputConfiguration? GetBestInputConfiguration(DeviceIdentity deviceIdentity)
-        => InputConfigurations.OrderByDescending(configuration => configuration.GetDeviceSupportConfidence(deviceIdentity)).FirstOrDefault();
+        => InputConfigurations.Select(configuration => new { Configuration = configuration, DeviceMatchStrength = configuration.GetDeviceSupportConfidence(deviceIdentity) })
+                              .Where(configurationMatchData => configurationMatchData.DeviceMatchStrength > 0)
+                              .OrderByDescending(configurationMatchData => configurationMatchData.DeviceMatchStrength)
+                              .Select(configurationMatchData => configurationMatchData.Configuration)
+                              .FirstOrDefault();
 
     public InputConfiguration? GetInputConfiguration(string configurationId)
         => _inputConfigurationLookup.TryGetValue(configurationId, out var configuration)
             ? configuration
             : null;
 
-    public IDeviceTopology? GetDeviceTopology(DeviceIdentity deviceIdentity)
-        => _deviceTopologyLookup.TryGetValue(deviceIdentity.TopologyName, out var topology)
+    public IDeviceTopology? GetDeviceTopology(DeviceTopologyName topologyName)
+        => _deviceTopologyLookup.TryGetValue(topologyName, out var topology)
             ? topology
             : null;
 

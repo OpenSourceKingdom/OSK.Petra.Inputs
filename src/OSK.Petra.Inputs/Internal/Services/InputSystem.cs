@@ -10,7 +10,7 @@ using OSK.Petra.Inputs.Notifications;
 namespace OSK.Petra.Inputs.Internal.Services;
 
 internal class InputSystem(IInputConfigurationProvider configurationProvider, IUserManager userManager,
-    IInputService inputService, IInputSystemNotifier systemNotifier, ISchemeService schemeService) : IInputSystem
+    IInputService inputService, IInputSystemNotifier systemNotifier, SchemeService schemeService) : IInputSystem
 {
     #region Variables
 
@@ -60,7 +60,7 @@ internal class InputSystem(IInputConfigurationProvider configurationProvider, IU
         }
 
         configurationProvider.Configuration = configuration;
-        return await SchemeService.LoadConfigurationAsync(cancellationToken);
+        return await schemeService.LoadSchemeConfigurationAsync(cancellationToken);
     }
 
     public void Update(TimeSpan deltaTime)

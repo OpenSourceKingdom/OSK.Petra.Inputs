@@ -24,15 +24,7 @@ public interface IInputUser
     /// <summary>
     /// The current active input scheme that is being used to interact with the input system
     /// </summary>
-    ActiveInputScheme? ActiveScheme { get; }
-
-    /// <summary>
-    /// Gets the preferred input sheme that the user has for a given device combination
-    /// </summary>
-    /// <param name="definitionName">The name of the definition that contains the desired scheme preference</param>
-    /// <param name="deviceCombinationId">The device combination of the preference being checked (i.e. xbox, playstation, etc.)</param>
-    /// <returns>The preferred scheme preference for the definition and device combination, if the user has any set</returns>
-    PreferredInputScheme? GetPreferredInputScheme(string definitionName, string deviceCombinationId);
+    ActiveSchemeDetails? ActiveScheme { get; }
 
     /// <summary>
     /// The current list of devices paired to the user

@@ -68,7 +68,7 @@ public static class InputSystemConfigurationValidator
                 $"The custom input scheme {customScheme.Name} on input definition {definition.Name} has device maps that are not supported and can not be used.");
         }
 
-        var existingScheme = inputConfiguration.GetScheme(scheme.DefinitionId, scheme.Name);
+        var existingScheme = inputConfiguration.GetScheme(scheme.DefinitionName, scheme.Name);
         if (existingScheme is not null && (!existingScheme.IsCustom || (existingScheme.IsCustom && !allowDuplicateCustomScheme)))
         {
             return InputConfigurationValidationResult.ForScheme(scheme => scheme.Name, InputConfigurationValidation.DuplicateData,
@@ -230,29 +230,29 @@ public static class InputSystemConfigurationValidator
                 $"There are {schemesWithInvalidNames.Count()} schemes with empty names on input configuration {inputConfiguration.GetDisplayName()}.");
         }
 
-        var schemesWithInvalidDefinitionIds = inputConfiguration.Schemes.Where(scheme => string.IsNullOrWhiteSpace(scheme.DefinitionId));
+        var schemesWithInvalidDefinitionIds = inputConfiguration.Schemes.Where(scheme => string.IsNullOrWhiteSpace(scheme.DefinitionName));
         if (schemesWithInvalidNames.Any())
         {
             return InputConfigurationValidationResult.ForScheme(scheme => scheme.Name, InputConfigurationValidation.MissingData,
-                $"There are {schemesWithInvalidNames.Count()} schemes with empty definition ids on input configuration {inputConfiguration.GetDisplayName()}, , the names are: {string.Join(", ", schemesWithInvalidDefinitionIds.Select(scheme => $"Definition: {scheme.DefinitionId} Scheme: {scheme.Name}"))}.");
+                $"There are {schemesWithInvalidNames.Count()} schemes with empty definition ids on input configuration {inputConfiguration.GetDisplayName()}, , the names are: {string.Join(", ", schemesWithInvalidDefinitionIds.Select(scheme => $"Definition: {scheme.DefinitionName} Scheme: {scheme.Name}"))}.");
         }
 
-        var schemesWithUnrecognizedDefinitionIds = inputConfiguration.Schemes.Where(scheme => configuration.GetDefinition(scheme.DefinitionId) is null);
+        var schemesWithUnrecognizedDefinitionIds = inputConfiguration.Schemes.Where(scheme => configuration.GetDefinition(scheme.DefinitionName) is null);
         if (schemesWithInvalidNames.Any())
         {
             return InputConfigurationValidationResult.ForScheme(scheme => scheme.Name, InputConfigurationValidation.InvalidData,
-                $"There are {schemesWithInvalidNames.Count()} schemes with definition ids that are not registered with the input system on input configuration {inputConfiguration.GetDisplayName()}, , the names are: {string.Join(", ", schemesWithUnrecognizedDefinitionIds.Select(scheme => $"Definition: {scheme.DefinitionId} Scheme: {scheme.Name}"))}.");
+                $"There are {schemesWithInvalidNames.Count()} schemes with definition ids that are not registered with the input system on input configuration {inputConfiguration.GetDisplayName()}, , the names are: {string.Join(", ", schemesWithUnrecognizedDefinitionIds.Select(scheme => $"Definition: {scheme.DefinitionName} Scheme: {scheme.Name}"))}.");
         }
 
         // Note: test difficulty - due to how schemes are read-only and provided at construction into a dictionary (i.e duplicate keys throw),
         // it's not entirely feasible this will occur, but validation will be done to ensure if something changes that this is still caught
-        var duplicateSchemeNames = inputConfiguration.Schemes.GroupBy(scheme => new { scheme.DefinitionId, scheme.Name })
+        var duplicateSchemeNames = inputConfiguration.Schemes.GroupBy(scheme => new { scheme.DefinitionName, scheme.Name })
            .Where(schemeGroup => schemeGroup.Count() > 1)
            .Select(schemeGroup => schemeGroup.Key);
         if (duplicateSchemeNames.Any())
         {
             return InputConfigurationValidationResult.ForInputConfiguration(inputConfig => inputConfig.Schemes, InputConfigurationValidation.DuplicateData,
-                $"There are {duplicateSchemeNames.Count()} schemes with the same name on input configuration {inputConfiguration.GetDisplayName()}, the names are: {string.Join(", ", duplicateSchemeNames.Select(scheme => $"Definition: {scheme.DefinitionId} Scheme: {scheme.Name}"))}.");
+                $"There are {duplicateSchemeNames.Count()} schemes with the same name on input configuration {inputConfiguration.GetDisplayName()}, the names are: {string.Join(", ", duplicateSchemeNames.Select(scheme => $"Definition: {scheme.DefinitionName} Scheme: {scheme.Name}"))}.");
         }
 
         var schemesMissingDeviceMaps = inputConfiguration.Schemes.Where(scheme => scheme.DeviceMaps is null || !scheme.DeviceMaps.Any());
@@ -264,7 +264,7 @@ public static class InputSystemConfigurationValidator
 
         foreach (var scheme in inputConfiguration.Schemes)
         {
-            var definition = configuration.GetDefinition(scheme.DefinitionId);
+            var definition = configuration.GetDefinition(scheme.DefinitionName);
             var validation = ValidateInputScheme(configuration, definition!, scheme);
             if (!validation.IsValid)
             {
@@ -321,14 +321,14 @@ public static class InputSystemConfigurationValidator
 
     private static InputConfigurationValidationResult ValidateDeviceMap(InputSystemConfiguration configuration, ActionDefinition definition, InputScheme scheme, DeviceInputMap deviceMap)
     {
-        var deviceTopology = configuration.GetDeviceTopology(deviceMap.DeviceIdentity);
+        var deviceTopology = configuration.GetDeviceTopology(deviceMap.DeviceIdentity.TopologyName);
         if (deviceTopology is null)
         {
             return InputConfigurationValidationResult.ForDeviceMap(map => map.DeviceIdentity, InputConfigurationValidation.InvalidData,
                 $"The input scheme {scheme.Name} on input defintion {definition.Name} uses a device identity that is not configured for the input system, the device is: {deviceMap.DeviceIdentity}.");
         }
 
-        var invalidInputIds = deviceMap.InputMaps.Where(map => !deviceTopology.TryGetInput(map.InputId, out _))
+        var invalidInputIds = deviceMap.InputMaps.Where(map => !deviceTopology.Inputs.Any(input => input.Id == map.InputId))
             .Select(map => map.InputId);
         if (invalidInputIds.Any())
         {

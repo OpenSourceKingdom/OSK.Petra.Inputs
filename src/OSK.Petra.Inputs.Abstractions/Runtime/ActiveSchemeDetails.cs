@@ -10,7 +10,7 @@ namespace OSK.Petra.Inputs.Abstractions.Runtime;
 /// <param name="definitionName">The name of the <see cref="ActionDefinition"/></param>
 /// <param name="schemeName">The name of the <see cref="InputScheme"/></param>
 /// <param name="deviceIdentities">The list of devices associated with the active scheme</param>
-public readonly struct ActiveInputScheme(string definitionName, string schemeName, DeviceIdentity[] deviceIdentities)
+public readonly struct ActiveSchemeDetails(string definitionName, string schemeName, DeviceIdentity[] deviceIdentities)
 {
     #region Variables
 

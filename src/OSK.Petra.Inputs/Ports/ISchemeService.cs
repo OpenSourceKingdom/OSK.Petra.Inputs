@@ -1,5 +1,8 @@
 ﻿using OSK.Operations.Outputs.Models;
+using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Runtime;
+using OSK.Petra.Inputs.Models;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,9 +12,24 @@ public interface ISchemeService
 {
     bool AllowCustomSchemes { get; }
 
-    Task<Output> SavePreferredSchemeAsync(PreferredInputScheme preferredScheme, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets the preferred input sheme that the user has for a given input configuration
+    /// </summary>
+    /// <param name="userId">The user to get the preferred scheme for</param>
+    /// <param name="inputConfigurationId">The input configuration id of the preference being checked (i.e. xbox, playstation, etc.)</param>
+    /// <param name="definitionName">The name of the definition that contains the desired scheme preference</param>
+    /// <returns>The preferred scheme preference for the definition and input configuration, if the user has any set</returns>
+    PreferredInputScheme? GetPreferredInputScheme(int userId, string inputConfigurationId, string definitionName);
 
-    Task<Output> LoadConfigurationAsync(CancellationToken cancellationToken = default);
+    InputScheme? GetActiveSchemeForUser(int userId);
+
+    IEnumerable<InputScheme> GetInputSchemes(string inputConfigurationId, string definitionName);
+
+    Task<Output> SaveCustomSchemeAsync(CustomInputScheme scheme, SchemeSavePermissions savePermissions, CancellationToken cancellationToken = default);
+
+    Task<Output> DeleteCustomSchemeAsync(string definitionName, string schemeName, CancellationToken cancellationToken = default);
+
+    Task<Output> SavePreferredSchemeAsync(PreferredInputScheme preferredScheme, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a scheme editor that targets the provided user

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using OSK.DataStructures;
 using OSK.Hexagonal.MetaData;
@@ -11,6 +12,11 @@ namespace OSK.Petra.Inputs.Ports;
 [HexagonalIntegration(HexagonalIntegrationType.LibraryProvided)]
 public interface ISchemeEditor
 {
+    /// <summary>
+    /// Triggered when an update has been performed on the editor
+    /// </summary>
+    event Action? EditorUpdated;
+
     /// <summary>
     /// A navigatable collection of input configuration
     /// </summary>
@@ -27,9 +33,9 @@ public interface ISchemeEditor
     ICollectionNavigator<InputScheme> SchemeNavigator { get; }
 
     /// <summary>
-    /// The current scheme being edited
+    /// The current scheme being viewed and/or edited
     /// </summary>
-    IEditableInputScheme EditableScheme { get; }
+    ISelectedScheme SelectedScheme { get; }
 
     /// <summary>
     /// Whether the scheme editor allows custom schemes

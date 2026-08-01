@@ -11,7 +11,7 @@ public enum DevicePairingBehavior
     /// 
     /// For example, if there are 2 users and one has a keyboard and the other has no input device, then a newly activate mouse
     /// will be given to the user with a keyboard to complete their comnbination before giving the device to a different user.
-    /// If both users have completed combinations, then the device will be given to the first user that has the fewest number of
+    /// If both users have completed input configurations, then the device will be given to the first user that has the fewest number of
     /// devices
     /// </summary>
     Balanced,

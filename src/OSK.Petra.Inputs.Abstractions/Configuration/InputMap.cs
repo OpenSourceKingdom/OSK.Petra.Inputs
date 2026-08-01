@@ -8,20 +8,20 @@ public readonly struct InputMap
 
     public string ActionName { get; init; }
 
-    public int[] InputIds { get; init; }
+    public int InputId { get; init; }
 
     #endregion
 
     #region Constructors
 
     public InputMap()
-        : this([], string.Empty)
+        : this(0, string.Empty)
     {
     }
 
-    public InputMap(int[] inputIds, string actionName)
+    public InputMap(int inputId, string actionName)
     {
-        InputIds = inputIds ?? throw new ArgumentNullException(nameof(inputIds));
+        InputId = inputId;
         ActionName = actionName ?? throw new ArgumentNullException(nameof(actionName));
     }
 
