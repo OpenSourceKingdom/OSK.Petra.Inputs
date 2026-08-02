@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OSK.Petra.Inputs.Internal;
-using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.Internal.Services;
 using OSK.Petra.Inputs.Ports;
 using System;

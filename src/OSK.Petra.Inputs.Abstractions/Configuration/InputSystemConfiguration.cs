@@ -17,7 +17,7 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopologyDescriptor> dev
 {
     #region Variables
 
-    private readonly Dictionary<DeviceTopologyName, IDeviceTopologyDescriptor> _deviceTopologyLookup
+    private readonly Dictionary<DeviceTopologyName, IDeviceTopologyDescriptor> _topologyDescriptorLookup
         = deviceTopologies.Where(topology => topology is not null).ToDictionary(topology => topology.TopologyName);
     private readonly Dictionary<string, InputConfiguration> _inputConfigurationLookup 
         = supportedConfigurations.Where(configuration => configuration is not null).ToDictionary(configuration => configuration.Id);
@@ -33,7 +33,7 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopologyDescriptor> dev
     /// </summary>
     public InputSystemJoinPolicy JoinPolicy => joinPolicy;
 
-    public IReadOnlyList<IDeviceTopologyDescriptor> SupportedDeviceTopologies => [.. _deviceTopologyLookup.Values];
+    public IReadOnlyList<IDeviceTopologyDescriptor> SupportedDeviceTopologies => [.. _topologyDescriptorLookup.Values];
 
     /// <summary>
     /// The collection of supported input device configurations for built in and custom schemes to use.
@@ -53,7 +53,7 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopologyDescriptor> dev
             : null;
 
     public IDeviceTopologyDescriptor? GetTopologyDescriptor(DeviceTopologyName topologyName)
-        => _deviceTopologyLookup.TryGetValue(topologyName, out var topology)
+        => _topologyDescriptorLookup.TryGetValue(topologyName, out var topology)
             ? topology
             : null;
 

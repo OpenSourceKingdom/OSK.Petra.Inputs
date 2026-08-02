@@ -22,7 +22,7 @@ internal class SelectedScheme: ISelectedScheme
 
     #region Constructors
 
-    public SelectedScheme(string name, bool isReadOnly, bool isPreferred, IEnumerable<InputAction> availableActions, IEnumerable<IInput> availableInputs, IEnumerable<InputMap> maps)
+    public SelectedScheme(string name, bool isReadOnly, bool isPreferred, IEnumerable<InputAction> availableActions, IEnumerable<IInput> availableInputs, IEnumerable<InputActionMap> maps)
     {
         Name = name;
         IsReadonly = isReadOnly;
@@ -35,17 +35,17 @@ internal class SelectedScheme: ISelectedScheme
         _availableActionLookup = availableActions.ToDictionary(action => action.Name);
         _availableInputLookup = availableInputs.ToDictionary(input => input.Id);
 
-        _inputMaps = [];
+        _inputMaps = []; 
         foreach (var map in maps)
         {
             _inputMaps[map.ActionName] = new InputActionPair()
             {
                 Action = _availableActionLookup[map.ActionName],
-                Input = _availableInputLookup[map.InputId]
+                Input = map.Input
             };
 
             _availableActionLookup.Remove(map.ActionName);
-            _availableInputLookup.Remove(map.InputId);
+            _availableInputLookup.Remove(map.Input.Id);
         }
     }
 

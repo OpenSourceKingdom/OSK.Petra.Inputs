@@ -360,15 +360,15 @@ public static class InputSystemConfigurationValidator
                 $"The input scheme {scheme.Name} on input defintion {definition.Name} uses a device identity that is not configured for the input system, the device is: {deviceMap.DeviceIdentity}.");
         }
 
-        var invalidInputIds = deviceMap.InputMaps.Where(map => !topologyDescriptor.IsCompatibleInput(map.InputId))
-            .Select(map => map.InputId);
+        var invalidInputIds = deviceMap.InputMaps.Where(map => !topologyDescriptor.IsCompatibleInput(map.Input))
+            .Select(map => map.Input.Id);
         if (invalidInputIds.Any())
         {
             return InputConfigurationValidationResult.ForDeviceMap(map => map.InputMaps, InputConfigurationValidation.InvalidData,
                 $"There are {invalidInputIds.Count()} input maps that use input ids that don't exist for the device map {deviceMap.DeviceIdentity} with scheme {scheme.Name} on input definition {definition.Name}, the invalid ids are: {string.Join(",", invalidInputIds.Distinct())}.");
         }
 
-        var duplicateInputIds = deviceMap.InputMaps.GroupBy(map => map.InputId)
+        var duplicateInputIds = deviceMap.InputMaps.GroupBy(map => map.Input.Id)
             .Where(mapGroup => mapGroup.Count() > 1)
             .Select(mapGroup => mapGroup.Key);
         if (duplicateInputIds.Any()) 
@@ -378,7 +378,7 @@ public static class InputSystemConfigurationValidator
         }
 
         var inputsMissingActionNames = deviceMap.InputMaps.Where(map => string.IsNullOrWhiteSpace(map.ActionName))
-            .Select(map => map.InputId);
+            .Select(map => map.Input.Id);
         if (inputsMissingActionNames.Any()) 
         {
             return InputConfigurationValidationResult.ForDeviceMap(map => map.InputMaps, InputConfigurationValidation.MissingData,
