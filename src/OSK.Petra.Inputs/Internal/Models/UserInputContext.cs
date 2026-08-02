@@ -12,6 +12,9 @@ internal class UserInputContext(int userId) : IUserInputContext
     private readonly Dictionary<int, InputState> _inputStates = [];
     private readonly Dictionary<Type, CapabilityData> _features = [];
 
+    private bool _globalActionSuppression;
+    private readonly Dictionary<int, bool> _suppressedActions = [];
+
     #endregion
 
     #region IInputProcessingContext
@@ -61,6 +64,25 @@ internal class UserInputContext(int userId) : IUserInputContext
         _inputStates.Clear();
         _features.Clear();
     }
+
+    internal void Suppress(int[]? actionGroups, bool isSuppressed)
+    {
+        if (actionGroups is null || actionGroups.Length is 0)
+        {
+            _globalActionSuppression = isSuppressed;
+            _suppressedActions.Clear();
+
+            return;
+        }
+
+        foreach (var actionGroup in actionGroups)
+        {
+            _suppressedActions[actionGroup] = isSuppressed;
+        }
+    }
+
+    internal bool IsSuppressed(int actionGroup)
+        => (_suppressedActions.TryGetValue(actionGroup, out var isSuppressed) && isSuppressed) || _globalActionSuppression;
 
     internal IEnumerable<CapabilityData> GetFeatures()
         => _features.Values;

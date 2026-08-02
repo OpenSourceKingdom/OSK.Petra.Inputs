@@ -22,13 +22,13 @@ internal partial class InputService : IInputService
     private readonly IInputCapability[] _capabilities;
     private readonly IInputConfigurationProvider _configurationProvider;
     private readonly ISchemeService _schemeService;
-    private readonly IUserActionSuppressionState _suppressionState;
     private readonly IUserManager _userManager;
     private readonly IDeviceDescriptorProvider _deviceDescriptorProvider;
     private readonly IInputSystemNotifier _systemNotifier;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<InputService> _logger;
 
+    private bool _globalActionSupression;
     private readonly Dictionary<int, UserInputContext> _userContexts = [];
 
     #endregion
@@ -36,12 +36,11 @@ internal partial class InputService : IInputService
     #region Constructors
 
     public InputService(IEnumerable<IInputCapability> capabilities, IInputConfigurationProvider configurationProvider, IUserManager userManager, ISchemeService schemeService, 
-        IUserActionSuppressionState suppressionState, IDeviceDescriptorProvider deviceDescriptorProvider, IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
+        IDeviceDescriptorProvider deviceDescriptorProvider, IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
     {
         _capabilities = capabilities?.ToArray() ?? throw new ArgumentNullException(nameof(capabilities));
         _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
         _schemeService = schemeService ?? throw new ArgumentNullException(nameof(schemeService));
-        _suppressionState = suppressionState ?? throw new ArgumentNullException(nameof(suppressionState));
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _deviceDescriptorProvider = deviceDescriptorProvider ?? throw new ArgumentNullException(nameof(deviceDescriptorProvider));
         _systemNotifier = systemNotifier ?? throw new ArgumentNullException(nameof(systemNotifier));
@@ -88,13 +87,28 @@ internal partial class InputService : IInputService
             return;
         }
 
-        if (modifyActionGroupSuppressionNotification.Suppress)
+        var hasActionFilter = modifyActionGroupSuppressionNotification.ActionGroups is not null && modifyActionGroupSuppressionNotification.ActionGroups.Length > 0;
+        var hasUserFilter = modifyActionGroupSuppressionNotification.UserIds is not null && modifyActionGroupSuppressionNotification.UserIds.Length > 0;
+
+        // Global
+        if (!hasActionFilter && !hasUserFilter)
         {
-            _suppressionState.Suppress(modifyActionGroupSuppressionNotification.ActionGroups, modifyActionGroupSuppressionNotification.UserIds);
+            _globalActionSupression = modifyActionGroupSuppressionNotification.Suppress;
+            foreach (var userContext in _userContexts.Values)
+            {
+                userContext.Suppress(actionGroups: null, isSuppressed: _globalActionSupression);
+            }
+
+            return;
         }
-        else
+
+        var userContexts = hasUserFilter
+            ? modifyActionGroupSuppressionNotification.UserIds.Where(id => _userContexts.TryGetValue(id, out _)).Select(id => _userContexts[id])
+            : _userContexts.Values;
+
+        foreach (var useContext in userContexts)
         {
-            _suppressionState.Enable(modifyActionGroupSuppressionNotification.ActionGroups, modifyActionGroupSuppressionNotification.UserIds);
+            useContext.Suppress(actionGroups: modifyActionGroupSuppressionNotification.ActionGroups, modifyActionGroupSuppressionNotification.Suppress);
         }
     }
 
@@ -142,6 +156,11 @@ internal partial class InputService : IInputService
         {
             userContext = new UserInputContext(user.Id);
             _userContexts[user.Id] = userContext;
+            
+            if (_globalActionSupression)
+            {
+                userContext.Suppress(null, true);
+            }
         }
 
         userContext.DeviceIdentifier = inputNotification.DeviceIdentifier;
@@ -168,7 +187,7 @@ internal partial class InputService : IInputService
         } 
 
         var action = configuration.GetDefinition(setSchemeOutput.Data.DefinitionName)?.GetAction(inputMap.Value.ActionName);
-        if (action is null || (action.ActionGroup.HasValue && !_suppressionState.IsSuppressed(userContext.UserId, action.ActionGroup.Value)))
+        if (action is null || (action.ActionGroup.HasValue && !userContext.IsSuppressed(action.ActionGroup.Value)))
         {
             return;
         }
