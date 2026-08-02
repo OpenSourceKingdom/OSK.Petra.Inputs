@@ -38,14 +38,12 @@ public static class ServiceCollectionExtensions
             throw new ArgumentNullException(nameof(configurator));
         }
 
-        services.TryAddSingleton<IDeviceDescriptorProvider, DeviceDescriptorProvider>();
         services.TryAddSingleton<ISchemeService, SchemeService>();
         services.TryAddSingleton<IInputService, InputService>();
         services.TryAddSingleton<IUserManager, UserManager>();
         services.TryAddSingleton<IInputSystem, InputSystem>();
         services.TryAddSingleton<IInputSystemNotifier, InputSystemNotifier>();
         services.TryAddSingleton<IInputConfigurationProvider, InputConfigurationProvider>();
-        services.TryAddSingleton<IUserActionSuppressionState, UserActionSuppressionState>();
 
        // var builder = new InputSystemBuilder(services);
        // configurator(builder);

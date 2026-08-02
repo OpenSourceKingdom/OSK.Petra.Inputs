@@ -25,6 +25,13 @@ public abstract class InputDeviceTopology<TEnum>: IDeviceTopology
 
     #endregion
 
+    #region IDeviceTopology
+
+    public bool Contains(IInput input)
+        => Inputs.Contains(input);
+
+    #endregion
+
     #region Helpers
 
     protected abstract IInput GetInput(TEnum value);

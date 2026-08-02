@@ -13,12 +13,12 @@ namespace OSK.Petra.Inputs.Abstractions.Configuration;
 /// <param name="supportedConfigurations">The configurations of topologies that is supported</param>
 /// <param name="definitions">The input definitions the input system will use to map inputs and actions</param>
 /// <param name="joinPolicy">The policy the input system uses for new users, devices, and the like</param>
-public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopologies, IEnumerable<InputConfiguration> supportedConfigurations, IEnumerable<ActionDefinition> definitions, InputSystemJoinPolicy joinPolicy)
+public class InputSystemConfiguration(IEnumerable<IDeviceTopologyDescriptor> deviceTopologies, IEnumerable<InputConfiguration> supportedConfigurations, IEnumerable<ActionDefinition> definitions, InputSystemJoinPolicy joinPolicy)
 {
     #region Variables
 
-    private readonly Dictionary<DeviceTopologyName, IDeviceTopology> _deviceTopologyLookup
-        = deviceTopologies.Where(topology => topology is not null).ToDictionary(topology => topology.Name);
+    private readonly Dictionary<DeviceTopologyName, IDeviceTopologyDescriptor> _deviceTopologyLookup
+        = deviceTopologies.Where(topology => topology is not null).ToDictionary(topology => topology.TopologyName);
     private readonly Dictionary<string, InputConfiguration> _inputConfigurationLookup 
         = supportedConfigurations.Where(configuration => configuration is not null).ToDictionary(configuration => configuration.Id);
     private readonly Dictionary<string, ActionDefinition> _inputDefinitionLookup 
@@ -33,7 +33,7 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
     /// </summary>
     public InputSystemJoinPolicy JoinPolicy => joinPolicy;
 
-    public IReadOnlyList<IDeviceTopology> SupportedDeviceTopologies => [.. _deviceTopologyLookup.Values];
+    public IReadOnlyList<IDeviceTopologyDescriptor> SupportedDeviceTopologies => [.. _deviceTopologyLookup.Values];
 
     /// <summary>
     /// The collection of supported input device configurations for built in and custom schemes to use.
@@ -52,7 +52,7 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
             ? configuration
             : null;
 
-    public IDeviceTopology? GetDeviceTopology(DeviceTopologyName topologyName)
+    public IDeviceTopologyDescriptor? GetTopologyDescriptor(DeviceTopologyName topologyName)
         => _deviceTopologyLookup.TryGetValue(topologyName, out var topology)
             ? topology
             : null;

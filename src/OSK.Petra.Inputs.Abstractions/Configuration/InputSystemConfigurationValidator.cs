@@ -353,14 +353,14 @@ public static class InputSystemConfigurationValidator
 
     private static InputConfigurationValidationResult ValidateDeviceMap(InputSystemConfiguration configuration, ActionDefinition definition, InputScheme scheme, DeviceInputMap deviceMap)
     {
-        var deviceTopology = configuration.GetDeviceTopology(deviceMap.DeviceIdentity.TopologyName);
-        if (deviceTopology is null)
+        var topologyDescriptor = configuration.GetTopologyDescriptor(deviceMap.DeviceIdentity.TopologyName);
+        if (topologyDescriptor is null)
         {
             return InputConfigurationValidationResult.ForDeviceMap(map => map.DeviceIdentity, InputConfigurationValidation.InvalidData,
                 $"The input scheme {scheme.Name} on input defintion {definition.Name} uses a device identity that is not configured for the input system, the device is: {deviceMap.DeviceIdentity}.");
         }
 
-        var invalidInputIds = deviceMap.InputMaps.Where(map => !deviceTopology.Inputs.Any(input => input.Id == map.InputId))
+        var invalidInputIds = deviceMap.InputMaps.Where(map => !topologyDescriptor.IsCompatibleInput(map.InputId))
             .Select(map => map.InputId);
         if (invalidInputIds.Any())
         {

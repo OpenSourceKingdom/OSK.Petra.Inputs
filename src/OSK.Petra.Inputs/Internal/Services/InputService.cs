@@ -23,7 +23,6 @@ internal partial class InputService : IInputService
     private readonly IInputConfigurationProvider _configurationProvider;
     private readonly ISchemeService _schemeService;
     private readonly IUserManager _userManager;
-    private readonly IDeviceDescriptorProvider _deviceDescriptorProvider;
     private readonly IInputSystemNotifier _systemNotifier;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<InputService> _logger;
@@ -36,13 +35,12 @@ internal partial class InputService : IInputService
     #region Constructors
 
     public InputService(IEnumerable<IInputCapability> capabilities, IInputConfigurationProvider configurationProvider, IUserManager userManager, ISchemeService schemeService, 
-        IDeviceDescriptorProvider deviceDescriptorProvider, IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
+        IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
     {
         _capabilities = capabilities?.ToArray() ?? throw new ArgumentNullException(nameof(capabilities));
         _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
         _schemeService = schemeService ?? throw new ArgumentNullException(nameof(schemeService));
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-        _deviceDescriptorProvider = deviceDescriptorProvider ?? throw new ArgumentNullException(nameof(deviceDescriptorProvider));
         _systemNotifier = systemNotifier ?? throw new ArgumentNullException(nameof(systemNotifier));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -129,15 +127,15 @@ internal partial class InputService : IInputService
 
         var configuration = _configurationProvider.Configuration;
 
-        var deviceDescriptor = _deviceDescriptorProvider.GetDescriptorForDevice(inputNotification.DeviceIdentifier.DeviceIdentity);
-        if (deviceDescriptor is null)
+        var topologyDescriptor = configuration.GetTopologyDescriptor(inputNotification.DeviceIdentifier.DeviceIdentity.TopologyName);
+        if (topologyDescriptor is null)
         {
             LogUnsupportedInputDeviceInformation(_logger, inputNotification.DeviceIdentifier);
             _systemNotifier.Notify(new UnrecognizedDeviceNotification(inputNotification.DeviceIdentifier));
             return;
         }
 
-        if (!deviceDescriptor.Contains(inputNotification.Input))
+        if (!topologyDescriptor.IsCompatibleInput(inputNotification.Input))
         {
             LogUnsupportedInputInformation(_logger, inputNotification.DeviceIdentifier, inputNotification.Input.GetGlyph().Symbol);
             _systemNotifier.Notify(new UnrecognizedDeviceNotification(inputNotification.DeviceIdentifier));
