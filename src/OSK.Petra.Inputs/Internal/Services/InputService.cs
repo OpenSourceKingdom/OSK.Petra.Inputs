@@ -22,6 +22,7 @@ internal partial class InputService : IInputService
     private readonly IInputCapability[] _capabilities;
     private readonly IInputConfigurationProvider _configurationProvider;
     private readonly ISchemeService _schemeService;
+    private readonly IUserActionSuppressionState _suppressionState;
     private readonly IUserManager _userManager;
     private readonly IDeviceDescriptorProvider _deviceDescriptorProvider;
     private readonly IInputSystemNotifier _systemNotifier;
@@ -35,11 +36,12 @@ internal partial class InputService : IInputService
     #region Constructors
 
     public InputService(IEnumerable<IInputCapability> capabilities, IInputConfigurationProvider configurationProvider, IUserManager userManager, ISchemeService schemeService, 
-        IDeviceDescriptorProvider deviceDescriptorProvider, IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
+        IUserActionSuppressionState suppressionState, IDeviceDescriptorProvider deviceDescriptorProvider, IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
     {
         _capabilities = capabilities?.ToArray() ?? throw new ArgumentNullException(nameof(capabilities));
         _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
         _schemeService = schemeService ?? throw new ArgumentNullException(nameof(schemeService));
+        _suppressionState = suppressionState ?? throw new ArgumentNullException(nameof(suppressionState));
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _deviceDescriptorProvider = deviceDescriptorProvider ?? throw new ArgumentNullException(nameof(deviceDescriptorProvider));
         _systemNotifier = systemNotifier ?? throw new ArgumentNullException(nameof(systemNotifier));
@@ -53,6 +55,7 @@ internal partial class InputService : IInputService
 
         systemNotifier.OnDeviceNotification += ProcessDeviceNotification;
         systemNotifier.OnUserNotification += ProcessUserNotification;
+        systemNotifier.OnSystemNotification += ProcessSystemNotification;
     }
 
     #endregion
@@ -77,6 +80,23 @@ internal partial class InputService : IInputService
     #endregion
 
     #region Helpers
+
+    private void ProcessSystemNotification(SystemNotification systemNotification)
+    {
+        if (systemNotification is not ModifyActionGroupSuppressionNotification modifyActionGroupSuppressionNotification)
+        {
+            return;
+        }
+
+        if (modifyActionGroupSuppressionNotification.Suppress)
+        {
+            _suppressionState.Suppress(modifyActionGroupSuppressionNotification.ActionGroups, modifyActionGroupSuppressionNotification.UserIds);
+        }
+        else
+        {
+            _suppressionState.Enable(modifyActionGroupSuppressionNotification.ActionGroups, modifyActionGroupSuppressionNotification.UserIds);
+        }
+    }
 
     private void ProcessUserNotification(UserNotification userNotification)
     {
@@ -148,7 +168,7 @@ internal partial class InputService : IInputService
         } 
 
         var action = configuration.GetDefinition(setSchemeOutput.Data.DefinitionName)?.GetAction(inputMap.Value.ActionName);
-        if (action is null || (action.ActionGroup.HasValue && inputNotification.SuppressedActionGroups.Contains(action.ActionGroup.Value)))
+        if (action is null || (action.ActionGroup.HasValue && !_suppressionState.IsSuppressed(userContext.UserId, action.ActionGroup.Value)))
         {
             return;
         }

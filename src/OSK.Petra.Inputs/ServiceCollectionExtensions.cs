@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OSK.Petra.Inputs.Internal;
+using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.Internal.Services;
 using OSK.Petra.Inputs.Ports;
 using System;
@@ -44,6 +45,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IInputSystem, InputSystem>();
         services.TryAddSingleton<IInputSystemNotifier, InputSystemNotifier>();
         services.TryAddSingleton<IInputConfigurationProvider, InputConfigurationProvider>();
+        services.TryAddSingleton<IUserActionSuppressionState, UserActionSuppressionState>();
 
        // var builder = new InputSystemBuilder(services);
        // configurator(builder);

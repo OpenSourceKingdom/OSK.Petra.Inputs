@@ -13,5 +13,10 @@ internal readonly struct GenericDeviceDescriptor(IDeviceTopology deviceTopology,
     public IEnumerable<IInput> GetInputs()
         => deviceTopology.Inputs;
 
+    public bool Contains(IInput input)
+    {
+        throw new System.NotImplementedException();
+    }
+
     #endregion
 }
