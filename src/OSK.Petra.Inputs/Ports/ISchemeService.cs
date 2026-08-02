@@ -1,5 +1,6 @@
 ﻿using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions.Configuration;
+using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Models;
 using System.Collections.Generic;
@@ -22,6 +23,8 @@ public interface ISchemeService
     PreferredInputScheme? GetPreferredInputScheme(int userId, string inputConfigurationId, string definitionName);
 
     InputScheme? GetActiveSchemeForUser(int userId);
+
+    Output<InputScheme> SetActiveSchemeForDevice(int userId, DeviceIdentity deviceIdentity);
 
     IEnumerable<InputScheme> GetInputSchemes(string inputConfigurationId, string definitionName);
 

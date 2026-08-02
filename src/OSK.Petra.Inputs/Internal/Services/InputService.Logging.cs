@@ -29,13 +29,10 @@ internal partial class InputService
     private static partial void LogUnsupportedInputInformation(ILogger logger, RuntimeDeviceIdentifier deviceIdentifier, string inputSymbol);
 
     [LoggerMessage(eventId: 8, LogLevel.Debug, "Input received, from device {deviceIdentifier}, for user {userId} has triggered an action '{actionName}' for input scheme {activeScheme}.")]
-    private static partial void LogInputActionTriggeredDebug(ILogger logger, int userId, RuntimeDeviceIdentifier deviceIdentifier, ActiveSchemeDetails activeScheme, string actionName);
+    private static partial void LogInputActionTriggeredDebug(ILogger logger, int userId, RuntimeDeviceIdentifier deviceIdentifier, string activeScheme, string actionName);
 
     [LoggerMessage(eventId: 9, LogLevel.Warning, "An attempt was made to pair device {deviceIdentifier} to user {userId} but it failed.")]
     private static partial void LogDevicePairingFailedWarning(ILogger logger, int userId, RuntimeDeviceIdentifier deviceIdentifier);
-
-    [LoggerMessage(eventId: 10, LogLevel.Information, "Input received from a device for user {userId} has changed the active scheme to {activeSchemeName} for input definition {definitionName} and supports '{deviceNames}'.")]
-    private static partial void LogNewActiveSchemeInformation(ILogger logger, int userId, string deviceNames, string definitionName, string activeSchemeName);
 
     #endregion
 }

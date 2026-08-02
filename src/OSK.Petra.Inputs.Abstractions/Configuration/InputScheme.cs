@@ -47,12 +47,17 @@ public class InputScheme(string definitionName, string name, IEnumerable<DeviceI
             ? map
             : null;
 
-    /// <summary>
-    /// Gets the device types this scheme uses
-    /// </summary>
-    /// <returns>The collection of device types</returns>
-    public IEnumerable<DeviceTopologyName> GetDeviceTypes()
-        => _deviceMapLookup.Values.Select(map => map.DeviceIdentity.TopologyName);
+    public InputMap? GetInputMap(DeviceIdentity deviceIdentity, int inputId)
+        => GetDeviceMap(deviceIdentity)?.GetInputMap(inputId);
+
+    public bool ContainsTopology(DeviceTopologyName topologyName)
+        => _deviceMapLookup.ContainsKey(topologyName);
+
+    public bool ContainsFamily(DeviceFamily family)
+        => _deviceMapLookup.Values.Any(map => map.DeviceIdentity.DeviceFamily == family);
+
+    public bool ContainsDevice(DeviceIdentity deviceIdentity)
+        => _deviceMapLookup.Values.Any(map => map.DeviceIdentity == deviceIdentity);
 
     #endregion
 }

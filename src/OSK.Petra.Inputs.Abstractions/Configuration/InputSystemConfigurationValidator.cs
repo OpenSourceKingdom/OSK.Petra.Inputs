@@ -20,6 +20,12 @@ public static class InputSystemConfigurationValidator
             return validation;
         }
 
+        validation = ValidateDeviceTopologies(configuration);
+        if (!validation.IsValid)
+        {
+            return validation;
+        }
+
         return ValidateJoinPolicy(configuration.JoinPolicy);
     }
 
@@ -132,6 +138,20 @@ public static class InputSystemConfigurationValidator
         {
             return InputConfigurationValidationResult.ForDefinition(definition => definition.Actions, InputConfigurationValidation.MissingData,
                 $"There are {definitionsWithoutActions.Count()} definitions without actions, the names are: {string.Join(", ", definitionsWithoutActions)}.");
+        }
+
+        var defaultDefinitions = definitions.Where(definition => definition.IsDefault);
+        var defaultDefinitionCount = defaultDefinitions.Count();
+        if (defaultDefinitionCount is 0)
+        {
+            return InputConfigurationValidationResult.ForDefinition(definition => definition.IsDefault, InputConfigurationValidation.InvalidData,
+                "There are no definitions marked as default.");
+        }
+
+        if (defaultDefinitionCount > 1)
+        {
+            return InputConfigurationValidationResult.ForDefinition(definition => definition.IsDefault, InputConfigurationValidation.InvalidData,
+                $"There are {defaultDefinitions.Count()} definitions marked as default, but only one should be marked, the names are: {string.Join(", ", defaultDefinitions.Select(d => d.Name))}.");
         }
 
         foreach (var definition in definitions)
@@ -260,6 +280,18 @@ public static class InputSystemConfigurationValidator
         {
             return InputConfigurationValidationResult.ForScheme(scheme => scheme.DeviceMaps, InputConfigurationValidation.MissingData,
                 $"There are {schemesMissingDeviceMaps.Count()} schemes on input configuration {inputConfiguration.GetDisplayName()} that have no device maps, the names are: {string.Join(", ", schemesMissingDeviceMaps.Select(scheme => scheme.Name))}.");
+        }
+
+        var totalSchemeDefaults = inputConfiguration.Schemes.Count(scheme => scheme.IsDefault);
+        if (totalSchemeDefaults is 0)
+        {
+            return InputConfigurationValidationResult.ForInputConfiguration(inputConfig => inputConfig.Schemes, InputConfigurationValidation.InvalidData,
+                $"There are no schemes marked as default on input configuration {inputConfiguration.GetDisplayName()}.");
+        }
+        if (totalSchemeDefaults > 1)
+        {
+            return InputConfigurationValidationResult.ForInputConfiguration(inputConfig => inputConfig.Schemes, InputConfigurationValidation.InvalidData,
+                $"There are {totalSchemeDefaults} schemes marked as default on input configuration {inputConfiguration.GetDisplayName()}, but only one should be marked.");
         }
 
         foreach (var scheme in inputConfiguration.Schemes)

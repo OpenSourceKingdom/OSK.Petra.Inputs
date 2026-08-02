@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Runtime;
@@ -24,6 +25,7 @@ internal partial class InputService : IInputService
     private readonly IUserManager _userManager;
     private readonly IDeviceDescriptorProvider _deviceDescriptorProvider;
     private readonly IInputSystemNotifier _systemNotifier;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<InputService> _logger;
 
     private readonly Dictionary<int, UserInputContext> _userContexts = [];
@@ -32,8 +34,8 @@ internal partial class InputService : IInputService
 
     #region Constructors
 
-    public InputService(IEnumerable<IInputCapability> capabilities, IInputConfigurationProvider configurationProvider, IUserManager userManager, ISchemeService schemeService, IDeviceDescriptorProvider deviceDescriptorProvider, IInputSystemNotifier systemNotifier,
-        ILogger<InputService> logger)
+    public InputService(IEnumerable<IInputCapability> capabilities, IInputConfigurationProvider configurationProvider, IUserManager userManager, ISchemeService schemeService, 
+        IDeviceDescriptorProvider deviceDescriptorProvider, IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
     {
         _capabilities = capabilities?.ToArray() ?? throw new ArgumentNullException(nameof(capabilities));
         _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
@@ -41,6 +43,7 @@ internal partial class InputService : IInputService
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _deviceDescriptorProvider = deviceDescriptorProvider ?? throw new ArgumentNullException(nameof(deviceDescriptorProvider));
         _systemNotifier = systemNotifier ?? throw new ArgumentNullException(nameof(systemNotifier));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         if (systemNotifier is null)
@@ -49,6 +52,7 @@ internal partial class InputService : IInputService
         }
 
         systemNotifier.OnDeviceNotification += ProcessDeviceNotification;
+        systemNotifier.OnUserNotification += ProcessUserNotification;
     }
 
     #endregion
@@ -73,6 +77,14 @@ internal partial class InputService : IInputService
     #endregion
 
     #region Helpers
+
+    private void ProcessUserNotification(UserNotification userNotification)
+    {
+        if (userNotification is UserRemovedNotification userRemovedNotification)
+        {
+            _userContexts.Remove(userRemovedNotification.User.Id);
+        }
+    }
 
     private void ProcessDeviceNotification(DeviceNotification deviceNotification)
     {
@@ -106,40 +118,47 @@ internal partial class InputService : IInputService
             return;
         }
 
-        if (_userContexts.TryGetValue(user.Id, out var userContext))
+        if (!_userContexts.TryGetValue(user.Id, out var userContext))
         {
-            userContext.DeviceIdentifier = inputNotification.DeviceIdentifier;
-            userContext.Input = inputNotification.Input;
-        }
-        else
-        {
-            userContext = new UserInputContext(user.Id)
-            {
-                DeviceIdentifier = inputNotification.DeviceIdentifier,
-                Input = inputNotification.Input
-            };
+            userContext = new UserInputContext(user.Id);
             _userContexts[user.Id] = userContext;
         }
 
-        foreach (var capability in _capabilities)
-        {
-            if (capability.CanProces(userContext.Input))
-            {
-                capability.Process(userContext);
-            }
-        }
+        userContext.DeviceIdentifier = inputNotification.DeviceIdentifier;
 
-        var scheme = _schemeService.GetActiveSchemeForUser(user.Id);
-        if (scheme is null)
+        var setSchemeOutput = _schemeService.SetActiveSchemeForDevice(user.Id, inputNotification.DeviceIdentifier.DeviceIdentity);
+        if (!setSchemeOutput.IsSuccessful)
         {
             return;
         }
+        if (setSchemeOutput.StatusCode.Status == OutputStatus.Updated)
+        {
+            userContext.Reset();
+        }
+
+        foreach (var capability in _capabilities.Where(capability => capability.CanProces(inputNotification.Input)))
+        {
+            capability.Process(userContext, inputNotification.Input);
+        }
         
-        var deviceMap = scheme.GetDeviceMap(inputNotification.DeviceIdentifier.DeviceIdentity);
-        if (deviceMap is null)
+        var inputMap = setSchemeOutput.Data.GetInputMap(inputNotification.DeviceIdentifier.DeviceIdentity, inputNotification.Input.Id);
+        if (inputMap is null)
         {
             return;
         } 
+
+        var action = configuration.GetDefinition(setSchemeOutput.Data.DefinitionName)?.GetAction(inputMap.Value.ActionName);
+        if (action is null || (action.ActionGroup.HasValue && inputNotification.SuppressedActionGroups.Contains(action.ActionGroup.Value)))
+        {
+            return;
+        }
+
+        if (userContext.TryGetState(inputNotification.Input, out var state) && action.TriggerPhases.Contains(state.Phase))
+        {
+            action.ActionExecutor(new InputEventContext(user.Id, inputNotification.DeltaTime, inputNotification.DeviceIdentifier, inputNotification.Input, userContext.GetFeatures(), _serviceProvider));
+            LogInputActionTriggeredDebug(_logger, user.Id, inputNotification.DeviceIdentifier, inputNotification.Input.GetGlyph().Symbol, action.Name);
+            _systemNotifier.Notify(new ActionExecutedNotification(user.Id, setSchemeOutput.Data.DefinitionName, action.Name));
+        }
     }
 
     private IInputUser? TryGetOrPairUserForDevice(InputSystemConfiguration configuration, RuntimeDeviceIdentifier deviceIdentifier)
@@ -155,7 +174,7 @@ internal partial class InputService : IInputService
             return null;
         }
 
-        var inputConfiguration = _configurationProvider.Configuration.GetBestInputConfiguration(deviceIdentifier.DeviceIdentity);
+        var inputConfiguration = _configurationProvider.Configuration.GetBestFitInputConfiguration(deviceIdentifier.DeviceIdentity);
         if (inputConfiguration is null)
         {
             LogUnpairedDeviceDueToUnsupportedConfigurationInformation(_logger, deviceIdentifier);

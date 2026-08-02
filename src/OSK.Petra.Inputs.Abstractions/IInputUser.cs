@@ -19,12 +19,7 @@ public interface IInputUser
     /// <summary>
     /// The currently active input definition the user is utilizing
     /// </summary>
-    string ActiveInputDefinitionName { get; }
-
-    /// <summary>
-    /// The current active input scheme that is being used to interact with the input system
-    /// </summary>
-    ActiveSchemeDetails? ActiveScheme { get; }
+    string ActiveDefinitionName { get; }
 
     /// <summary>
     /// The current list of devices paired to the user

@@ -1,4 +1,5 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Inputs;
+using System;
 
 namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
@@ -10,7 +11,8 @@ public interface IUserInputContext
 
     RuntimeDeviceIdentifier DeviceIdentifier { get; }
 
-    IInput Input { get; }
+    TState GetOrCreateState<TState>(IInput input, Func<IInput, TState> factory)
+        where TState : InputState;
 
     void SetFeature<TData>(TData data)
         where TData : CapabilityData;

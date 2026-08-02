@@ -47,18 +47,6 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
     public IReadOnlyList<ActionDefinition> Definitions
         => [.. _inputDefinitionLookup.Values];
 
-    /// <summary>
-    /// Attempts to get an input configuration by the device identity
-    /// </summary>
-    /// <param name="deviceIdentity">The identity of the device to get a topology for</param>
-    /// <returns>The specific topology for the device identity if it is supported, otherwise null</returns>
-    public InputConfiguration? GetBestInputConfiguration(DeviceIdentity deviceIdentity)
-        => InputConfigurations.Select(configuration => new { Configuration = configuration, DeviceMatchStrength = configuration.GetDeviceSupportConfidence(deviceIdentity) })
-                              .Where(configurationMatchData => configurationMatchData.DeviceMatchStrength > 0)
-                              .OrderByDescending(configurationMatchData => configurationMatchData.DeviceMatchStrength)
-                              .Select(configurationMatchData => configurationMatchData.Configuration)
-                              .FirstOrDefault();
-
     public InputConfiguration? GetInputConfiguration(string configurationId)
         => _inputConfigurationLookup.TryGetValue(configurationId, out var configuration)
             ? configuration

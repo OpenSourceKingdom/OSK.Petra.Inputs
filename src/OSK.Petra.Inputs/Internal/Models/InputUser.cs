@@ -8,7 +8,6 @@ internal class InputUser(int id): IInputUser
 {
     #region Variables
 
-    private string _activeDefinitionName = string.Empty;
     private Dictionary<int, PairedDevice> _pairedDevices = [];
 
     #endregion
@@ -27,20 +26,7 @@ internal class InputUser(int id): IInputUser
 
     public int Id => id;
 
-    public string ActiveInputDefinitionName 
-    {
-        get => _activeDefinitionName;
-        internal set
-        {
-            _activeDefinitionName = value;
-
-            // Resetting the active scheme since it relies on the definition name. It should be updated
-            // once the input processor picks up the next input from the user.
-            ActiveScheme = null;
-        }
-    }
-
-    public ActiveSchemeDetails? ActiveScheme { get; internal set; }
+    public string ActiveDefinitionName { get; set; } = string.Empty;
 
     public IReadOnlyCollection<PairedDevice> PairedDevices => _pairedDevices.Values;
 

@@ -38,13 +38,6 @@ internal partial class UserManager: IUserManager
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _systemNotifier = systemNotifier ?? throw new ArgumentNullException(nameof(systemNotifier));
-        _systemNotifier.OnUserNotification += userNotification =>
-        {
-            if (userNotification is UserActiveSchemeChangeNotification activeSchemeChangeNotification)
-            {
-                _users[activeSchemeChangeNotification.User.Id].ActiveScheme = activeSchemeChangeNotification.NewScheme;
-            }
-        };
     }
 
     #endregion
@@ -93,7 +86,7 @@ internal partial class UserManager: IUserManager
 
         _users[newUserId] = new InputUser(newUserId)
         {
-            ActiveInputDefinitionName = inputDefinition.Name
+            ActiveDefinitionName = inputDefinition.Name
         };
 
         _systemNotifier.Notify(new UserJoinedNotification(_users[newUserId]));
@@ -128,9 +121,9 @@ internal partial class UserManager: IUserManager
             return Out.DataNotFound($"Input definition with name {definition} does not exist.");
         }
 
-        user.ActiveInputDefinitionName = definitionName;
+        user.ActiveDefinitionName = definitionName;
 
-        _systemNotifier.Notify(new UserActiveDefinitionChangeNotification(user, user.ActiveInputDefinitionName));
+        _systemNotifier.Notify(new UserActiveDefinitionChangeNotification(user, user.ActiveDefinitionName));
         return Out.Success();
     }
 

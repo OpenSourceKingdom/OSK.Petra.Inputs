@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace OSK.Petra.Inputs.Abstractions.Inputs;
 

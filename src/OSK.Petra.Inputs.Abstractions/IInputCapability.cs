@@ -7,5 +7,5 @@ public interface IInputCapability
 {
     bool CanProces(IInput input);
 
-    void Process(IUserInputContext context);
+    void Process(IUserInputContext context, IInput input);
 }

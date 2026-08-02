@@ -76,10 +76,24 @@ public class InputConfiguration
         {
             return 0;
         }
+        if (!TopologyNames.Contains(deviceIdentity.TopologyName))
+        {
+            return 0;
+        }
+        if (Schemes.Any(scheme => scheme.ContainsDevice(deviceIdentity)))
+        {
+            return 1;
+        }
+        if (Schemes.Any(scheme => scheme.ContainsFamily(deviceIdentity.DeviceFamily)))
+        {
+            return 0.75f;
+        }
 
-        return TopologyNames.Contains(deviceIdentity.TopologyName)
-            ? TopologyNames.Count is 1 ? 1 : 1 / TopologyNames.Count
-            : 0;
+        // If there is a generic scheme, we can assume that it will support the device family at a lower confidence level than a specific scheme,
+        // but a configuration that contains no generic should be considered a higher confidence than configurations that don't match the topology at all,
+        return Schemes.Any(scheme => scheme.ContainsFamily(DeviceFamily.Generic))
+            ? .5f
+            : .1f;
     }
 
     /// <summary>

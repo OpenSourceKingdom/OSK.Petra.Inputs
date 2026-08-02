@@ -3,8 +3,10 @@ using OSK.Operations.Outputs;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
+using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Models;
+using OSK.Petra.Inputs.Notifications;
 using OSK.Petra.Inputs.Ports;
 using System;
 using System.Collections.Generic;
@@ -14,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
-internal partial class SchemeService(IInputConfigurationProvider configurationProvider, ISchemeRepository schemeRepository, IUserManager userManager, ILogger logger): ISchemeService
+internal partial class SchemeService(IInputConfigurationProvider configurationProvider, ISchemeRepository schemeRepository, IUserManager userManager, IInputSystemNotifier systemNotifier, ILogger logger): ISchemeService
 {
     #region Variables
 
@@ -26,7 +28,15 @@ internal partial class SchemeService(IInputConfigurationProvider configurationPr
     /// </summary>
     private readonly Dictionary<string, Dictionary<string, Dictionary<string, InputScheme>>> _customSchemeLookup = [];
 
+    /// <summary>
+    /// A cache data storage for user preferences. It is ordered by:
+    /// - User Id
+    /// - Input Configuration Id
+    /// - Definition Name
+    /// </summary>
     private readonly Dictionary<int, Dictionary<string, Dictionary<string, PreferredInputScheme>>> _userPreferredSchemesLookup = [];
+
+    private readonly Dictionary<int, InputScheme> _activeUserSchemesLookup = [];
 
     #endregion
 
@@ -54,6 +64,51 @@ internal partial class SchemeService(IInputConfigurationProvider configurationPr
         }
 
         return new SchemeEditor(user, configurationProvider, this);
+    }
+
+    public InputScheme? GetActiveSchemeForUser(int userId)
+    {
+        var user = userManager.GetUser(userId);
+        if (user is null)
+        {
+            return null;
+        }
+
+        return _activeUserSchemesLookup.TryGetValue(userId, out var activeScheme)
+            ? activeScheme
+            : null;
+    }
+
+    public Output<InputScheme> SetActiveSchemeForDevice(int userId, DeviceIdentity deviceIdentity)
+    {
+        var user = userManager.GetUser(userId);
+        if (user is null)
+        {
+            return Out.DataNotFound<InputScheme>($"No user with the id {userId} exists.");
+        }
+        if (_activeUserSchemesLookup.TryGetValue(userId, out var activeScheme) && activeScheme.ContainsTopology(deviceIdentity.TopologyName))
+        {
+            return Out.Success(activeScheme);
+        }
+
+        var inputConfiguration = configurationProvider.Configuration.GetBestFitInputConfiguration(deviceIdentity);
+        if (inputConfiguration is null)
+        {
+            return Out.InvalidRequest<InputScheme>($"No input configuration exists that supports the device identity {deviceIdentity}.");
+        }
+
+        var definition = configurationProvider.Configuration.GetDefinition(user.ActiveDefinitionName) ?? configurationProvider.Configuration.Definitions.First(definition => definition.IsDefault);
+        activeScheme = GetActiveScheme(userId, definition, inputConfiguration, deviceIdentity);
+        _activeUserSchemesLookup[userId] = activeScheme;
+
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            LogNewActiveSchemeInformation(logger, user.Id, inputConfiguration.GetDisplayName(), definition.Name, activeScheme.Name);
+        }
+
+        systemNotifier.Notify(new UserActiveSchemeChangeNotification(user, inputConfiguration, definition.Name, activeScheme.Name));
+
+        return Out.Updated(activeScheme);
     }
 
     public async Task<Output> SavePreferredSchemeAsync(PreferredInputScheme scheme, CancellationToken cancellationToken = default)
@@ -217,16 +272,32 @@ internal partial class SchemeService(IInputConfigurationProvider configurationPr
         return Out.Success();
     }
 
+    private InputScheme GetActiveScheme(int userId, ActionDefinition definition, InputConfiguration inputConfiguration, DeviceIdentity deviceIdentity)
+    {
+        var preferredScheme = GetPreferredInputScheme(userId, inputConfiguration.Id, definition.Name);
+
+        InputScheme? activeScheme = null;
+        if (preferredScheme is not null)
+        {
+            activeScheme = inputConfiguration.Schemes.Concat(GetCustomInputSchemes(inputConfiguration.Id, definition.Name)).FirstOrDefault(scheme => scheme.Name.Equals(preferredScheme.Value.SchemeName));
+        }
+
+        activeScheme ??= inputConfiguration.Schemes.First(scheme => scheme.IsDefault);
+        return activeScheme;
+    }
+
     #endregion
 
     #region Logging
 
-
     [LoggerMessage(eventId: 1, LogLevel.Warning, "An error was encountered when attempting to get active input schemes, using an empty list; error: {error}")]
     private static partial void LogLoadActiveInputFailedWarning(ILogger logger, string error);
 
-    [LoggerMessage(eventId: 1, LogLevel.Warning, "An error was encountered when attmepting to get custom input shcemes, using an empty list; error: {error}")]
+    [LoggerMessage(eventId: 2, LogLevel.Warning, "An error was encountered when attmepting to get custom input shcemes, using an empty list; error: {error}")]
     private static partial void LogLoadCustomSchemesFailedWarning(ILogger logger, string error);
+
+    [LoggerMessage(eventId: 3, LogLevel.Information, "User {userId} has changed the active scheme to {activeSchemeName} for action definition {definitionName}, for the device(s): '{deviceNames}'.")]
+    private static partial void LogNewActiveSchemeInformation(ILogger logger, int userId, string deviceNames, string definitionName, string activeSchemeName);
 
     #endregion
 }
