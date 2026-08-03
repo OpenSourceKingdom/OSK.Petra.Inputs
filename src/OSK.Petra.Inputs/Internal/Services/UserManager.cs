@@ -20,7 +20,7 @@ internal partial class UserManager: IUserManager
 {
     #region Variables
 
-    private readonly IInputConfigurationProvider _configurationProvider;
+    private readonly IInputSystemConfigurationProvider _configurationProvider;
     private readonly IInputSystemNotifier _systemNotifier;
     private readonly ISchemeRepository _schemeRepository;
     private readonly ILogger<UserManager> _logger;
@@ -31,7 +31,7 @@ internal partial class UserManager: IUserManager
 
     #region Constructors
 
-    public UserManager(IInputConfigurationProvider configurationProvider, IInputSystemNotifier systemNotifier, ISchemeRepository schemeRepository, ILogger<UserManager> logger)
+    public UserManager(IInputSystemConfigurationProvider configurationProvider, IInputSystemNotifier systemNotifier, ISchemeRepository schemeRepository, ILogger<UserManager> logger)
     {
         _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
         _schemeRepository = schemeRepository ?? throw new ArgumentNullException(nameof(schemeRepository));

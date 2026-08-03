@@ -2,7 +2,7 @@
 
 namespace OSK.Petra.Inputs.Internal;
 
-internal interface IInputConfigurationProvider
+internal interface IInputSystemConfigurationProvider
 {
     InputSystemConfiguration Configuration { get; set; }
 }

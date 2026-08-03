@@ -6,11 +6,6 @@
 public interface IInput
 {
     /// <summary>
-    /// The device topology the input belongs to
-    /// </summary>
-    DeviceTopologyName TopologyName { get; }
-
-    /// <summary>
     /// The device id for this input
     /// </summary>
     int Id { get; }

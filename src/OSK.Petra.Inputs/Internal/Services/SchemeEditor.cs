@@ -13,6 +13,8 @@ using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.Internal.Models;
 using System.Diagnostics;
 using OSK.Petra.Inputs.Abstractions.Runtime;
+using OSK.Petra.Inputs.Abstractions.Inputs;
+using System.Collections.Generic;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
@@ -21,19 +23,23 @@ internal class SchemeEditor: ISchemeEditor
     #region Variables
 
     private readonly IInputUser _user;
-    private readonly IInputConfigurationProvider _inputConfigurationProvider;
-    private readonly SchemeService _schemeService;
+    private readonly ISchemeService _schemeService;
+    private readonly IInputSystemConfigurationProvider _inputConfigurationProvider;
+    private readonly IDeviceCatalogProvider _deviceCatalogProvider;
     private SelectedScheme _selectedScheme;
+
+    private Dictionary<DeviceTopologyName, IDeviceDescriptor> _deviceSchemeDescriptors = [];
 
     #endregion
 
     #region Constructors
 
-    public SchemeEditor(IInputUser user, IInputConfigurationProvider inputConfigurationProvider, SchemeService schemeService) 
+    public SchemeEditor(IInputUser user, ISchemeService schemeService, IInputSystemConfigurationProvider inputConfigurationProvider, IDeviceCatalogProvider deviceCatalogProvider) 
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
-        _inputConfigurationProvider = inputConfigurationProvider ?? throw new ArgumentNullException(nameof(inputConfigurationProvider));
         _schemeService = schemeService ?? throw new ArgumentNullException(nameof(schemeService));
+        _inputConfigurationProvider = inputConfigurationProvider ?? throw new ArgumentNullException(nameof(inputConfigurationProvider));
+        _deviceCatalogProvider = deviceCatalogProvider ?? throw new ArgumentNullException(nameof(deviceCatalogProvider));
 
         UpdateNavigators();
         UpdateSelectedScheme(isNew: false);
@@ -54,6 +60,29 @@ internal class SchemeEditor: ISchemeEditor
     public ICollectionNavigator<ActionDefinition> DefinitionNavigator { get; private set; }
 
     public ICollectionNavigator<InputScheme> SchemeNavigator { get; private set; }
+
+    public DeviceCatalog GetDeviceRegistry(DeviceTopologyName topologyName)
+        => _deviceCatalogProvider.GetCatalog(topologyName);
+
+    public Output SetSchemeDevice(DeviceTopologyName topologyName, string deviceName)
+    {
+        var deviceCatalog = _deviceCatalogProvider.GetCatalog(topologyName);
+        if (deviceCatalog.KnownDevices.Count is 0 && deviceCatalog.GenericDevice is null)
+        {
+            return Out.InvalidRequest($"The topology {topologyName} is not supported and can not be used for schemes.");
+        }
+
+        var deviceDescriptor = deviceCatalog.KnownDevices.FirstOrDefault(device => device.Identity.Name.Equals(deviceName));
+        if (deviceDescriptor is null)
+        {
+            return Out.InvalidRequest($"The device name '{deviceName}' is not a supported device and can not be used for schemes.");
+        }
+
+        _deviceSchemeDescriptors[topologyName] = deviceDescriptor;
+        UpdateSelectedScheme(isNew: _selectedScheme.IsNew);
+
+        return Out.Success();
+    }
 
     public Output CreateNewScheme(int? inputConfigurationId = null)
     {
@@ -92,33 +121,31 @@ internal class SchemeEditor: ISchemeEditor
         {
             return Out.InvalidRequest("Unable to save a custom scheme since the backing repository does not allow it.");
         }
-        if (SelectedScheme.IsReadonly)
-        {
-            if (_selectedScheme.InitiallyPreferred != _selectedScheme.IsPreferred)
+        if (!SelectedScheme.IsReadonly)
+        {        
+            var scheme = new CustomInputScheme()
             {
-                return await _schemeService.SavePreferredSchemeAsync(new PreferredInputScheme()
-                {
-                    ConfigurationId = InputConfigurationNavigator.Current!.Id,
-                    DefinitionName = DefinitionNavigator.Current!.Name,
-                    SchemeName = _selectedScheme.Name,
-                    UserId = _user.Id
-                });
-            }
+                DefinitionName = DefinitionNavigator.Current!.Name,
+                Name = SelectedScheme.Name,
+                DeviceMaps = []
+            };
 
-            return Out.Success();
+            var saveOutput = await _schemeService.SaveCustomSchemeAsync(scheme, SchemeSavePermissions.Overwrite, cancellationToken);
+            if (!saveOutput.IsSuccessful)
+            {
+                return saveOutput;
+            }
         }
 
-        var scheme = new CustomInputScheme()
+        if (_selectedScheme.InitiallyPreferred != _selectedScheme.IsPreferred)
         {
-            DefinitionName = DefinitionNavigator.Current!.Name,
-            Name = SelectedScheme.Name,
-            DeviceMaps = []
-        };
-
-        var saveOutput = await _schemeService.SaveCustomSchemeAsync(scheme, SchemeSavePermissions.Overwrite, cancellationToken);
-        if (!saveOutput.IsSuccessful)
-        {
-            return saveOutput;
+            return await _schemeService.SavePreferredSchemeAsync(new PreferredInputScheme()
+            {
+                ConfigurationId = InputConfigurationNavigator.Current!.Id,
+                DefinitionName = DefinitionNavigator.Current!.Name,
+                SchemeName = _selectedScheme.Name,
+                UserId = _user.Id
+            });
         }
 
         UpdateNavigators();
@@ -131,6 +158,27 @@ internal class SchemeEditor: ISchemeEditor
     #endregion
 
     #region Helpers
+
+    internal Task<Output> InitializeAsync(CancellationToken cancellationToken = default)
+        => _deviceCatalogProvider.InitializeAsync(cancellationToken);
+
+    private void SetDefaultDeviceDescriptors(InputConfiguration? configuration)
+    {
+        if (configuration is null)
+        {
+            return;
+        }
+
+        _deviceSchemeDescriptors.Count();
+        foreach (var topologyName in configuration.TopologyNames)
+        {
+            var genericDevice = _inputConfigurationProvider.Configuration.GetTopologyDescriptor(topologyName)?.CreateGeneric();
+            if (genericDevice is not null)
+            {
+                _deviceSchemeDescriptors[topologyName] = genericDevice;
+            }
+        }
+    }
 
     [MemberNotNull(nameof(InputConfigurationNavigator), nameof(DefinitionNavigator), nameof(SchemeNavigator))]
     private void UpdateNavigators()
@@ -146,10 +194,13 @@ internal class SchemeEditor: ISchemeEditor
         InputConfigurationNavigator = new CollectionNavigator<InputConfiguration>(_inputConfigurationProvider.Configuration.InputConfigurations, wrapNavigation: true);
         InputConfigurationNavigator.Navigated += navigationEvent =>
         {
+            SetDefaultDeviceDescriptors(navigationEvent.Current);
             SetupDefinitionNavigator();
 
             TryPubishEditorEvent();
         };
+
+        SetDefaultDeviceDescriptors(InputConfigurationNavigator.Current);
     }
 
     [MemberNotNull(nameof(DefinitionNavigator))]
@@ -188,7 +239,13 @@ internal class SchemeEditor: ISchemeEditor
         var preferredScheme = _schemeService.GetPreferredInputScheme(_user.Id, InputConfigurationNavigator.Current.Id, DefinitionNavigator.Current.Name);
         var isPreferred = preferredScheme is not null && preferredScheme.Value.SchemeName.Equals(SchemeNavigator.Current.Name);
 
-        _selectedScheme = new SelectedScheme(SchemeNavigator.Current.Name, SchemeNavigator.Current.IsCustom, isPreferred, DefinitionNavigator.Current.Actions, [], []);
+        var schemeName = isNew ? "New Scheme" : SchemeNavigator.Current.Name;
+        var currentMaps = isNew
+            ? []
+            : SchemeNavigator.Current.DeviceMaps.Select(deviceMap => new DeviceMapPairing<InputActionMap>(deviceMap.DeviceIdentity, deviceMap.InputMaps));
+        var availableInputs = _deviceSchemeDescriptors.Select(kvp => new DeviceMapPairing<IInput>(kvp.Value.Identity, kvp.Value.Inputs));
+
+        _selectedScheme = new SelectedScheme(SchemeNavigator.Current.Name, SchemeNavigator.Current.IsCustom, isPreferred, isNew, DefinitionNavigator.Current.Actions, availableInputs, currentMaps);
     }
 
     private void TryPubishEditorEvent()

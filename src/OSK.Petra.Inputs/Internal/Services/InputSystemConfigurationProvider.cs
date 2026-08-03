@@ -2,7 +2,7 @@
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
-internal partial class InputConfigurationProvider: IInputConfigurationProvider
+internal partial class InputSystemConfigurationProvider: IInputSystemConfigurationProvider
 {
     #region IInputSystemConfigurationProvider
 

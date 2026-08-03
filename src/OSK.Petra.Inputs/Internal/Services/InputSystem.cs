@@ -9,7 +9,7 @@ using OSK.Petra.Inputs.Notifications;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
-internal class InputSystem(IInputConfigurationProvider configurationProvider, IUserManager userManager,
+internal class InputSystem(IInputSystemConfigurationProvider configurationProvider, IUserManager userManager,
     IInputService inputService, IInputSystemNotifier systemNotifier, SchemeService schemeService) : IInputSystem
 {
     #region Variables
@@ -40,7 +40,7 @@ internal class InputSystem(IInputConfigurationProvider configurationProvider, IU
                 return;
             }
 
-            PauseInput = value;
+            _isPaused = value;
             inputService.PauseInput = value;
             systemNotifier.Notify(new InputMonitorStatusChangedNotification(!value));
         }

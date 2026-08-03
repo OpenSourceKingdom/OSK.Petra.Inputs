@@ -14,7 +14,7 @@ public readonly struct InputActionMap
     /// <summary>
     /// The action name this maps to
     /// </summary>
-    public string ActionName { get; init; }
+    public InputAction Action { get; init; }
 
     /// <summary>
     /// The input this maps to
@@ -25,9 +25,9 @@ public readonly struct InputActionMap
 
     #region Constructors
 
-    public InputActionMap(string actionName, IInput input)
+    public InputActionMap(InputAction action, IInput input)
     {
-        ActionName = actionName ?? throw new ArgumentNullException(nameof(actionName));
+        Action = action ?? throw new ArgumentNullException(nameof(action));
         Input = input ?? throw new ArgumentNullException(nameof(input));
     }
 

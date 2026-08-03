@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OSK.Operations.Outputs;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions;
@@ -16,7 +17,8 @@ using System.Threading.Tasks;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
-internal partial class SchemeService(IInputConfigurationProvider configurationProvider, ISchemeRepository schemeRepository, IUserManager userManager, IInputSystemNotifier systemNotifier, ILogger logger): ISchemeService
+internal partial class SchemeService(IInputSystemConfigurationProvider configurationProvider, ISchemeRepository schemeRepository, IUserManager userManager, IInputSystemNotifier systemNotifier,
+    IServiceProvider serviceProvider, ILogger logger): ISchemeService
 {
     #region Variables
 
@@ -55,15 +57,18 @@ internal partial class SchemeService(IInputConfigurationProvider configurationPr
         => (configurationProvider.Configuration.GetInputConfiguration(inputConfigurationId)?.Schemes.Where(scheme => scheme.DefinitionName.Equals(definitionName, StringComparison.OrdinalIgnoreCase)) ?? [])
             .Concat(GetCustomInputSchemes(inputConfigurationId, definitionName));
 
-    public ISchemeEditor? GetSchemeEditor(int userId)
+    public async Task<Output<ISchemeEditor>> GetSchemeEditorAsync(int userId, CancellationToken cancellation = default)
     {
         var user = userManager.GetUser(userId);
         if (user is null)
         {
-            return null;
+            return Out.DataNotFound<ISchemeEditor>($"No user was found for id {userId}");
         }
 
-        return new SchemeEditor(user, configurationProvider, this);
+        var editor = ActivatorUtilities.CreateInstance<SchemeEditor>(serviceProvider, user);
+        var initializationOutput = await editor.InitializeAsync(cancellation);
+
+        return Out.Success((ISchemeEditor)editor);
     }
 
     public InputScheme? GetActiveSchemeForUser(int userId)

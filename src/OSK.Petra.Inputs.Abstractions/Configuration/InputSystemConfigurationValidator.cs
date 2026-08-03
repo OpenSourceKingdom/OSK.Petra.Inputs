@@ -339,7 +339,7 @@ public static class InputSystemConfigurationValidator
         }
 
         var duplicateActions = scheme.DeviceMaps.SelectMany(map => map.InputMaps)
-            .GroupBy(map => map.ActionName)
+            .GroupBy(map => map.Action)
             .Where(actionMapGroup => actionMapGroup.Count() > 1)
             .Select(actionMapGroup => actionMapGroup.Key);
         if (duplicateActions.Any())
@@ -377,22 +377,15 @@ public static class InputSystemConfigurationValidator
                 $"There are {duplicateInputIds.Count()} input ids for the device map {deviceMap.DeviceIdentity} with scheme {scheme.Name} on input definition {definition.Name}, the duplicate ids are: {string.Join(", ", duplicateInputIds)}.");
         }
 
-        var inputsMissingActionNames = deviceMap.InputMaps.Where(map => string.IsNullOrWhiteSpace(map.ActionName))
+        var inputsMissingActions = deviceMap.InputMaps.Where(map => map.Action is null)
             .Select(map => map.Input.Id);
-        if (inputsMissingActionNames.Any()) 
+        if (inputsMissingActions.Any()) 
         {
             return InputConfigurationValidationResult.ForDeviceMap(map => map.InputMaps, InputConfigurationValidation.MissingData,
-                $"There are {inputsMissingActionNames.Count()} input maps missing action names for device map {deviceMap.DeviceIdentity} with scheme {scheme.Name} on input definition {definition.Name}, the input map ids are: {string.Join(", ", inputsMissingActionNames)}.");
+                $"There are {inputsMissingActions.Count()} input maps missing actions for device map {deviceMap.DeviceIdentity} with scheme {scheme.Name} on input definition {definition.Name}, the input map ids are: {string.Join(", ", inputsMissingActions)}.");
         }
 
-        var invalidActionNames = deviceMap.InputMaps.Where(map => definition.GetAction(map.ActionName) is null);
-        if (invalidActionNames.Any()) 
-        {
-            return InputConfigurationValidationResult.ForDeviceMap(map => map.InputMaps, InputConfigurationValidation.InvalidData,
-                $"There are {invalidActionNames.Count()} input maps with action names that don't exist for device map {deviceMap.DeviceIdentity} with scheme {scheme.Name} on input definition {definition.Name}, the invalid action names are: {string.Join(", ", invalidActionNames.Select(map => map.ActionName).Distinct())}.");
-        }
-
-        var duplicateActionNames = deviceMap.InputMaps.GroupBy(map => map.ActionName)
+        var duplicateActionNames = deviceMap.InputMaps.GroupBy(map => map.Action)
             .Where(mapGroup => mapGroup.Count() > 1)
             .Select(mapGroup => mapGroup.Key);
         if (duplicateActionNames.Any())

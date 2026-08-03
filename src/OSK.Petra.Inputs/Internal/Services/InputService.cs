@@ -20,7 +20,7 @@ internal partial class InputService : IInputService
     private bool _paused;
 
     private readonly IInputCapability[] _capabilities;
-    private readonly IInputConfigurationProvider _configurationProvider;
+    private readonly IInputSystemConfigurationProvider _configurationProvider;
     private readonly ISchemeService _schemeService;
     private readonly IUserManager _userManager;
     private readonly IInputSystemNotifier _systemNotifier;
@@ -34,7 +34,7 @@ internal partial class InputService : IInputService
 
     #region Constructors
 
-    public InputService(IEnumerable<IInputCapability> capabilities, IInputConfigurationProvider configurationProvider, IUserManager userManager, ISchemeService schemeService, 
+    public InputService(IEnumerable<IInputCapability> capabilities, IInputSystemConfigurationProvider configurationProvider, IUserManager userManager, ISchemeService schemeService, 
         IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
     {
         _capabilities = capabilities?.ToArray() ?? throw new ArgumentNullException(nameof(capabilities));
@@ -182,9 +182,9 @@ internal partial class InputService : IInputService
         if (inputMap is null)
         {
             return;
-        } 
+        }
 
-        var action = configuration.GetDefinition(setSchemeOutput.Data.DefinitionName)?.GetAction(inputMap.Value.ActionName);
+        var action = inputMap.Value.Action;
         if (action is null || (action.ActionGroup.HasValue && !userContext.IsSuppressed(action.ActionGroup.Value)))
         {
             return;

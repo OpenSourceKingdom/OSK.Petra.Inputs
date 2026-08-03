@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using OSK.Petra.Inputs.Abstractions.Configuration;
 
 namespace OSK.Petra.Inputs.Abstractions.Inputs;
 
@@ -7,7 +6,7 @@ namespace OSK.Petra.Inputs.Abstractions.Inputs;
 /// Describes validation and filtering rules for a device topology. It defines what families are supported
 /// and provides matching and factory helpers for generic devices.
 /// </summary>
-public interface IDeviceTopologyDescriptor
+public interface IDeviceTopologyDefinition
 {
     /// <summary>
     /// The name of the topology this descriptor represents
@@ -34,10 +33,9 @@ public interface IDeviceTopologyDescriptor
     bool IsCompatibleInput(IInput input);
 
     /// <summary>
-    /// Creates a generic device input map for the given device family that represents a default device for this topology.
-    /// This can be used when a concrete device profile is not available.
+    /// Creates a generic device input map for a default device for this topology.
+    /// This can be used when a concrete device is not available.
     /// </summary>
-    /// <param name="family">The device family to create the generic device for</param>
-    /// <returns>A DeviceInputMap representing a generic device for this topology</returns>
-    DeviceInputMap CreateGeneric(DeviceFamily family);
+    /// <returns>A descriptor representing a generic device for this topology</returns>
+    IDeviceDescriptor CreateGeneric();
 }

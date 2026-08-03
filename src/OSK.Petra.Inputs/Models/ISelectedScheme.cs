@@ -25,19 +25,24 @@ public interface ISelectedScheme
     bool IsPreferred { get; }
 
     /// <summary>
-    /// The pairs of map input glyphs to actions
+    /// Whether the scheme is a new scheme being created, that is it isn't actually saved yet
     /// </summary>
-    IReadOnlyCollection<InputActionPair> InputMaps { get; }
+    bool IsNew { get; }
 
     /// <summary>
-    /// The list of unpaired actions that must be paired before saving
+    /// The pairs of map input glyphs to actions
     /// </summary>
-    IReadOnlyCollection<InputAction> UnpairedActions { get; }
+    IReadOnlyList<DeviceMapPairing<InputActionMap>> ConfiguredInputMaps { get; }
 
     /// <summary>
     /// The list of unpaired inputs
     /// </summary>
-    IReadOnlyCollection<IInput> UnpairedInputs { get; }
+    IReadOnlyList<DeviceMapPairing<IInput>> UnpairedInputs { get; }
+
+    /// <summary>
+    /// The list of unpaired actions that must be paired before saving
+    /// </summary>
+    IReadOnlyList<InputAction> UnpairedActions { get; }
 
     /// <summary>
     /// Sets the name of the scheme
@@ -60,7 +65,8 @@ public interface ISelectedScheme
     /// <item>Input maps will be replaced if they match another known map</item>
     /// </list>
     /// </remarks>
+    /// <param name="deviceIdentity">The device that is being given a map</param>
     /// <param name="action">The action to pair with the inputs</param>
     /// <param name="input">The input being mapped to the action</param>
-    Output SetInputMap(InputAction action, IInput input);
+    Output SetInputMap(DeviceIdentity deviceIdentity, InputAction action, IInput input);
 }

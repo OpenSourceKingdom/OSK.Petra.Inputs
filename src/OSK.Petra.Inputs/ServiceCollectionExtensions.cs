@@ -42,7 +42,8 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IUserManager, UserManager>();
         services.TryAddSingleton<IInputSystem, InputSystem>();
         services.TryAddSingleton<IInputSystemNotifier, InputSystemNotifier>();
-        services.TryAddSingleton<IInputConfigurationProvider, InputConfigurationProvider>();
+        services.TryAddSingleton<IInputSystemConfigurationProvider, InputSystemConfigurationProvider>();
+        services.TryAddSingleton<IDeviceCatalogProvider, DeviceCatalogProvider>();
 
        // var builder = new InputSystemBuilder(services);
        // configurator(builder);

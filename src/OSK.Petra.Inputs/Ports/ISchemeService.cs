@@ -38,6 +38,7 @@ public interface ISchemeService
     /// Gets a scheme editor that targets the provided user
     /// </summary>
     /// <param name="userId">The id of the user to target</param>
+    /// <param name="cancellationToken">A token to cancel the operation</param>
     /// <returns>A scheme editor that is targeted to the user id</returns>
-    ISchemeEditor? GetSchemeEditor(int userId);
+    Task<Output<ISchemeEditor>> GetSchemeEditorAsync(int userId, CancellationToken cancellationToken = default);
 }

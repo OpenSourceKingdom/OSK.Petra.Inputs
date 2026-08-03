@@ -4,14 +4,14 @@ using System.Linq;
 
 namespace OSK.Petra.Inputs.Abstractions.Inputs;
 
-public abstract class InputDeviceTopology<TEnum>: IDeviceTopology
+public abstract class InputDeviceTopology<TEnum>: IDeviceDescriptor
     where TEnum: Enum
 {
     #region Constructors
 
-    protected InputDeviceTopology(DeviceTopologyName deviceType)
+    protected InputDeviceTopology(DeviceIdentity deviceIdentity)
     {
-        Name = deviceType;
+        Identity = deviceIdentity;
         Inputs = [.. Enum.GetValues(typeof(TEnum)).Cast<TEnum>().Select(GetInput)];
     }
 
@@ -19,7 +19,7 @@ public abstract class InputDeviceTopology<TEnum>: IDeviceTopology
 
     #region IInputDeviceTopology
 
-    public DeviceTopologyName Name { get; }
+    public DeviceIdentity Identity { get; }
 
     public IReadOnlyCollection<IInput> Inputs { get; }
 

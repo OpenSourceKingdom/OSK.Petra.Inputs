@@ -2,9 +2,9 @@
 
 namespace OSK.Petra.Inputs.Abstractions.Inputs;
 
-public interface IDeviceTopology
+public interface IDeviceDescriptor
 {
-    DeviceTopologyName Name { get; }
+    DeviceIdentity Identity { get; }
 
     IReadOnlyCollection<IInput> Inputs { get; }
 
