@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 namespace OSK.Petra.Inputs.Internal.Services;
 
 internal partial class SchemeService(IInputSystemConfigurationProvider configurationProvider, ISchemeRepository schemeRepository, IUserManager userManager, IInputSystemNotifier systemNotifier,
-    IServiceProvider serviceProvider, ILogger logger): ISchemeService
+    IDeviceCatalogProvider deviceCatalogProvider, IServiceProvider serviceProvider, ILogger logger): ISchemeService
 {
     #region Variables
 
@@ -65,8 +65,13 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
             return Out.DataNotFound<ISchemeEditor>($"No user was found for id {userId}");
         }
 
-        var editor = ActivatorUtilities.CreateInstance<SchemeEditor>(serviceProvider, user);
-        var initializationOutput = await editor.InitializeAsync(cancellation);
+        var getCatalogOutput = await deviceCatalogProvider.GetCatalogAsync(cancellation);
+        if (!getCatalogOutput.IsSuccessful)
+        {
+            return getCatalogOutput.As<ISchemeEditor>();
+        }
+
+        var editor = ActivatorUtilities.CreateInstance<SchemeEditor>(serviceProvider, user, getCatalogOutput.Data);
 
         return Out.Success((ISchemeEditor)editor);
     }

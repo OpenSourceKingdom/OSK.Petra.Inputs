@@ -1,13 +1,26 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Inputs;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace OSK.Petra.Inputs.Models;
 
-public class DeviceCatalog
+public class DeviceCatalog(IEnumerable<DeviceCatalogPart> parts)
 {
-    public DeviceTopologyName TopologyName { get; set; }
+    #region Variables
 
-    public IDeviceDescriptor? GenericDevice { get; set; }
+    private readonly Dictionary<DeviceTopologyName, DeviceCatalogPart> _partLookup = parts.ToDictionary(part => part.TopologyName);
 
-    public IReadOnlyList<IDeviceDescriptor> KnownDevices { get; set; } = [];
+    #endregion
+
+    #region Api
+
+
+    public IReadOnlyList<DeviceCatalogPart> Parts => [.. _partLookup.Values];
+
+    public DeviceCatalogPart? GetPart(DeviceTopologyName topologyName)
+        => _partLookup.TryGetValue(topologyName, out var part)
+            ? part
+            : null;
+
+    #endregion
 }

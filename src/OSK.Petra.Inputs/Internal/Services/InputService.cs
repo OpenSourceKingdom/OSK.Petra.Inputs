@@ -2,6 +2,7 @@
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
+using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.Notifications;
@@ -71,7 +72,14 @@ internal partial class InputService : IInputService
 
     public void Update(TimeSpan delta)
     {
-        throw new NotImplementedException();
+        foreach (var userDeviceContextPairs in _userContexts.Values.Select(userContext => userContext.DeviceInputContexts.Select(deviceContext => new { UserContext = userContext, DeviceContext = deviceContext })))
+        {
+            foreach (var data in userDeviceContextPairs.SelectMany(pair => pair.DeviceContext.GetInputStateSnapshot().Select(state => new { pair.UserContext, pair.DeviceContext, State = state })))
+            {
+                data.State.Duration = data.State.Duration.Add(delta);
+                ProcessInput(data.UserContext, data.DeviceContext, data.State, delta);
+            }
+        }
     }
 
     #endregion
@@ -80,33 +88,49 @@ internal partial class InputService : IInputService
 
     private void ProcessSystemNotification(SystemNotification systemNotification)
     {
-        if (systemNotification is not ModifyActionGroupSuppressionNotification modifyActionGroupSuppressionNotification)
+        switch (systemNotification)
         {
-            return;
-        }
+            case ModifyActionGroupSuppressionNotification modifyActionGroupSuppressionNotification:
+                var hasActionFilter = modifyActionGroupSuppressionNotification.ActionGroups is not null && modifyActionGroupSuppressionNotification.ActionGroups.Length > 0;
+                var hasUserFilter = modifyActionGroupSuppressionNotification.UserIds is not null && modifyActionGroupSuppressionNotification.UserIds.Length > 0;
 
-        var hasActionFilter = modifyActionGroupSuppressionNotification.ActionGroups is not null && modifyActionGroupSuppressionNotification.ActionGroups.Length > 0;
-        var hasUserFilter = modifyActionGroupSuppressionNotification.UserIds is not null && modifyActionGroupSuppressionNotification.UserIds.Length > 0;
+                // Global
+                if (!hasActionFilter && !hasUserFilter)
+                {
+                    _globalActionSupression = modifyActionGroupSuppressionNotification.Suppress;
+                    foreach (var userContext in _userContexts.Values)
+                    {
+                        userContext.Suppress(actionGroups: null, isSuppressed: _globalActionSupression);
+                    }
 
-        // Global
-        if (!hasActionFilter && !hasUserFilter)
-        {
-            _globalActionSupression = modifyActionGroupSuppressionNotification.Suppress;
-            foreach (var userContext in _userContexts.Values)
-            {
-                userContext.Suppress(actionGroups: null, isSuppressed: _globalActionSupression);
-            }
+                    return;
+                }
 
-            return;
-        }
+                var userContexts = hasUserFilter
+                    ? modifyActionGroupSuppressionNotification.UserIds.Where(id => _userContexts.TryGetValue(id, out _)).Select(id => _userContexts[id])
+                    : _userContexts.Values;
 
-        var userContexts = hasUserFilter
-            ? modifyActionGroupSuppressionNotification.UserIds.Where(id => _userContexts.TryGetValue(id, out _)).Select(id => _userContexts[id])
-            : _userContexts.Values;
+                foreach (var useContext in userContexts)
+                {
+                    useContext.Suppress(actionGroups: modifyActionGroupSuppressionNotification.ActionGroups, modifyActionGroupSuppressionNotification.Suppress);
+                }
 
-        foreach (var useContext in userContexts)
-        {
-            useContext.Suppress(actionGroups: modifyActionGroupSuppressionNotification.ActionGroups, modifyActionGroupSuppressionNotification.Suppress);
+                break;
+            case SchemeEditorInputCaptureInitiatedNotification inputCaptureInitiatedNotification:
+                if (_userContexts.TryGetValue(inputCaptureInitiatedNotification.UserId, out var initiatedUserContext))
+                {
+                    initiatedUserContext.EditorDelay = new SchemeEditorDelay()
+                    {
+                        Delay = inputCaptureInitiatedNotification.CaptureTimeout
+                    };
+                }
+                break;
+            case SchemeEditorInputCaptureTimeoutNotification inputCaptureTimeoutNotification:
+                if (_userContexts.TryGetValue(inputCaptureTimeoutNotification.UserId, out var timeoutUserContext))
+                {
+                    timeoutUserContext.EditorDelay = null;
+                }
+                break;
         }
     }
 
@@ -150,35 +174,56 @@ internal partial class InputService : IInputService
             return;
         }
 
-        if (!_userContexts.TryGetValue(user.Id, out var userContext))
-        {
-            userContext = new UserInputContext(user.Id);
-            _userContexts[user.Id] = userContext;
-            
-            if (_globalActionSupression)
-            {
-                userContext.Suppress(null, true);
-            }
-        }
-
-        userContext.DeviceIdentifier = inputNotification.DeviceIdentifier;
-
         var setSchemeOutput = _schemeService.SetActiveSchemeForDevice(user.Id, inputNotification.DeviceIdentifier.DeviceIdentity);
         if (!setSchemeOutput.IsSuccessful)
         {
             return;
         }
-        if (setSchemeOutput.StatusCode.Status == OutputStatus.Updated)
-        {
-            userContext.Reset();
-        }
 
-        foreach (var capability in _capabilities.Where(capability => capability.CanProces(inputNotification.Input)))
+        if (!_userContexts.TryGetValue(user.Id, out var userContext))
         {
-            capability.Process(userContext, inputNotification.Input);
+            userContext = new UserInputContext(user.Id, setSchemeOutput.Data);
+            _userContexts[user.Id] = userContext;
+
+            if (_globalActionSupression)
+            {
+                userContext.Suppress(null, true);
+            }
+        }
+         
+        if (userContext.EditorDelay is not null)
+        {
+            _systemNotifier.Notify(new SchemeEditorInputCapturedNotification(userContext.UserId, inputNotification.DeviceIdentifier.DeviceIdentity, inputNotification.Input));
+            return;
+        }
+        if (PauseInput)
+        {
+            return;
         }
         
-        var inputMap = setSchemeOutput.Data.GetInputMap(inputNotification.DeviceIdentifier.DeviceIdentity, inputNotification.Input.Id);
+        if (setSchemeOutput.StatusCode.Status == OutputStatus.Updated)
+        {
+            userContext.Scheme = setSchemeOutput.Data;
+        }
+
+        var deviceContext = userContext.GetOrAddDevice(deviceNotification.DeviceIdentifier);
+        var inputState = deviceContext.GetOrCreateState(inputNotification.Input);
+
+        ProcessInput(userContext, deviceContext, inputState, inputNotification.DeltaTime);
+    }
+
+    private void ProcessInput(UserInputContext userContext, DeviceInputContext deviceContext, InputState inputState, TimeSpan deltaTime)
+    {
+        foreach (var capability in _capabilities.Where(capability => capability.CanProces(inputState.Input)))
+        {
+            capability.Process(deviceContext, inputState, deltaTime);
+            if (inputState.IsDisposed)
+            {
+                return;
+            }
+        }
+
+        var inputMap = userContext.Scheme.GetInputMap(deviceContext.DeviceIdentifier.DeviceIdentity, inputState.Input.Id);
         if (inputMap is null)
         {
             return;
@@ -190,11 +235,11 @@ internal partial class InputService : IInputService
             return;
         }
 
-        if (userContext.TryGetState(inputNotification.Input, out var state) && action.TriggerPhases.Contains(state.Phase))
+        if (action.TriggerPhases.Contains(inputState.Phase))
         {
-            action.ActionExecutor(new InputEventContext(user.Id, inputNotification.DeltaTime, inputNotification.DeviceIdentifier, inputNotification.Input, userContext.GetFeatures(), _serviceProvider));
-            LogInputActionTriggeredDebug(_logger, user.Id, inputNotification.DeviceIdentifier, inputNotification.Input.GetGlyph().Symbol, action.Name);
-            _systemNotifier.Notify(new ActionExecutedNotification(user.Id, setSchemeOutput.Data.DefinitionName, action.Name));
+            action.ActionExecutor(new InputEventContext(userContext.UserId, deviceContext.DeviceIdentifier, deviceContext, inputState, deltaTime, _serviceProvider));
+            LogInputActionTriggeredDebug(_logger, userContext.UserId, deviceContext.DeviceIdentifier, inputState.Input.GetGlyph().Symbol, action.Name);
+            _systemNotifier.Notify(new ActionExecutedNotification(userContext.UserId, userContext.Scheme.DefinitionName, action.Name));
         }
     }
 

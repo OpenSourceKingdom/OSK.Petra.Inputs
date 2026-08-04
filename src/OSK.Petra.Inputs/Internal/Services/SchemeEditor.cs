@@ -15,6 +15,7 @@ using System.Diagnostics;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using System.Collections.Generic;
+using OSK.Petra.Inputs.Notifications;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
@@ -22,10 +23,15 @@ internal class SchemeEditor: ISchemeEditor
 {
     #region Variables
 
+    private InputAction? _targetAction;
+
     private readonly IInputUser _user;
     private readonly ISchemeService _schemeService;
     private readonly IInputSystemConfigurationProvider _inputConfigurationProvider;
-    private readonly IDeviceCatalogProvider _deviceCatalogProvider;
+    private readonly IUserManager _userManager;
+    private readonly IInputSystemNotifier _systemNotifier;
+    private readonly DeviceCatalog _deviceCatalog;
+
     private SelectedScheme _selectedScheme;
 
     private Dictionary<DeviceTopologyName, IDeviceDescriptor> _deviceSchemeDescriptors = [];
@@ -34,22 +40,33 @@ internal class SchemeEditor: ISchemeEditor
 
     #region Constructors
 
-    public SchemeEditor(IInputUser user, ISchemeService schemeService, IInputSystemConfigurationProvider inputConfigurationProvider, IDeviceCatalogProvider deviceCatalogProvider) 
+    public SchemeEditor(IInputUser user, DeviceCatalog deviceCatalog, ISchemeService schemeService, IInputSystemConfigurationProvider inputConfigurationProvider,
+        IUserManager userManager, IInputSystemNotifier systemNotifier) 
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
+        _deviceCatalog = deviceCatalog ?? throw new ArgumentNullException(nameof(deviceCatalog));
         _schemeService = schemeService ?? throw new ArgumentNullException(nameof(schemeService));
         _inputConfigurationProvider = inputConfigurationProvider ?? throw new ArgumentNullException(nameof(inputConfigurationProvider));
-        _deviceCatalogProvider = deviceCatalogProvider ?? throw new ArgumentNullException(nameof(deviceCatalogProvider));
+        _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+        _systemNotifier = systemNotifier ?? throw new ArgumentNullException(nameof(systemNotifier));
 
         UpdateNavigators();
         UpdateSelectedScheme(isNew: false);
+
+        systemNotifier.OnSystemNotification += systemNotification =>
+        {
+            if (systemNotification is SchemeEditorInputCapturedNotification inputCapturedNotification)
+            {
+                CaptureInput(inputCapturedNotification.UserId, inputCapturedNotification.DeviceIdentity, inputCapturedNotification.Input);
+            }
+        };
     }
 
     #endregion
 
     #region ISchemeEditor
 
-    public event Action? EditorUpdated;
+    public event Action<SchemeEditorUpdateTarget>? EditorUpdated;
 
     public ISelectedScheme SelectedScheme => _selectedScheme;
 
@@ -61,18 +78,51 @@ internal class SchemeEditor: ISchemeEditor
 
     public ICollectionNavigator<InputScheme> SchemeNavigator { get; private set; }
 
-    public DeviceCatalog GetDeviceRegistry(DeviceTopologyName topologyName)
-        => _deviceCatalogProvider.GetCatalog(topologyName);
+    public DeviceCatalogPart? GetDeviceCatalog(DeviceTopologyName topologyName)
+        => _deviceCatalog.GetPart(topologyName);
+
+    public Output InitiateInputCapture(InputAction action, TimeSpan? captureTimeout = null)
+    {
+        if (action is null)
+        {
+            throw new ArgumentNullException(nameof(action));
+        }
+
+        if (_targetAction is not null)
+        {
+            return Out.InvalidRequest($"The scheme editor is currently attempting to capture input for action '{_targetAction.Name}', please abort the capture before attempting to capture another action input.");
+        }
+
+        if (DefinitionNavigator.Current!.GetAction(action.Name) is null)
+        {
+            return Out.InvalidRequest($"The action '{action.Name}' is not a valid action for input capture, please ensure the action is valid and is associated wtih a definition.");
+        }
+
+        _targetAction = action;
+        _systemNotifier.Notify(new SchemeEditorInputCaptureInitiatedNotification(_user.Id, captureTimeout));
+        return Out.Success();
+    }
+
+    public void AbortInputCapture()
+    {
+        if (_targetAction is null)
+        {
+            return;
+        }
+
+        _targetAction = null;
+        _systemNotifier.Notify(new SchemeEditorInputCaptureTimeoutNotification(_user.Id));
+    }
 
     public Output SetSchemeDevice(DeviceTopologyName topologyName, string deviceName)
     {
-        var deviceCatalog = _deviceCatalogProvider.GetCatalog(topologyName);
-        if (deviceCatalog.KnownDevices.Count is 0 && deviceCatalog.GenericDevice is null)
+        var catalogPart = _deviceCatalog.GetPart(topologyName);
+        if (catalogPart is null || catalogPart.KnownDevices.Count is 0 && catalogPart.GenericDevice is null)
         {
             return Out.InvalidRequest($"The topology {topologyName} is not supported and can not be used for schemes.");
         }
 
-        var deviceDescriptor = deviceCatalog.KnownDevices.FirstOrDefault(device => device.Identity.Name.Equals(deviceName));
+        var deviceDescriptor = catalogPart.KnownDevices.FirstOrDefault(device => device.Identity.Name.Equals(deviceName));
         if (deviceDescriptor is null)
         {
             return Out.InvalidRequest($"The device name '{deviceName}' is not a supported device and can not be used for schemes.");
@@ -80,6 +130,8 @@ internal class SchemeEditor: ISchemeEditor
 
         _deviceSchemeDescriptors[topologyName] = deviceDescriptor;
         UpdateSelectedScheme(isNew: _selectedScheme.IsNew);
+
+        TryPubishEditorEvent(SchemeEditorUpdateTarget.DeviceSelection);
 
         return Out.Success();
     }
@@ -92,6 +144,9 @@ internal class SchemeEditor: ISchemeEditor
         }
 
         UpdateSelectedScheme(isNew: true);
+
+        TryPubishEditorEvent(SchemeEditorUpdateTarget.NewScheme);
+
         return Out.Created();
     }
 
@@ -110,7 +165,7 @@ internal class SchemeEditor: ISchemeEditor
 
         UpdateNavigators();
         UpdateSelectedScheme(isNew: false); 
-        TryPubishEditorEvent();
+        TryPubishEditorEvent(SchemeEditorUpdateTarget.DeleteScheme);
 
         return Out.Success();
     }
@@ -122,7 +177,12 @@ internal class SchemeEditor: ISchemeEditor
             return Out.InvalidRequest("Unable to save a custom scheme since the backing repository does not allow it.");
         }
         if (!SelectedScheme.IsReadonly)
-        {        
+        {
+            if (_selectedScheme.UnpairedActions.Count > 0)
+            {
+                return Out.InvalidRequest($"Unable to save scheme '{_selectedScheme.Name}' because it still has unpaired actions.");
+            }
+
             var scheme = new CustomInputScheme()
             {
                 DefinitionName = DefinitionNavigator.Current!.Name,
@@ -150,7 +210,7 @@ internal class SchemeEditor: ISchemeEditor
 
         UpdateNavigators();
         UpdateSelectedScheme(isNew: false); 
-        TryPubishEditorEvent();
+        TryPubishEditorEvent(SchemeEditorUpdateTarget.SaveScheme);
 
         return Out.Success();
     }
@@ -159,8 +219,33 @@ internal class SchemeEditor: ISchemeEditor
 
     #region Helpers
 
-    internal Task<Output> InitializeAsync(CancellationToken cancellationToken = default)
-        => _deviceCatalogProvider.InitializeAsync(cancellationToken);
+    private void CaptureInput(int userId, DeviceIdentity deviceIdentity, IInput input)
+    {
+        if (input is null)
+        {
+            throw new ArgumentNullException(nameof(input));
+        }
+
+        if (_targetAction is null)
+        {
+            return;
+        }
+        if (userId != _user.Id)
+        {
+            return;
+        }
+        if (!_deviceSchemeDescriptors.TryGetValue(deviceIdentity.TopologyName, out var expectedDevice))
+        {
+            return;
+        }
+        if (!expectedDevice.IsGeneric() && expectedDevice.Identity != deviceIdentity)
+        {
+            return;
+        }
+
+        _selectedScheme.SetInputMap(deviceIdentity, _targetAction, input);
+        _targetAction = null;
+    }
 
     private void SetDefaultDeviceDescriptors(InputConfiguration? configuration)
     {
@@ -197,7 +282,7 @@ internal class SchemeEditor: ISchemeEditor
             SetDefaultDeviceDescriptors(navigationEvent.Current);
             SetupDefinitionNavigator();
 
-            TryPubishEditorEvent();
+            TryPubishEditorEvent(SchemeEditorUpdateTarget.InputConfigurationNavigation);
         };
 
         SetDefaultDeviceDescriptors(InputConfigurationNavigator.Current);
@@ -209,12 +294,10 @@ internal class SchemeEditor: ISchemeEditor
         DefinitionNavigator = new CollectionNavigator<ActionDefinition>(_inputConfigurationProvider.Configuration.Definitions, wrapNavigation: true);
         DefinitionNavigator.Navigated += _ =>
         {
-            SchemeNavigator = new CollectionNavigator<InputScheme>(InputConfigurationNavigator.Current!.Schemes.Where(scheme => scheme.DefinitionName.Equals(DefinitionNavigator.Current!.Name)), wrapNavigation: true);
-            SchemeNavigator.Navigated += _ =>
+            SetupSchemeNavigator();
 
             UpdateSelectedScheme(isNew: false);
-
-            TryPubishEditorEvent();
+            TryPubishEditorEvent(SchemeEditorUpdateTarget.DefinitionNavigation);
         };
     }
 
@@ -225,7 +308,7 @@ internal class SchemeEditor: ISchemeEditor
         SchemeNavigator.Navigated += _ =>
         {
             UpdateSelectedScheme(isNew: false);
-            TryPubishEditorEvent();
+            TryPubishEditorEvent(SchemeEditorUpdateTarget.SchemeNavigation);
         };
     }
 
@@ -248,9 +331,9 @@ internal class SchemeEditor: ISchemeEditor
         _selectedScheme = new SelectedScheme(SchemeNavigator.Current.Name, SchemeNavigator.Current.IsCustom, isPreferred, isNew, DefinitionNavigator.Current.Actions, availableInputs, currentMaps);
     }
 
-    private void TryPubishEditorEvent()
+    private void TryPubishEditorEvent(SchemeEditorUpdateTarget updateTarget)
     {
-        EditorUpdated?.Invoke();
+        EditorUpdated?.Invoke(updateTarget);
     }
 
     #endregion

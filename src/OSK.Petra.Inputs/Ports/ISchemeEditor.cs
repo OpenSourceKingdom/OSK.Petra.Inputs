@@ -6,6 +6,7 @@ using OSK.Hexagonal.MetaData;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Models;
 
 namespace OSK.Petra.Inputs.Ports;
@@ -16,7 +17,7 @@ public interface ISchemeEditor
     /// <summary>
     /// Triggered when an update has been performed on the editor
     /// </summary>
-    event Action? EditorUpdated;
+    event Action<SchemeEditorUpdateTarget>? EditorUpdated;
 
     /// <summary>
     /// A navigatable collection of input configuration
@@ -47,7 +48,7 @@ public interface ISchemeEditor
     /// Gets a registry of known devices that the system supports
     /// </summary>
     /// <returns>Theregistry for the device topology</returns>
-    DeviceCatalog GetDeviceRegistry(DeviceTopologyName topologyName);
+    DeviceCatalogPart? GetDeviceCatalog(DeviceTopologyName topologyName);
 
     /// <summary>
     /// Sets the editor's device for the given topology that is used to edit the <see cref="SelectedScheme"/>
@@ -84,4 +85,8 @@ public interface ISchemeEditor
     /// <param name="cancellationToken">A token to cancel the operation</param>
     /// <returns>An output for the success of the operation</returns>
     Task <Output> SaveSchemeAsync(CancellationToken cancellationToken = default);
+
+    Output InitiateInputCapture(InputAction action, TimeSpan? captureTimeout = null);
+
+    void AbortInputCapture();
 }

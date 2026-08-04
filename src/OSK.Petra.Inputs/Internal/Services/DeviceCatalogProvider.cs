@@ -3,7 +3,6 @@ using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Ports;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -15,45 +14,34 @@ internal class DeviceCatalogProvider(IInputSystemConfigurationProvider configura
 {
     #region Variables
 
-    private bool _initialized;
-    private readonly Dictionary<DeviceTopologyName, IReadOnlyList<IDeviceDescriptor>> _deviceDescriptorLookup = [];
+    private DeviceCatalog? _catalog;
 
     #endregion
 
     #region IDeviceCatalogProvider
 
-    public DeviceCatalog GetCatalog(DeviceTopologyName topologyName)
+    public async Task<Output<DeviceCatalog>> GetCatalogAsync(CancellationToken cancellationToken = default)
     {
-        var topologyDescriptor = configurationProvider.Configuration.GetTopologyDescriptor(topologyName);
-        if (topologyDescriptor is null)
+        if (_catalog is null)
         {
-            // Topology isn't supported, so no devices to return
-            return new DeviceCatalog()
+            var loadCatalogOutput = await LoadCatalogAsync(cancellationToken);
+            if (!loadCatalogOutput.IsSuccessful)
             {
-                TopologyName = topologyName,
-                GenericDevice = null,
-                KnownDevices = []
-            };
+                return loadCatalogOutput;
+            }
+
+            _catalog = loadCatalogOutput.Data;
         }
 
-        return new DeviceCatalog()
-        {
-            TopologyName = topologyName,
-            GenericDevice = topologyDescriptor.CreateGeneric(),
-            KnownDevices = _deviceDescriptorLookup.TryGetValue(topologyName, out var knownDescriptors)
-                ? [.. knownDescriptors]
-                : []
-        };
+        return Out.Success(_catalog);
     }
 
-    public async Task<Output> InitializeAsync(CancellationToken cancellationToken = default)
-    {
-        if (_initialized)
-        {
-            return Out.Success();
-        }
+    #endregion
 
-        _deviceDescriptorLookup.Clear();
+    #region Helpers
+
+    private async Task<Output<DeviceCatalog>> LoadCatalogAsync(CancellationToken cancellationToken = default)
+    {
         var allDevices = new List<IDeviceDescriptor>();
 
         foreach (var deviceProvider in deviceProviders)
@@ -61,19 +49,26 @@ internal class DeviceCatalogProvider(IInputSystemConfigurationProvider configura
             var getDevicesOutput = await deviceProvider.GetDevicesAsync(cancellationToken);
             if (!getDevicesOutput.IsSuccessful)
             {
-                return getDevicesOutput;
+                return getDevicesOutput.As<DeviceCatalog>();
             }
 
             allDevices.AddRange(getDevicesOutput.Data);
         }
 
-        foreach (var deviceGroup in allDevices.GroupBy(device => device.Identity.TopologyName))
-        {
-            _deviceDescriptorLookup[deviceGroup.Key] = [.. deviceGroup.GroupBy(group => group.Identity).Select(identityGroup => identityGroup.First())];
-        }
+        var partDeviceLookup = allDevices.GroupBy(group => group.Identity.TopologyName)
+                                         .Select(topologyGroup => topologyGroup.GroupBy(descriptor => descriptor.Identity).First())
+                                         .ToDictionary(identityGroup => identityGroup.Key.TopologyName);
 
-        _initialized = true;
-        return Out.Success();
+        var catalogParts = configurationProvider.Configuration.SupportedDeviceTopologies.Select(toplogyDefinition => new DeviceCatalogPart()
+        {
+            TopologyName = toplogyDefinition.TopologyName,
+            GenericDevice = toplogyDefinition.CreateGeneric(),
+            KnownDevices = partDeviceLookup.TryGetValue(toplogyDefinition.TopologyName, out var knownDevices)
+                ? [.. knownDevices]
+                : []
+        });
+
+        return Out.Success(new DeviceCatalog(catalogParts));
     }
 
     #endregion

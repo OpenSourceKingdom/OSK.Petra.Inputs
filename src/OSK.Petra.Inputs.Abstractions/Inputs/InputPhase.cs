@@ -1,4 +1,5 @@
-﻿
+﻿using OSK.Petra.Inputs.Abstractions.Configuration;
+
 namespace OSK.Petra.Inputs.Abstractions.Inputs;
 
 /// <summary>

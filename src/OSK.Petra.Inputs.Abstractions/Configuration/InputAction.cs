@@ -14,7 +14,7 @@ namespace OSK.Petra.Inputs.Abstractions.Configuration;
 /// <param name="actionExecutor">The specific action to execute</param>
 /// <param name="description">A readable description for the action that can be displayed for users</param>
 /// <param name="actionGroup">An option group number that specifies the action group this action belongs to</param>
-public class InputAction(string actionName, ISet<InputPhase> triggerPhases, Action<InputEventContext> actionExecutor, string? description = null, int? actionGroup = null)
+public class InputAction(string actionName, ISet<InputPhase> triggerPhases, Action<IInputEventContext> actionExecutor, string? description = null, int? actionGroup = null)
 {
     #region Api
 
@@ -42,7 +42,7 @@ public class InputAction(string actionName, ISet<InputPhase> triggerPhases, Acti
     /// <summary>
     /// The configured action to execute when the related input is activated
     /// </summary>
-    public Action<InputEventContext> ActionExecutor => actionExecutor;
+    public Action<IInputEventContext> ActionExecutor => actionExecutor;
 
     #endregion
 }

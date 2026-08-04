@@ -1,8 +1,5 @@
-﻿using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
-using System;
+﻿using OSK.Petra.Inputs.Abstractions.Inputs;
 using System.Collections.Generic;
-using System.Text;
 
 namespace OSK.Petra.Inputs.Models;
 

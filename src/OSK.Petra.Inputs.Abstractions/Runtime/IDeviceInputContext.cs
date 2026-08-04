@@ -1,9 +1,10 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Inputs;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
-public interface IUserInputContext
+public interface IDeviceInputContext
 {
     #region Variables
 
@@ -11,11 +12,8 @@ public interface IUserInputContext
 
     RuntimeDeviceIdentifier DeviceIdentifier { get; }
 
-    TState GetOrCreateState<TState>(IInput input, Func<IInput, TState> factory)
-        where TState : InputState;
-
     void SetFeature<TData>(TData data)
-        where TData : CapabilityData;
+        where TData : ICapabilityFeature;
 
     #endregion
 }

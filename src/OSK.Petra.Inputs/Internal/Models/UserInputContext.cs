@@ -1,71 +1,40 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
+﻿using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
-internal class UserInputContext(int userId) : IUserInputContext
+internal class UserInputContext(int userId, InputScheme scheme)
 {
     #region Variables
 
-    private readonly Dictionary<int, InputState> _inputStates = [];
-    private readonly Dictionary<Type, CapabilityData> _features = [];
-
     private bool _globalActionSuppression;
     private readonly Dictionary<int, bool> _suppressedActions = [];
+    private readonly Dictionary<RuntimeDeviceIdentifier, DeviceInputContext> _deviceContexts = [];
 
     #endregion
 
-    #region IInputProcessingContext
+    #region Api
 
     public int UserId => userId;
 
-    public RuntimeDeviceIdentifier DeviceIdentifier { get; set; }
+    public IEnumerable<DeviceInputContext> DeviceInputContexts => _deviceContexts.Values;
 
-    public void SetFeature<TData>(TData data) 
-        where TData : CapabilityData
-    {
-        if (data is null)
+    public InputScheme Scheme 
+    { 
+        get => scheme;
+        set
         {
-            throw new ArgumentNullException(nameof(data));
+            scheme = value;
+            _deviceContexts.Clear();
         }
-
-        _features[typeof(TData)] = data;
     }
 
-    public TState GetOrCreateState<TState>(IInput input, Func<IInput, TState> factory)
-        where TState : InputState
-    {
-        if (input is null)
-        {
-            throw new ArgumentNullException(nameof(input));
-        }
-        if (factory is null)
-        {
-            throw new ArgumentNullException(nameof(factory));
-        }
+    public SchemeEditorDelay? EditorDelay { get; set; }
 
-        if (!_inputStates.TryGetValue(input.Id, out var state))
-        {
-            state = factory(input);
-            _inputStates[input.Id] = state;
-        }
-
-        return (TState)state;
-    }
-
-    #endregion
-
-    #region Helpers
-
-    internal void Reset()
-    {
-        _inputStates.Clear();
-        _features.Clear();
-    }
-
-    internal void Suppress(int[]? actionGroups, bool isSuppressed)
+    public void Suppress(int[]? actionGroups, bool isSuppressed)
     {
         if (actionGroups is null || actionGroups.Length is 0)
         {
@@ -81,17 +50,21 @@ internal class UserInputContext(int userId) : IUserInputContext
         }
     }
 
-    internal bool IsSuppressed(int actionGroup)
+    public bool IsSuppressed(int actionGroup)
         => (_suppressedActions.TryGetValue(actionGroup, out var isSuppressed) && isSuppressed) || _globalActionSuppression;
 
-    internal IEnumerable<CapabilityData> GetFeatures()
-        => _features.Values;
+    public DeviceInputContext GetOrAddDevice(RuntimeDeviceIdentifier deviceIdentifier)
+    {
+        if (_deviceContexts.TryGetValue(deviceIdentifier, out var deviceInputContext))
+        {
+            return deviceInputContext;
+        }
 
-    internal IEnumerable<InputState> GetStates()
-        => _inputStates.Values;
+        deviceInputContext = new(userId, deviceIdentifier);
+        _deviceContexts[deviceIdentifier] = deviceInputContext;
 
-    internal bool TryGetState(IInput input, out InputState state)
-        => _inputStates.TryGetValue(input.Id,out state);
+        return deviceInputContext;
+    }
 
     #endregion
 }
