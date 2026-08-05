@@ -2,7 +2,6 @@
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
@@ -12,41 +11,52 @@ internal class InputState(IInput input, DeviceInputContext deviceContext) : IInp
 
     internal bool IsDisposed { get; private set; }
 
-    private readonly Dictionary<Type, ICapabilityDetail> _detailLookup = [];
+    private readonly Dictionary<Type, ICapabilityDetails> _detailLookup = [];
 
     #endregion
 
     #region IInputState
 
+    public event Action<IInputState>? Disposed;
+
+    public RuntimeDeviceIdentifier DeviceIdentifier => deviceContext.DeviceIdentifier;
+
     public IInput Input => input;
 
-    public InputPhase Phase { get; set; }
+    public bool IsNewActivation { get; internal set; }
+
+    public InputPhase Phase { get; private set; }
 
     public TimeSpan Duration { get; internal set; }
 
-    public bool Consumed { get; set; }
-
-    public TDetail? GetDetail<TDetail>() 
-        where TDetail : ICapabilityDetail
-        => _detailLookup.TryGetValue(typeof(TDetail), out var detail) && detail is TDetail typedDetail
+    public TDetails? GetDetails<TDetails>() 
+        where TDetails : ICapabilityDetails
+        => _detailLookup.TryGetValue(typeof(TDetails), out var detail) && detail is TDetails typedDetail
             ? typedDetail
             : default;
 
-    public void SetDetail<TDetail>(TDetail detail) 
-        where TDetail : ICapabilityDetail
+    public void SetDetails<TDetails>(TDetails detail) 
+        where TDetails : ICapabilityDetails
     {
         if (detail is null)
         {
             throw new ArgumentNullException(nameof(detail));
         }
 
-        _detailLookup[typeof(TDetail)] = detail;
+        _detailLookup[typeof(TDetails)] = detail;
+    }
+
+    public void CombinePhase(InputPhase phase)
+    {
+        Phase = Phase.Combine(phase);
     }
 
     public void Dispose()
     {
         deviceContext.RemoveState(this);
         IsDisposed = true;
+
+        Disposed?.Invoke(this);
     }
 
     #endregion

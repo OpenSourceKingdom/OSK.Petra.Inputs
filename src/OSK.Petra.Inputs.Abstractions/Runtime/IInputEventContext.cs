@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 
 namespace OSK.Petra.Inputs.Abstractions.Runtime;
@@ -21,8 +19,8 @@ public interface IInputEventContext
 
     IInput Input { get; }
 
-    TDetail? GetInputDetail<TDetail>()
-        where TDetail: ICapabilityDetail;
+    TDetails? GetInputDetails<TDetails>()
+        where TDetails: ICapabilityDetails;
 
     TFeature? GetDeviceFeature<TFeature>()
         where TFeature: ICapabilityFeature;

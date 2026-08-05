@@ -208,6 +208,8 @@ internal partial class InputService : IInputService
 
         var deviceContext = userContext.GetOrAddDevice(deviceNotification.DeviceIdentifier);
         var inputState = deviceContext.GetOrCreateState(inputNotification.Input);
+        // A new input activation, capabilities should track data information across activations
+        inputState.IsNewActivation = true;
 
         ProcessInput(userContext, deviceContext, inputState, inputNotification.DeltaTime);
     }
@@ -222,6 +224,13 @@ internal partial class InputService : IInputService
                 return;
             }
         }
+
+        if (!inputState.IsNewActivation && inputState.Phase is InputPhase.End)
+        {
+            return;
+        }
+
+        inputState.IsNewActivation = false;
 
         var inputMap = userContext.Scheme.GetInputMap(deviceContext.DeviceIdentifier.DeviceIdentity, inputState.Input.Id);
         if (inputMap is null)

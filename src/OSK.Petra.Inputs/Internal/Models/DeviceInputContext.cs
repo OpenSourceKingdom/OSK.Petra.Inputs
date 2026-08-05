@@ -32,17 +32,11 @@ internal class DeviceInputContext(int userId, RuntimeDeviceIdentifier deviceIden
         _features[typeof(TData)] = data;
     }
 
-    public bool TryGetState(int id, [NotNullWhen(true)] out IInputState? state)
-    {
-        if (_inputStates.TryGetValue(id, out var inputState))
-        {
-            state = inputState;
-            return true;
-        }
-
-        state = null;
-        return false;
-    }
+    public TFeature? GetFeature<TFeature>()
+        where TFeature : ICapabilityFeature
+        => _features.TryGetValue(typeof(TFeature), out var feature) && feature is TFeature typedFeature
+            ? typedFeature
+            : default;
 
     #endregion
 
@@ -71,12 +65,6 @@ internal class DeviceInputContext(int userId, RuntimeDeviceIdentifier deviceIden
 
     internal IEnumerable<InputState> GetInputStateSnapshot()
         => [.. _inputStates.Values];
-
-    internal TFeature? GetFeature<TFeature>()
-        where TFeature : ICapabilityFeature
-        => _features.TryGetValue(typeof(TFeature), out var feature) && feature is TFeature typedFeature
-            ? typedFeature
-            : default;
 
     internal void Reset()
     {

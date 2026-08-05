@@ -5,17 +5,23 @@ namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
 public interface IInputState: IDisposable
 {
+    event Action<IInputState>? Disposed;
+
+    bool IsNewActivation { get; }
+
+    RuntimeDeviceIdentifier DeviceIdentifier { get; }
+
     IInput Input { get; }
 
-    InputPhase Phase { get; set; }
+    InputPhase Phase { get; }
 
     TimeSpan Duration { get; }
 
-    public bool Consumed { get; }
+    void CombinePhase(InputPhase phase);
 
-    void SetDetail<TDetail>(TDetail detail)
-        where TDetail: ICapabilityDetail;
+    void SetDetails<TDetail>(TDetail detail)
+        where TDetail: ICapabilityDetails;
 
-    TDetail? GetDetail<TDetail>()
-        where TDetail: ICapabilityDetail;
+    TDetail? GetDetails<TDetail>()
+        where TDetail: ICapabilityDetails;
 }

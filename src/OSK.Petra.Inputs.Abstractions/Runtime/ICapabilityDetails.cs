@@ -1,5 +1,5 @@
 ﻿namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
-public interface ICapabilityFeature
+public interface ICapabilityDetails
 {
 }

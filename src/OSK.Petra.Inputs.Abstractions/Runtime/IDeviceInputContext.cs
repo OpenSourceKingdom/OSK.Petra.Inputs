@@ -1,8 +1,4 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using System;
-using System.Diagnostics.CodeAnalysis;
-
-namespace OSK.Petra.Inputs.Abstractions.Runtime;
+﻿namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
 public interface IDeviceInputContext
 {
@@ -12,8 +8,11 @@ public interface IDeviceInputContext
 
     RuntimeDeviceIdentifier DeviceIdentifier { get; }
 
-    void SetFeature<TData>(TData data)
-        where TData : ICapabilityFeature;
+    void SetFeature<TFeature>(TFeature feature)
+        where TFeature : ICapabilityFeature;
+
+    TFeature? GetFeature<TFeature>()
+        where TFeature : ICapabilityFeature;
 
     #endregion
 }

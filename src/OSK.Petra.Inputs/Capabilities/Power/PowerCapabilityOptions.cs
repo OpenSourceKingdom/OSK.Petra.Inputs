@@ -1,16 +1,16 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Inputs;
 using System;
 
-namespace OSK.Petra.Inputs.Capabilities.Digital;
+namespace OSK.Petra.Inputs.Capabilities.Power;
 
-public class DigitalInputOptions
+public class PowerCapabilityOptions
 {
     /// <summary>
     /// The amount of time the input phase may remain inactive before the interaction
     /// is considered fully ended. If the input is reactivated within this time window,
     /// it is treated as a continuation of the same interaction rather than a new one.
     /// </summary>
-    public TimeSpan? TapReactivationTime { get; set; }
+    public TimeSpan? ReactivationTime { get; set; }
 
     /// <summary>
     /// The minimum amount of time an input must remain in the <see cref="InputPhase.Start"/>

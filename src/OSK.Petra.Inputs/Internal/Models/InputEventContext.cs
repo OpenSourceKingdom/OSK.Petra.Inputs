@@ -1,8 +1,6 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
@@ -24,9 +22,9 @@ internal class InputEventContext(int userId, RuntimeDeviceIdentifier deviceIdent
         where TFeature : ICapabilityFeature
         => deviceContext.GetFeature<TFeature>();
 
-    public TDetail? GetInputDetail<TDetail>() 
-        where TDetail : ICapabilityDetail
-        => state.GetDetail<TDetail>();
+    public TDetails? GetInputDetails<TDetails>() 
+        where TDetails : ICapabilityDetails
+        => state.GetDetails<TDetails>();
 
     #endregion
 }
