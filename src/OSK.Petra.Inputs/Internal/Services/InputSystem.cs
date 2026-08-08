@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Exceptions;
 using OSK.Petra.Inputs.Notifications;
 
 namespace OSK.Petra.Inputs.Internal.Services;
@@ -46,21 +45,15 @@ internal class InputSystem(IInputSystemConfigurationProvider configurationProvid
         }
     }
 
-    public async Task<Output> InitializeAsync(InputSystemConfiguration configuration, CancellationToken cancellationToken = default)
+    public Task<Output> InitializeAsync(CancellationToken cancellationToken = default)
     {
-        if (configuration is null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        var validationResult = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
+        var validationResult = InputSystemConfigurationValidator.ValidateConfiguration(configurationProvider.Configuration);
         if (!validationResult.IsValid)
         {
-            throw new InputSystemValidationException($"The provided input configuration was invalid. Message: {validationResult}");
+            throw new InvalidOperationException($"The provided input configuration was invalid. Message: {validationResult}");
         }
 
-        configurationProvider.Configuration = configuration;
-        return await schemeService.LoadSchemeConfigurationAsync(cancellationToken);
+        return schemeService.LoadSchemeConfigurationAsync(cancellationToken);
     }
 
     public void Update(TimeSpan deltaTime)

@@ -1,5 +1,4 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Abstractions.Runtime;
+﻿using OSK.Petra.Inputs.Abstractions.Runtime;
 using System.Collections.Generic;
 using System.Linq;
 

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using OSK.Petra.Inputs.Abstractions.Inputs;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace OSK.Petra.Inputs.Abstractions.Configuration;
 
@@ -27,6 +29,9 @@ public class CustomInputScheme
     #endregion
 
     #region Helpers
+
+    public IEnumerable<DeviceIdentity> GetDeviceIdentities()
+        => DeviceMaps.Select(map => map.DeviceIdentity);
 
     public InputScheme ToInputScheme()
         => new(DefinitionName, Name, DeviceMaps, isDefault: false, isCustom: true);

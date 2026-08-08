@@ -46,10 +46,9 @@ public interface IInputSystem
     /// <summary>
     /// Initializes the input system
     /// </summary>
-    /// <param name="configuration">The configuration to apply to the manager</param>
     /// <param name="cancellationToken">A token to cancel the operation</param>
     /// <returns>An output that describes whether the configuration was fully initialized with the input system</returns>
-    Task<Output> InitializeAsync(InputSystemConfiguration configuration, CancellationToken cancellationToken = default);
+    Task<Output> InitializeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates the input system using the specified delta time

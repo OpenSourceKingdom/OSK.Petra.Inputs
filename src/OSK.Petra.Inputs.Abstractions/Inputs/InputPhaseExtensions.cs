@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OSK.Petra.Inputs.Abstractions.Inputs;
+﻿namespace OSK.Petra.Inputs.Abstractions.Inputs;
 
 public static class InputPhaseExtensions
 {

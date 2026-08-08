@@ -10,7 +10,7 @@ using OSK.Petra.Inputs.Models;
 
 namespace OSK.Petra.Inputs.Ports;
 
-[HexagonalIntegration(HexagonalIntegrationType.LibraryProvided)]
+[HexagonalIntegration(HexagonalIntegrationType.LibraryProvided, HexagonalIntegrationType.UnderDevelopment)]
 public interface ISchemeEditor
 {
     /// <summary>

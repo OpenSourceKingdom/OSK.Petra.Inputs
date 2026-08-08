@@ -29,7 +29,12 @@ public class InputConfiguration
 
     #region Variables
 
-    private readonly Dictionary<string, Dictionary<string, InputScheme>> _inputSchemeLookup = [];
+    /// <summary>
+    /// Scheme Lookup keys:
+    /// - Definition Name
+    /// - Scheme Name
+    /// </summary>
+    private readonly Dictionary<string, Dictionary<string, InputScheme>> _inputSchemeLookup = new(StringComparer.OrdinalIgnoreCase);
 
     #endregion
 
@@ -117,6 +122,34 @@ public class InputConfiguration
             2 => $"{TopologyNames[0]} and {TopologyNames[1]}",
             _ => $"{string.Join(", ", TopologyNames.Take(TopologyNames.Count - 1).Select(device => device))}, and {TopologyNames[^1]}"
         };
+    }
+
+    public void AddScheme(InputScheme scheme)
+    {
+        if (scheme is null)
+        {
+            throw new ArgumentNullException(nameof(scheme), "Scheme can not be null");
+        }
+        if (string.IsNullOrWhiteSpace(scheme.Name))
+        {
+            throw new InvalidOperationException("Scheme name can not be empty.");
+        }
+        if (string.IsNullOrWhiteSpace(scheme.DefinitionName))
+        {
+            throw new InvalidOperationException("Scheme definition name can not be empty.");
+        }
+
+        if (!_inputSchemeLookup.TryGetValue(scheme.DefinitionName, out var definitionSchemeLookup))
+        {
+            definitionSchemeLookup = [];
+            _inputSchemeLookup[scheme.DefinitionName] = new(StringComparer.OrdinalIgnoreCase);
+        }
+        if (definitionSchemeLookup.TryGetValue(scheme.Name, out _))
+        {
+            throw new InvalidOperationException($"Unable to add scheme '{scheme.Name}' to the definition '{scheme.DefinitionName}' since a scheme with the same name already exists.");
+        }
+
+        definitionSchemeLookup[scheme.Name] = scheme;
     }
 
     #endregion

@@ -67,7 +67,7 @@ public static class InputSystemConfigurationValidator
         }
 
         var scheme = customScheme.ToInputScheme();
-        var inputConfiguration = configuration.GetInputConfiguration(InputConfiguration.GetConfigurationId(scheme.DeviceMaps.Select(map => map.DeviceIdentity)));
+        var inputConfiguration = configuration.GetInputConfiguration(InputConfiguration.GetConfigurationId(scheme.GetDeviceIdentities()));
         if (inputConfiguration is null)
         {
             return InputConfigurationValidationResult.ForScheme(scheme => scheme.DeviceMaps, InputConfigurationValidation.InvalidData,
@@ -307,8 +307,7 @@ public static class InputSystemConfigurationValidator
         return InputConfigurationValidationResult.Success();
     }
 
-    private static InputConfigurationValidationResult ValidateInputScheme(InputSystemConfiguration configuration, ActionDefinition definition,
-        InputScheme scheme)
+    private static InputConfigurationValidationResult ValidateInputScheme(InputSystemConfiguration configuration, ActionDefinition definition, InputScheme scheme)
     {
         // Note: test difficulty - due to how schemes are read-only and provided at construction into a dictionary (i.e duplicate keys throw),
         // it's not entirely feasible this will occur, but validation will be done to ensure if something changes that this is still caught

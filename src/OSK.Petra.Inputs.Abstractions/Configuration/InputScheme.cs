@@ -50,6 +50,9 @@ public class InputScheme(string definitionName, string name, IEnumerable<DeviceI
     public InputActionMap? GetInputMap(DeviceIdentity deviceIdentity, int inputId)
         => GetDeviceMap(deviceIdentity)?.GetInputMap(inputId);
 
+    public IEnumerable<DeviceIdentity> GetDeviceIdentities()
+        => DeviceMaps.Select(map => map.DeviceIdentity);
+
     public bool ContainsTopology(DeviceTopologyName topologyName)
         => _deviceMapLookup.ContainsKey(topologyName);
 

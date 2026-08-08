@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="OSK.Extensions.Petra.Inputs.Configuration/OSK.Extensions.Petra.Inputs.Configuration.csproj" Id="417c78e1-fbdb-482a-a0f3-3def40167594" />
   <Project Path="OSK.Petra.Inputs.Abstractions/OSK.Petra.Inputs.Abstractions.csproj" />
   <Project Path="OSK.Petra.Inputs/OSK.Petra.Inputs.csproj" />
 </Solution>

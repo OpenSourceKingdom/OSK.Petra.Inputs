@@ -2,11 +2,11 @@
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
-internal partial class InputSystemConfigurationProvider: IInputSystemConfigurationProvider
+internal class InputSystemConfigurationProvider(InputSystemConfiguration configuration) : IInputSystemConfigurationProvider
 {
     #region IInputSystemConfigurationProvider
 
-    public required InputSystemConfiguration Configuration { get; set; }
+    public InputSystemConfiguration Configuration => configuration;
 
     #endregion
 }

@@ -179,7 +179,7 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
             return saveOutput;
         }
 
-        _customSchemeLookup[InputConfiguration.GetConfigurationId(scheme.DeviceMaps.Select(map => map.DeviceIdentity))][scheme.DefinitionName][scheme.Name] = scheme.ToInputScheme();
+        _customSchemeLookup[InputConfiguration.GetConfigurationId(scheme.GetDeviceIdentities())][scheme.DefinitionName][scheme.Name] = scheme.ToInputScheme();
         return Out.Success();
     }
 
@@ -258,7 +258,7 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
             {
                 foreach (var customScheme in getCustomSchemesOutput.Data)
                 {
-                    var configurationId = InputConfiguration.GetConfigurationId(customScheme.DeviceMaps.Select(map => map.DeviceIdentity));
+                    var configurationId = InputConfiguration.GetConfigurationId(customScheme.GetDeviceIdentities());
                     if (!_customSchemeLookup.TryGetValue(configurationId, out var configurationSchemeLookup))
                     {
                         configurationSchemeLookup = new();

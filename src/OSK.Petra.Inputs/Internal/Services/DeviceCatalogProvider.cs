@@ -61,9 +61,9 @@ internal class DeviceCatalogProvider(IInputSystemConfigurationProvider configura
 
         var catalogParts = configurationProvider.Configuration.SupportedDeviceTopologies.Select(toplogyDefinition => new DeviceCatalogPart()
         {
-            TopologyName = toplogyDefinition.TopologyName,
+            TopologyName = toplogyDefinition.Name,
             GenericDevice = toplogyDefinition.CreateGeneric(),
-            KnownDevices = partDeviceLookup.TryGetValue(toplogyDefinition.TopologyName, out var knownDevices)
+            KnownDevices = partDeviceLookup.TryGetValue(toplogyDefinition.Name, out var knownDevices)
                 ? [.. knownDevices]
                 : []
         });

@@ -1,4 +1,5 @@
-﻿using OSK.Operations.Outputs.Models;
+﻿using OSK.Hexagonal.MetaData;
+using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace OSK.Petra.Inputs.Ports;
 
+[HexagonalIntegration(HexagonalIntegrationType.LibraryProvided)]
 public interface ISchemeService
 {
     bool AllowCustomSchemes { get; }

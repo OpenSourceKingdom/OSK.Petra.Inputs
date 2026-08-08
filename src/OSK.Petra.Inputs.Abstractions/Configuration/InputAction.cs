@@ -34,7 +34,7 @@ public class InputAction(string actionName, ISet<InputPhase> triggerPhases, Acti
     public ISet<InputPhase> TriggerPhases => triggerPhases;
 
     /// <summary>
-    /// Specifies an action group for the input action. This can be used in conjunction with <see cref="InputEventProcessOptions.SuppressedActionGroups"/> to ignore
+    /// Specifies an action group for the input action. This can be used in conjunction with notifications to ignore
     /// actions of a given type during input processing
     /// </summary>
     public int? ActionGroup => actionGroup;

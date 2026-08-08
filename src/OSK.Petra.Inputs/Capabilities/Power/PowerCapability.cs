@@ -2,7 +2,6 @@
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
-using OSK.Petra.Inputs.Capabilities.Power;
 using System;
 
 namespace OSK.Petra.Inputs.Capabilities.Power;
