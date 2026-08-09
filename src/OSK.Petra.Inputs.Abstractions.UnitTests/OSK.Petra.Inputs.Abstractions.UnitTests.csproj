@@ -25,4 +25,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\OSK.Petra.Inputs.Abstractions\OSK.Petra.Inputs.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

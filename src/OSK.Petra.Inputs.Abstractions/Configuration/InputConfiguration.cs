@@ -23,7 +23,7 @@ public class InputConfiguration
     /// <returns>A standard unique string id for the group</returns>
     public static string GetConfigurationId(IEnumerable<DeviceTopologyName> topologies)
         // Sequences that are the same but out of order must match - i.e. Keyboard + Mouse == Mouse + Keyboard
-        => string.Join(".", topologies.Distinct().OrderBy(name => name));
+        => string.Join(".", topologies.Distinct().Select(topology => topology.Name).OrderBy(name => name));
 
     #endregion
 
@@ -118,9 +118,9 @@ public class InputConfiguration
         return TopologyNames.Count switch
         {
             0 => string.Empty,
-            1 =>$"{TopologyNames[0]}",
-            2 => $"{TopologyNames[0]} and {TopologyNames[1]}",
-            _ => $"{string.Join(", ", TopologyNames.Take(TopologyNames.Count - 1).Select(device => device))}, and {TopologyNames[^1]}"
+            1 =>$"{TopologyNames[0].Name}",
+            2 => $"{TopologyNames[0].Name} and {TopologyNames[1].Name}",
+            _ => $"{string.Join(", ", TopologyNames.Take(TopologyNames.Count - 1).Select(device => device.Name))}, and {TopologyNames[^1].Name}"
         };
     }
 
@@ -141,8 +141,8 @@ public class InputConfiguration
 
         if (!_inputSchemeLookup.TryGetValue(scheme.DefinitionName, out var definitionSchemeLookup))
         {
-            definitionSchemeLookup = [];
-            _inputSchemeLookup[scheme.DefinitionName] = new(StringComparer.OrdinalIgnoreCase);
+            definitionSchemeLookup = new(StringComparer.OrdinalIgnoreCase);
+            _inputSchemeLookup[scheme.DefinitionName] = definitionSchemeLookup;
         }
         if (definitionSchemeLookup.TryGetValue(scheme.Name, out _))
         {

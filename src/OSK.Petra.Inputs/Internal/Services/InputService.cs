@@ -151,7 +151,7 @@ internal partial class InputService : IInputService
 
         var configuration = _configurationProvider.Configuration;
 
-        var topologyDescriptor = configuration.GetTopologyDescriptor(inputNotification.DeviceIdentifier.DeviceIdentity.TopologyName);
+        var topologyDescriptor = configuration.GetTopology(inputNotification.DeviceIdentifier.DeviceIdentity.TopologyName);
         if (topologyDescriptor is null)
         {
             LogUnsupportedInputDeviceInformation(_logger, inputNotification.DeviceIdentifier);

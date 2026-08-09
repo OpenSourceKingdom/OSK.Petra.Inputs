@@ -17,10 +17,10 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
 {
     #region Variables
 
-    private readonly Dictionary<DeviceTopologyName, IDeviceTopology> _topologyDescriptorLookup
-        = deviceTopologies.Where(topology => topology is not null).ToDictionary(topology => topology.Name);
+    private readonly Dictionary<DeviceTopologyName, IDeviceTopology> _topologyLookup
+        = deviceTopologies?.Where(topology => topology is not null).ToDictionary(topology => topology.Name) ?? [];
     private readonly Dictionary<string, InputConfiguration> _inputConfigurationLookup 
-        = supportedConfigurations.Where(configuration => configuration is not null).ToDictionary(configuration => configuration.Id);
+        = supportedConfigurations?.Where(configuration => configuration is not null).ToDictionary(configuration => configuration.Id) ?? [];
     private readonly Dictionary<string, ActionDefinition> _inputDefinitionLookup 
         = definitions?.Where(definition => definition?.Name is not null).ToDictionary(definition => definition.Name, StringComparer.OrdinalIgnoreCase) ?? [];
 
@@ -33,7 +33,7 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
     /// </summary>
     public InputSystemJoinPolicy JoinPolicy => joinPolicy;
 
-    public IReadOnlyList<IDeviceTopology> SupportedDeviceTopologies => [.. _topologyDescriptorLookup.Values];
+    public IReadOnlyList<IDeviceTopology> SupportedDeviceTopologies => [.. _topologyLookup.Values];
 
     /// <summary>
     /// The collection of supported input device configurations for built in and custom schemes to use.
@@ -52,8 +52,8 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
             ? configuration
             : null;
 
-    public IDeviceTopology? GetTopologyDescriptor(DeviceTopologyName topologyName)
-        => _topologyDescriptorLookup.TryGetValue(topologyName, out var topology)
+    public IDeviceTopology? GetTopology(DeviceTopologyName topologyName)
+        => _topologyLookup.TryGetValue(topologyName, out var topology)
             ? topology
             : null;
 

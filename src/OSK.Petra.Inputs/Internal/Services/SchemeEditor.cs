@@ -257,7 +257,7 @@ internal class SchemeEditor: ISchemeEditor
         _deviceSchemeDescriptors.Count();
         foreach (var topologyName in configuration.TopologyNames)
         {
-            var genericDevice = _inputConfigurationProvider.Configuration.GetTopologyDescriptor(topologyName)?.CreateGeneric();
+            var genericDevice = _inputConfigurationProvider.Configuration.GetTopology(topologyName)?.CreateGeneric();
             if (genericDevice is not null)
             {
                 _deviceSchemeDescriptors[topologyName] = genericDevice;

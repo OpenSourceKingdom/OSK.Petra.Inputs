@@ -88,7 +88,7 @@ public static class InputSystemConfigurationValidator
 
     #region Helpers
 
-    private static InputConfigurationValidationResult ValidateJoinPolicy(InputSystemJoinPolicy joinPolicy)
+    internal static InputConfigurationValidationResult ValidateJoinPolicy(InputSystemJoinPolicy joinPolicy)
     {
         if (joinPolicy is null)
         {
@@ -258,7 +258,7 @@ public static class InputSystemConfigurationValidator
         }
 
         var schemesWithUnrecognizedDefinitionIds = inputConfiguration.Schemes.Where(scheme => configuration.GetDefinition(scheme.DefinitionName) is null);
-        if (schemesWithInvalidNames.Any())
+        if (schemesWithUnrecognizedDefinitionIds.Any())
         {
             return InputConfigurationValidationResult.ForScheme(scheme => scheme.Name, InputConfigurationValidation.InvalidData,
                 $"There are {schemesWithInvalidNames.Count()} schemes with definition ids that are not registered with the input system on input configuration {inputConfiguration.GetDisplayName()}, , the names are: {string.Join(", ", schemesWithUnrecognizedDefinitionIds.Select(scheme => $"Definition: {scheme.DefinitionName} Scheme: {scheme.Name}"))}.");
@@ -352,7 +352,7 @@ public static class InputSystemConfigurationValidator
 
     private static InputConfigurationValidationResult ValidateDeviceMap(InputSystemConfiguration configuration, ActionDefinition definition, InputScheme scheme, DeviceInputMap deviceMap)
     {
-        var topologyDescriptor = configuration.GetTopologyDescriptor(deviceMap.DeviceIdentity.TopologyName);
+        var topologyDescriptor = configuration.GetTopology(deviceMap.DeviceIdentity.TopologyName);
         if (topologyDescriptor is null)
         {
             return InputConfigurationValidationResult.ForDeviceMap(map => map.DeviceIdentity, InputConfigurationValidation.InvalidData,
