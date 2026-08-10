@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 namespace OSK.Petra.Inputs.Internal.Services;
 
 internal partial class SchemeService(IInputSystemConfigurationProvider configurationProvider, ISchemeRepository schemeRepository, IUserManager userManager, IInputSystemNotifier systemNotifier,
-    IDeviceCatalogProvider deviceCatalogProvider, IServiceProvider serviceProvider, ILogger logger): ISchemeService
+    IDeviceCatalogProvider deviceCatalogProvider, IServiceProvider serviceProvider, ILogger logger): IInternalSchemeService
 {
     #region Variables
 
@@ -196,16 +196,7 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
         return await schemeRepository.DeleteCustomSchemeAsync(definitionName, schemeName, cancellationToken);
     }
 
-    #endregion
-
-    #region Helpers
-
-    private IEnumerable<InputScheme> GetCustomInputSchemes(string inputConfigurationId, string definitionName)
-        => _customSchemeLookup.TryGetValue(inputConfigurationId, out var definitionSchemeLookup) && definitionSchemeLookup.TryGetValue(definitionName, out var schemeLookup)
-            ? schemeLookup.Values
-            : [];
-
-    internal async Task<Output> LoadSchemeConfigurationAsync(CancellationToken cancellationToken = default)
+    public async Task<Output> LoadSchemeConfigurationAsync(CancellationToken cancellationToken = default)
     {
         _customSchemeLookup.Clear();
         _userPreferredSchemesLookup.Clear();
@@ -281,6 +272,15 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
 
         return Out.Success();
     }
+
+    #endregion
+
+    #region Helpers
+
+    private IEnumerable<InputScheme> GetCustomInputSchemes(string inputConfigurationId, string definitionName)
+        => _customSchemeLookup.TryGetValue(inputConfigurationId, out var definitionSchemeLookup) && definitionSchemeLookup.TryGetValue(definitionName, out var schemeLookup)
+            ? schemeLookup.Values
+            : [];
 
     private InputScheme GetActiveScheme(int userId, ActionDefinition definition, InputConfiguration inputConfiguration, DeviceIdentity deviceIdentity)
     {

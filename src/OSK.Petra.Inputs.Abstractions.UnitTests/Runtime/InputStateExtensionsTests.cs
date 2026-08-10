@@ -84,7 +84,7 @@ public class InputStateExtensionsTests
         var factory = new Func<TestCapabilityDetails>(() => new TestCapabilityDetails());
 
         // Act
-        var result = _mockState.Object.GetOrCreateDetails<TestCapabilityDetails>(factory);
+        var result = _mockState.Object.GetOrCreateDetails(factory);
 
         // Assert
         Assert.NotNull(result);
@@ -98,7 +98,7 @@ public class InputStateExtensionsTests
         var factory = new Func<TestCapabilityDetails>(() => new TestCapabilityDetails());
 
         // Act
-        var result = _mockState.Object.GetOrCreateDetails<TestCapabilityDetails>(factory);
+        var result = _mockState.Object.GetOrCreateDetails(factory);
 
         // Assert
         _mockState.Verify(s => s.SetDetails(result), Times.Once);
@@ -113,7 +113,7 @@ public class InputStateExtensionsTests
         var factory = new Func<TestCapabilityDetails>(() => new TestCapabilityDetails());
 
         // Act
-        var result = _mockState.Object.GetOrCreateDetails<TestCapabilityDetails>(factory);
+        var result = _mockState.Object.GetOrCreateDetails(factory);
 
         // Assert
         Assert.Same(existing, result);

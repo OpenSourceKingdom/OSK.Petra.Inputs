@@ -84,7 +84,7 @@ public class DeviceInputContextExtensionsTests
         var factory = new Func<TestCapabilityFeature>(() => new TestCapabilityFeature());
 
         // Act
-        var result = _mockContext.Object.GetOrCreateFeature<TestCapabilityFeature>(factory);
+        var result = _mockContext.Object.GetOrCreateFeature(factory);
 
         // Assert
         Assert.NotNull(result);
@@ -98,7 +98,7 @@ public class DeviceInputContextExtensionsTests
         var factory = new Func<TestCapabilityFeature>(() => new TestCapabilityFeature());
 
         // Act
-        var result = _mockContext.Object.GetOrCreateFeature<TestCapabilityFeature>(factory);
+        var result = _mockContext.Object.GetOrCreateFeature(factory);
 
         // Assert
         _mockContext.Verify(c => c.SetFeature(result), Times.Once);
@@ -113,7 +113,7 @@ public class DeviceInputContextExtensionsTests
         var factory = new Func<TestCapabilityFeature>(() => new TestCapabilityFeature());
 
         // Act
-        var result = _mockContext.Object.GetOrCreateFeature<TestCapabilityFeature>(factory);
+        var result = _mockContext.Object.GetOrCreateFeature(factory);
 
         // Assert
         Assert.Same(existing, result);

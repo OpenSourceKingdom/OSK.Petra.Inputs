@@ -9,7 +9,7 @@ using OSK.Petra.Inputs.Notifications;
 namespace OSK.Petra.Inputs.Internal.Services;
 
 internal class InputSystem(IInputSystemConfigurationProvider configurationProvider, IUserManager userManager,
-    IInputService inputService, IInputSystemNotifier systemNotifier, SchemeService schemeService) : IInputSystem
+    IInputService inputService, IInputSystemNotifier systemNotifier, IInternalSchemeService schemeService) : IInputSystem
 {
     #region Variables
 

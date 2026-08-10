@@ -1,4 +1,3 @@
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests;

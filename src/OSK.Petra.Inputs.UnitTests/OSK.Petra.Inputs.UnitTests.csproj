@@ -12,6 +12,7 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
 		<PackageReference Include="Moq" Version="4.20.72" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
@@ -21,8 +22,13 @@
 		<PackageReference Include="xunit.v3" Version="3.2.2" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Using Include="Xunit" />
-	</ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OSK.Petra.Inputs.Abstractions\OSK.Petra.Inputs.Abstractions.csproj" />
+    <ProjectReference Include="..\OSK.Petra.Inputs\OSK.Petra.Inputs.csproj" />
+  </ItemGroup>
 
 </Project>

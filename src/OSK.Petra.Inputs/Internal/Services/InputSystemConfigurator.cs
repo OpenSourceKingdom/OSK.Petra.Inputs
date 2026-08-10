@@ -83,7 +83,8 @@ internal class InputSystemConfigurator : IInputSystemConfigurator
 
         services.AddSingleton<IInputSystemConfigurationProvider>(_ => new InputSystemConfigurationProvider(_configuration));
 
-        services.TryAddSingleton<ISchemeService, SchemeService>();
+        services.TryAddSingleton<IInternalSchemeService, SchemeService>();
+        services.TryAddSingleton<ISchemeService>(sp => sp.GetRequiredService<IInternalSchemeService>());
         services.TryAddSingleton<IInputService, InputService>();
         services.TryAddSingleton<IUserManager, UserManager>();
         services.TryAddSingleton<IInputSystem, InputSystem>();

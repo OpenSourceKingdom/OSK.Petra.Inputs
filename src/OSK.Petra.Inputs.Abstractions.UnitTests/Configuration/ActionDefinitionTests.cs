@@ -19,7 +19,7 @@ public class ActionDefinitionTests
 
     [Theory]
     [InlineData(true)]
-    [InlineData(true)]
+    [InlineData(false)]
     public void Constructor_SetsValues(bool isDefault)
     {
         // Arrange & Act
@@ -99,7 +99,7 @@ public class ActionDefinitionTests
     {
         // Arrange & Act
         var definition = new ActionDefinition("Default", _actions, isDefault: true);
-        var result = definition.GetAction("");
+        var result = definition.GetAction(name!);
 
         // Assert
         Assert.Null(result);
