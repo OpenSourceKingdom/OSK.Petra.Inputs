@@ -136,22 +136,6 @@ public class InputConfigurationValidationResultTests
 
     #endregion
 
-    #region ForProcessorConfiguration
-
-    [Fact]
-    public void ForProcessorConfiguration_SetsCorrectType()
-    {
-        // Arrange & Act
-        var result = InputConfigurationValidationResult.ForProcessorConfiguration(
-            cfg => cfg.DeadzoneTolerance, InputConfigurationValidation.InvalidData, "Test message");
-
-        // Assert
-        Assert.Equal(ConfigurationType.InputProcessor, result.ConfigurationType);
-        Assert.Equal("DeadzoneTolerance", result.TargetName);
-    }
-
-    #endregion
-
     #region ToString
 
     [Fact]

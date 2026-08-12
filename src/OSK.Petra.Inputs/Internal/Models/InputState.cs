@@ -13,6 +13,8 @@ internal class InputState(IInput input, DeviceInputContext deviceContext) : IInp
 
     private readonly Dictionary<Type, ICapabilityDetails> _detailLookup = [];
 
+    private bool _hasStatusBeenSet;
+
     #endregion
 
     #region IInputState
@@ -23,7 +25,7 @@ internal class InputState(IInput input, DeviceInputContext deviceContext) : IInp
 
     public IInput Input => input;
 
-    public bool IsNewActivation { get; internal set; }
+    public bool IsNewActivation { get; private set; } = true;
 
     public InputPhase Phase { get; private set; }
 
@@ -48,7 +50,17 @@ internal class InputState(IInput input, DeviceInputContext deviceContext) : IInp
 
     public void CombinePhase(InputPhase phase)
     {
-        Phase = Phase.Combine(phase);
+        Phase = _hasStatusBeenSet
+            ? Phase.Combine(phase)
+            : phase;
+
+        _hasStatusBeenSet = true;
+    }
+
+    public void Reset()
+    {
+        IsNewActivation = false;
+        _hasStatusBeenSet = false;
     }
 
     public void Dispose()

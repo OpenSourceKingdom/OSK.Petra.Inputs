@@ -1,8 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Exceptions;
 using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Services;
@@ -158,7 +157,7 @@ public class InputSystemConfiguratorTests
     public void ConfigureServices_NoConfiguration_ThrowsArgumentNullException()
     {
         // Arrange
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => _configurator.ConfigureServices(services));
@@ -169,7 +168,7 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
         _configurator.ConfigureServices(services);
@@ -177,7 +176,7 @@ public class InputSystemConfiguratorTests
         // Assert
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputSystemConfigurationProvider));
         Assert.NotNull(descriptor);
-        Assert.Equal(Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton, descriptor.Lifetime);
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
     }
 
     [Fact]
@@ -185,7 +184,7 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
         _configurator.ConfigureServices(services);
@@ -193,7 +192,7 @@ public class InputSystemConfiguratorTests
         // Assert
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(ISchemeService));
         Assert.NotNull(descriptor);
-        Assert.Equal(Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton, descriptor.Lifetime);
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
     }
 
     [Fact]
@@ -201,7 +200,7 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
         _configurator.ConfigureServices(services);
@@ -209,7 +208,7 @@ public class InputSystemConfiguratorTests
         // Assert
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputService));
         Assert.NotNull(descriptor);
-        Assert.Equal(Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton, descriptor.Lifetime);
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
     }
 
     [Fact]
@@ -217,7 +216,7 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
         _configurator.ConfigureServices(services);
@@ -225,7 +224,7 @@ public class InputSystemConfiguratorTests
         // Assert
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IUserManager));
         Assert.NotNull(descriptor);
-        Assert.Equal(Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton, descriptor.Lifetime);
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
     }
 
     [Fact]
@@ -233,7 +232,7 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
         _configurator.ConfigureServices(services);
@@ -241,7 +240,7 @@ public class InputSystemConfiguratorTests
         // Assert
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputSystem));
         Assert.NotNull(descriptor);
-        Assert.Equal(Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton, descriptor.Lifetime);
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
     }
 
     [Fact]
@@ -249,7 +248,7 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
         _configurator.ConfigureServices(services);
@@ -257,7 +256,7 @@ public class InputSystemConfiguratorTests
         // Assert
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputSystemNotifier));
         Assert.NotNull(descriptor);
-        Assert.Equal(Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton, descriptor.Lifetime);
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
     }
 
     [Fact]
@@ -265,7 +264,7 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
         _configurator.ConfigureServices(services);
@@ -273,7 +272,7 @@ public class InputSystemConfiguratorTests
         // Assert
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IDeviceCatalogProvider));
         Assert.NotNull(descriptor);
-        Assert.Equal(Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton, descriptor.Lifetime);
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
     }
 
     [Fact]
@@ -281,7 +280,7 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
         _configurator.ConfigureServices(services);
@@ -297,17 +296,16 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var customRepo = new Mock<ISchemeRepository>();
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
-        _configurator.UseSchemeRepository(customRepo.Object.GetType());
+        _configurator.UseSchemeRepository(typeof(TestSchemeRepository));
         _configurator.ConfigureServices(services);
 
         // Assert
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(ISchemeRepository));
         Assert.NotNull(descriptor);
-        Assert.Equal(customRepo.Object.GetType(), descriptor.ImplementationType);
+        Assert.Equal(typeof(TestSchemeRepository), descriptor.ImplementationType);
     }
 
     [Fact]
@@ -315,7 +313,7 @@ public class InputSystemConfiguratorTests
     {
         // Arrange
         _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
 
         // Act
         _configurator.WithDeviceProvider<MockDeviceProvider>();
@@ -324,7 +322,7 @@ public class InputSystemConfiguratorTests
         // Assert
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IDeviceProvider));
         Assert.NotNull(descriptor);
-        Assert.Equal(Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient, descriptor.Lifetime);
+        Assert.Equal(ServiceLifetime.Transient, descriptor.Lifetime);
     }
 
     #endregion

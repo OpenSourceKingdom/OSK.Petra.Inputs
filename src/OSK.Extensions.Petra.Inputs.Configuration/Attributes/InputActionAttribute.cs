@@ -37,7 +37,7 @@ public class InputActionAttribute : Attribute
     public InputPhase[] TriggerPhases { get; set; } = [];
 
     /// <summary>
-    /// Specifies an action type for the input action. This can be used in conjunction with <see cref="InputEventProcessOptions.SuppressedActionGroups"/> to ignore
+    /// Specifies an action type for the input action. This can be used in conjunction with the suppress action notification to ignore
     /// actions of a given type during input processing
     /// </summary>
     public int ActionGroup

@@ -45,7 +45,7 @@ internal class InputSystemConfigurator : IInputSystemConfigurator
         {
             throw new ArgumentNullException(nameof(type));
         }
-        if (!type.IsAssignableFrom(typeof(ISchemeRepository)))
+        if (!typeof(ISchemeRepository).IsAssignableFrom(type))
         {
             throw new InvalidOperationException($"The repositry type '{type.FullName}' does not match the expected type of an '{typeof(ISchemeRepository).FullName}'");
         }

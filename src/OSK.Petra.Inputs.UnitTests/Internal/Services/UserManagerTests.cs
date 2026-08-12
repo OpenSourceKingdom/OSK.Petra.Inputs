@@ -113,8 +113,8 @@ public class UserManagerTests
             _mockSchemeRepository.Object,
             _mockLogger.Object);
 
-        var user1 = TestConfigurationFactory.CreateUser(1);
-        var user2 = TestConfigurationFactory.CreateUser(2);
+        userManager.CreateUser(new UserJoinOptions());
+        userManager.CreateUser(new UserJoinOptions());
 
         // Act
         var result = userManager.CreateUser(new UserJoinOptions());
@@ -584,97 +584,102 @@ public class UserManagerTests
     #region SavePreferredSchemeAsync
 
     [Fact]
-    public void SavePreferredSchemeAsync_UserIdOutOfRange_ReturnsInvalidRequest()
+    public async Task SavePreferredSchemeAsync_UserIdOutOfRange_ReturnsInvalidRequest()
     {
         // Arrange
         var scheme = new PreferredInputScheme() { UserId = -1, DefinitionName = "Default", SchemeName = "Test", ConfigurationId = "1" };
 
         // Act
-        var result = _userManager.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_EmptyDefinitionName_ReturnsInvalidRequest()
+    public async Task SavePreferredSchemeAsync_EmptyDefinitionName_ReturnsInvalidRequest()
     {
         // Arrange
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "", SchemeName = "Test", ConfigurationId = "1" };
 
         // Act
-        var result = _userManager.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_NonExistentDefinition_ReturnsDataNotFound()
+    public async Task SavePreferredSchemeAsync_NonExistentDefinition_ReturnsDataNotFound()
     {
         // Arrange
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "NonExistent", SchemeName = "Test", ConfigurationId = "1" };
 
         // Act
-        var result = _userManager.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_EmptySchemeName_ReturnsInvalidRequest()
+    public async Task SavePreferredSchemeAsync_EmptySchemeName_ReturnsInvalidRequest()
     {
         // Arrange
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "", ConfigurationId = "1" };
 
         // Act
-        var result = _userManager.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_EmptyConfigurationId_ReturnsInvalidRequest()
+    public async Task SavePreferredSchemeAsync_EmptyConfigurationId_ReturnsInvalidRequest()
     {
         // Arrange
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Test", ConfigurationId = "" };
 
         // Act
-        var result = _userManager.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_NonExistentConfigurationId_ReturnsDataNotFound()
+    public async Task SavePreferredSchemeAsync_NonExistentConfigurationId_ReturnsDataNotFound()
     {
         // Arrange
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Test", ConfigurationId = "nonexistent" };
 
         // Act
-        var result = _userManager.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_ValidScheme_DelegatesToRepository()
+    public async Task SavePreferredSchemeAsync_ValidScheme_DelegatesToRepository()
     {
         // Arrange
-        var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Default", ConfigurationId = "1" };
-        _mockSchemeRepository.Setup(r => r.SavePreferredSchemeAsync(scheme, default))
+        var scheme = new PreferredInputScheme() {
+            UserId = 1, 
+            DefinitionName = "Default", 
+            SchemeName = "Default", 
+            ConfigurationId = InputConfiguration.GetConfigurationId(DeviceTopologyName.Keyboard, DeviceTopologyName.Mouse) 
+        };
+        _mockSchemeRepository.Setup(r => r.SavePreferredSchemeAsync(scheme, It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(Out.Success(scheme)));
 
         // Act
-        var result = _userManager.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
-        _mockSchemeRepository.Verify(r => r.SavePreferredSchemeAsync(scheme, default), Times.Once);
+        _mockSchemeRepository.Verify(r => r.SavePreferredSchemeAsync(scheme, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

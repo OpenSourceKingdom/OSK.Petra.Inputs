@@ -51,7 +51,7 @@ public class InputStateTests
         var state = CreateState();
 
         // Assert
-        Assert.Same(_deviceIdentifier, state.DeviceIdentifier);
+        Assert.Equal(_deviceIdentifier, state.DeviceIdentifier);
     }
 
     #endregion
@@ -65,20 +65,24 @@ public class InputStateTests
         var state = CreateState();
 
         // Assert
-        Assert.False(state.IsNewActivation);
+        Assert.True(state.IsNewActivation);
     }
 
-    [Fact]
-    public void IsNewActivation_CanBeSetToTrue()
+    #endregion
+
+    #region Reset
+
+    public void Reset_SetsIsNewActivationToFalse()
     {
         // Arrange
         var state = CreateState();
+        Assert.True(state.IsNewActivation);
 
         // Act
-        state.IsNewActivation = true;
+        state.Reset();
 
         // Assert
-        Assert.True(state.IsNewActivation);
+        Assert.False(state.IsNewActivation);
     }
 
     #endregion

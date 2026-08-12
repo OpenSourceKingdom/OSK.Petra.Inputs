@@ -221,7 +221,6 @@ public class SchemeServiceTests
 
         var configProvider = new Mock<IInputSystemConfigurationProvider>();
         configProvider.SetupGet(m => m.Configuration).Returns(TestConfigurationFactory.CreateValidConfiguration());
-        configProvider.Setup(m => m.Configuration.GetBestFitInputConfiguration(It.IsAny<DeviceIdentity>())).Returns((InputConfiguration?)null);
 
         var service = new SchemeService(
             configProvider.Object,
@@ -262,87 +261,87 @@ public class SchemeServiceTests
     #region SavePreferredSchemeAsync
 
     [Fact]
-    public void SavePreferredSchemeAsync_UserIdOutOfRange_ReturnsInvalidRequest()
+    public async Task SavePreferredSchemeAsync_UserIdOutOfRange_ReturnsInvalidRequest()
     {
         // Arrange
         var service = CreateService();
         var scheme = new PreferredInputScheme() { UserId = -1, DefinitionName = "Default", SchemeName = "Test", ConfigurationId = "1" };
 
         // Act
-        var result = service.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await service.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_EmptyDefinitionName_ReturnsInvalidRequest()
+    public async Task SavePreferredSchemeAsync_EmptyDefinitionName_ReturnsInvalidRequest()
     {
         // Arrange
         var service = CreateService();
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "", SchemeName = "Test", ConfigurationId = "1" };
 
         // Act
-        var result = service.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await service.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_NonExistentDefinition_ReturnsDataNotFound()
+    public async Task SavePreferredSchemeAsync_NonExistentDefinition_ReturnsDataNotFound()
     {
         // Arrange
         var service = CreateService();
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "NonExistent", SchemeName = "Test", ConfigurationId = "1" };
 
         // Act
-        var result = service.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await service.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_EmptySchemeName_ReturnsInvalidRequest()
+    public async Task SavePreferredSchemeAsync_EmptySchemeName_ReturnsInvalidRequest()
     {
         // Arrange
         var service = CreateService();
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "", ConfigurationId = "1" };
 
         // Act
-        var result = service.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await service.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_NonExistentConfiguration_ReturnsDataNotFound()
+    public async Task SavePreferredSchemeAsync_NonExistentConfiguration_ReturnsDataNotFound()
     {
         // Arrange
         var service = CreateService();
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Test", ConfigurationId = "nonexistent" };
 
         // Act
-        var result = service.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await service.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SavePreferredSchemeAsync_ValidScheme_DelegatesToRepository()
+    public async Task SavePreferredSchemeAsync_ValidScheme_DelegatesToRepository()
     {
         // Arrange
-        var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Default", ConfigurationId = "1" };
-        _mockSchemeRepository.Setup(r => r.SavePreferredSchemeAsync(scheme, default))
+        var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Default", ConfigurationId = InputConfiguration.GetConfigurationId(DeviceTopologyName.Keyboard, DeviceTopologyName.Mouse) };
+        _mockSchemeRepository.Setup(r => r.SavePreferredSchemeAsync(scheme, It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(Out.Success(scheme)));
 
         var service = CreateService();
 
         // Act
-        var result = service.SavePreferredSchemeAsync(scheme).GetAwaiter().GetResult();
+        var result = await service.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -353,42 +352,61 @@ public class SchemeServiceTests
     #region SaveCustomSchemeAsync
 
     [Fact]
-    public void SaveCustomSchemeAsync_NullScheme_ThrowsArgumentNullException()
+    public async Task SaveCustomSchemeAsync_NullScheme_ThrowsArgumentNullException()
     {
         // Arrange
         var service = CreateService();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => service.SaveCustomSchemeAsync(null!, SchemeSavePermissions.Overwrite).GetAwaiter().GetResult());
+        await Assert.ThrowsAsync<ArgumentNullException>(() => service.SaveCustomSchemeAsync(null!, SchemeSavePermissions.Overwrite, TestContext.Current.CancellationToken));
     }
 
     [Fact]
-    public void SaveCustomSchemeAsync_CustomSchemesNotAllowed_ReturnsInvalidRequest()
+    public async Task SaveCustomSchemeAsync_CustomSchemesNotAllowed_ReturnsInvalidRequest()
     {
         // Arrange
         var service = CreateService();
         var scheme = new CustomInputScheme() { DefinitionName = "Default", Name = "Test", DeviceMaps = [] };
 
         // Act
-        var result = service.SaveCustomSchemeAsync(scheme, SchemeSavePermissions.Overwrite).GetAwaiter().GetResult();
+        var result = await service.SaveCustomSchemeAsync(scheme, SchemeSavePermissions.Overwrite, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void SaveCustomSchemeAsync_CustomSchemesAllowed_DelegatesToRepository()
+    public async Task SaveCustomSchemeAsync_CustomSchemesAllowed_DelegatesToRepository()
     {
         // Arrange
         _mockSchemeRepository.SetupGet(m => m.AllowCustomSchemes).Returns(true);
-        _mockSchemeRepository.Setup(r => r.SaveCustomInputScheme(It.IsAny<CustomInputScheme>(), default))
+        _mockSchemeRepository.Setup(r => r.SaveCustomInputScheme(It.IsAny<CustomInputScheme>(), It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(Out.Success(Mock.Of<CustomInputScheme>())));
 
         var service = CreateService();
-        var scheme = new CustomInputScheme() { DefinitionName = "Default", Name = "Test", DeviceMaps = [] };
+        var scheme = new CustomInputScheme() 
+        { 
+            DefinitionName = "Default", 
+            Name = "Test", 
+            DeviceMaps = [
+                new DeviceInputMap() 
+                { 
+                    DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Generic"),
+                    InputMaps = [
+                         new InputActionMap(new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }, "Moves the cursor"), Mock.Of<IInput>()),
+                         new InputActionMap(new InputAction("Click", new HashSet<InputPhase> { InputPhase.Start, InputPhase.End }, ctx => { }, "Clicks"), Mock.Of<IInput>())
+                    ]
+                },
+                new DeviceInputMap()
+                {
+                    DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Mouse, DeviceFamily.Generic, "Generic"),
+                    InputMaps = []
+                }
+            ] 
+        };
 
         // Act
-        var result = service.SaveCustomSchemeAsync(scheme, SchemeSavePermissions.Overwrite).GetAwaiter().GetResult();
+        var result = await service.SaveCustomSchemeAsync(scheme, SchemeSavePermissions.Overwrite, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -399,72 +417,72 @@ public class SchemeServiceTests
     #region DeleteCustomSchemeAsync
 
     [Fact]
-    public void DeleteCustomSchemeAsync_CustomSchemesNotAllowed_ReturnsSuccess()
+    public async Task DeleteCustomSchemeAsync_CustomSchemesNotAllowed_ReturnsSuccess()
     {
         // Arrange
         var service = CreateService();
 
         // Act
-        var result = service.DeleteCustomSchemeAsync("Default", "Test").GetAwaiter().GetResult();
+        var result = await service.DeleteCustomSchemeAsync("Default", "Test", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
     }
 
     [Fact]
-    public void DeleteCustomSchemeAsync_EmptyDefinitionName_ReturnsSuccess()
+    public async Task DeleteCustomSchemeAsync_EmptyDefinitionName_ReturnsSuccess()
     {
         // Arrange
         _mockSchemeRepository.SetupGet(m => m.AllowCustomSchemes).Returns(true);
         var service = CreateService();
 
         // Act
-        var result = service.DeleteCustomSchemeAsync("", "Test").GetAwaiter().GetResult();
+        var result = await service.DeleteCustomSchemeAsync("", "Test", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
     }
 
     [Fact]
-    public void DeleteCustomSchemeAsync_EmptySchemeName_ReturnsSuccess()
+    public async Task DeleteCustomSchemeAsync_EmptySchemeName_ReturnsSuccess()
     {
         // Arrange
         _mockSchemeRepository.SetupGet(m => m.AllowCustomSchemes).Returns(true);
         var service = CreateService();
 
         // Act
-        var result = service.DeleteCustomSchemeAsync("Default", "").GetAwaiter().GetResult();
+        var result = await service.DeleteCustomSchemeAsync("Default", "", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
     }
 
     [Fact]
-    public void DeleteCustomSchemeAsync_NonExistentDefinition_ReturnsSuccess()
+    public async Task DeleteCustomSchemeAsync_NonExistentDefinition_ReturnsSuccess()
     {
         // Arrange
         _mockSchemeRepository.SetupGet(m => m.AllowCustomSchemes).Returns(true);
         var service = CreateService();
 
         // Act
-        var result = service.DeleteCustomSchemeAsync("NonExistent", "Test").GetAwaiter().GetResult();
+        var result = await service.DeleteCustomSchemeAsync("NonExistent", "Test", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
     }
 
     [Fact]
-    public void DeleteCustomSchemeAsync_ValidRequest_DelegatesToRepository()
+    public async Task DeleteCustomSchemeAsync_ValidRequest_DelegatesToRepository()
     {
         // Arrange
         _mockSchemeRepository.SetupGet(m => m.AllowCustomSchemes).Returns(true);
-        _mockSchemeRepository.Setup(r => r.DeleteCustomSchemeAsync("Default", "Test", default))
+        _mockSchemeRepository.Setup(r => r.DeleteCustomSchemeAsync("Default", "Test", It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(Out.Success()));
 
         var service = CreateService();
 
         // Act
-        var result = service.DeleteCustomSchemeAsync("Default", "Test").GetAwaiter().GetResult();
+        var result = await service.DeleteCustomSchemeAsync("Default", "Test", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -492,31 +510,31 @@ public class SchemeServiceTests
     #region GetSchemeEditorAsync
 
     [Fact]
-    public void GetSchemeEditorAsync_UserNotFound_ReturnsDataNotFound()
+    public async Task GetSchemeEditorAsync_UserNotFound_ReturnsDataNotFound()
     {
         // Arrange
         _mockUserManager.Setup(m => m.GetUser(1)).Returns((IInputUser?)null);
         var service = CreateService();
 
         // Act
-        var result = service.GetSchemeEditorAsync(1).GetAwaiter().GetResult();
+        var result = await service.GetSchemeEditorAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public void GetSchemeEditorAsync_DeviceCatalogFails_ReturnsError()
+    public async Task GetSchemeEditorAsync_DeviceCatalogFails_ReturnsError()
     {
         // Arrange
         _mockUserManager.Setup(m => m.GetUser(1)).Returns(TestConfigurationFactory.CreateUser(1));
-        _mockDeviceCatalogProvider.Setup(p => p.GetCatalogAsync(default))
+        _mockDeviceCatalogProvider.Setup(p => p.GetCatalogAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(Out.InvalidRequest<DeviceCatalog>("catalog error")));
 
         var service = CreateService();
 
         // Act
-        var result = service.GetSchemeEditorAsync(1).GetAwaiter().GetResult();
+        var result = await service.GetSchemeEditorAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);

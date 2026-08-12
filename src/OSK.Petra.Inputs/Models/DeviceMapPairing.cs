@@ -7,5 +7,5 @@ public readonly struct DeviceMapPairing<T>(DeviceIdentity deviceIdentity, IEnume
 {
     public DeviceIdentity DeviceIdentity => deviceIdentity;
 
-    public IReadOnlyList<T> Items { get; } = [.. items];
+    public IReadOnlyList<T> Items { get; } = items is null ? [] : [.. items];
 }

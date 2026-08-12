@@ -234,7 +234,7 @@ public class InputSystemTests
     }
 
     [Fact]
-    public void InitializeAsync_InvalidConfiguration_ThrowsInvalidOperationException()
+    public async Task InitializeAsync_InvalidConfiguration_ThrowsInvalidOperationException()
     {
         // Arrange
         var invalidConfig = CreateInvalidConfiguration();
@@ -242,11 +242,11 @@ public class InputSystemTests
         var system = CreateSystem();
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => system.InitializeAsync().GetAwaiter().GetResult());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => system.InitializeAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
-    public void InitializeAsync_CallsSchemeServiceLoad()
+    public async Task InitializeAsync_CallsSchemeServiceLoad()
     {
         // Arrange
         var system = CreateSystem();
@@ -254,7 +254,7 @@ public class InputSystemTests
             .Returns(Task.FromResult(Out.Success()));
 
         // Act
-        _ = system.InitializeAsync();
+        await system.InitializeAsync(TestContext.Current.CancellationToken);
 
         // Assert
         _mockSchemeService.Verify(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()), Times.Once);

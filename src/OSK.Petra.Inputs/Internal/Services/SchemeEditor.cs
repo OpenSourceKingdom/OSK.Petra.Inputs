@@ -70,7 +70,7 @@ internal class SchemeEditor: ISchemeEditor
 
     public ISelectedScheme SelectedScheme => _selectedScheme;
 
-    public bool AllowCustomScheme { get; }
+    public bool AllowCustomScheme => _schemeService.AllowCustomSchemes;
 
     public ICollectionNavigator<InputConfiguration> InputConfigurationNavigator { get; private set; }
 
@@ -116,10 +116,17 @@ internal class SchemeEditor: ISchemeEditor
 
     public Output SetSchemeDevice(DeviceTopologyName topologyName, string deviceName)
     {
-        var catalogPart = _deviceCatalog.GetPart(topologyName);
-        if (catalogPart is null || catalogPart.KnownDevices.Count is 0 && catalogPart.GenericDevice is null)
+        var catalogPart = _deviceCatalog.GetPart(topologyName); 
+        if (catalogPart is null)
         {
-            return Out.InvalidRequest($"The topology {topologyName} is not supported and can not be used for schemes.");
+            return Out.InvalidRequest($"The topology '{topologyName}' is not supported and can not be used for schemes.");
+        }
+
+        if (string.IsNullOrWhiteSpace(deviceName) || deviceName.Equals("generic", StringComparison.OrdinalIgnoreCase))
+        {
+            return catalogPart.GenericDevice is null
+                ? Out.InvalidRequest($"A generic device scheme was requested for the device topology '{topologyName}' but there is no generic device available.")
+                : Out.Success(catalogPart.GenericDevice);
         }
 
         var deviceDescriptor = catalogPart.KnownDevices.FirstOrDefault(device => device.Identity.Name.Equals(deviceName));

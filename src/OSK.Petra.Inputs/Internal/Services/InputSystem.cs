@@ -34,7 +34,7 @@ internal class InputSystem(IInputSystemConfigurationProvider configurationProvid
         get => _isPaused;
         set
         {
-            if (_isPaused == PauseInput)
+            if (_isPaused == value)
             {
                 return;
             }

@@ -6,94 +6,25 @@ public class InputPhaseExtensionsTests
 {
     #region Combine
 
-    [Fact]
-    public void Combine_StartWithEnd_ReturnsEnd()
+    [Theory]
+    [InlineData(InputPhase.Start, InputPhase.Start, InputPhase.Start)]
+    [InlineData(InputPhase.Start, InputPhase.Active, InputPhase.Start)]
+    [InlineData(InputPhase.Start, InputPhase.End, InputPhase.End)]
+
+    [InlineData(InputPhase.End, InputPhase.Start, InputPhase.End)]
+    [InlineData(InputPhase.End, InputPhase.Active, InputPhase.End)]
+    [InlineData(InputPhase.End, InputPhase.End, InputPhase.End)]
+
+    [InlineData(InputPhase.Active, InputPhase.Start, InputPhase.Start)]
+    [InlineData(InputPhase.Active, InputPhase.Active, InputPhase.Active)]
+    [InlineData(InputPhase.Active, InputPhase.End, InputPhase.End)]
+    public void Combine_PhaseVariations_ReturnsExpectedPhase(InputPhase phase1, InputPhase phase2, InputPhase expectedPhase)
     {
-        // Arrange & Act
-        var result = InputPhase.Start.Combine(InputPhase.End);
+        // Arrange/Act
+        var actualPhase = phase1.Combine(phase2);
 
         // Assert
-        Assert.Equal(InputPhase.End, result);
-    }
-
-    [Fact]
-    public void Combine_EndWithStart_ReturnsEnd()
-    {
-        // Arrange & Act
-        var result = InputPhase.End.Combine(InputPhase.Start);
-
-        // Assert
-        Assert.Equal(InputPhase.End, result);
-    }
-
-    [Fact]
-    public void Combine_ActiveWithEnd_ReturnsEnd()
-    {
-        // Arrange & Act
-        var result = InputPhase.Active.Combine(InputPhase.End);
-
-        // Assert
-        Assert.Equal(InputPhase.End, result);
-    }
-
-    [Fact]
-    public void Combine_EndWithActive_ReturnsEnd()
-    {
-        // Arrange & Act
-        var result = InputPhase.End.Combine(InputPhase.Active);
-
-        // Assert
-        Assert.Equal(InputPhase.End, result);
-    }
-
-    [Fact]
-    public void Combine_StartWithActive_ReturnsStart()
-    {
-        // Arrange & Act
-        var result = InputPhase.Start.Combine(InputPhase.Active);
-
-        // Assert
-        Assert.Equal(InputPhase.Start, result);
-    }
-
-    [Fact]
-    public void Combine_ActiveWithStart_ReturnsStart()
-    {
-        // Arrange & Act
-        var result = InputPhase.Active.Combine(InputPhase.Start);
-
-        // Assert
-        Assert.Equal(InputPhase.Start, result);
-    }
-
-    [Fact]
-    public void Combine_StartWithStart_ReturnsStart()
-    {
-        // Arrange & Act
-        var result = InputPhase.Start.Combine(InputPhase.Start);
-
-        // Assert
-        Assert.Equal(InputPhase.Start, result);
-    }
-
-    [Fact]
-    public void Combine_ActiveWithActive_ReturnsActive()
-    {
-        // Arrange & Act
-        var result = InputPhase.Active.Combine(InputPhase.Active);
-
-        // Assert
-        Assert.Equal(InputPhase.Active, result);
-    }
-
-    [Fact]
-    public void Combine_EndWithEnd_ReturnsEnd()
-    {
-        // Arrange & Act
-        var result = InputPhase.End.Combine(InputPhase.End);
-
-        // Assert
-        Assert.Equal(InputPhase.End, result);
+        Assert.Equal(expectedPhase, actualPhase);
     }
 
     #endregion

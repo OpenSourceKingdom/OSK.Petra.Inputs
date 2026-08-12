@@ -2,9 +2,6 @@
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Ports;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OSK.Petra.Inputs.UnitTests._Helpers;
 

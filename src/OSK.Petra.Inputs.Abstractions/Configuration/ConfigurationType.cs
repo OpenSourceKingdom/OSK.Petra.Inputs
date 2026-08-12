@@ -12,6 +12,5 @@ public enum ConfigurationType
     DeviceMap,
     InputMap,
     JoinPolicy,
-    InputProcessor,
     InputConfiguration
 }

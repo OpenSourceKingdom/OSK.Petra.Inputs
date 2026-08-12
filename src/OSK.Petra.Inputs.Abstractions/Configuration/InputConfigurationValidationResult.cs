@@ -93,17 +93,6 @@ public class InputConfigurationValidationResult
         InputConfigurationValidation validation, string? message = null)
         => ForConfiguration(ConfigurationType.JoinPolicy, propertyPath, validation, message);
 
-    /// <summary>
-    /// Create a validation result that is specific to the input processor configuration, targeting a specific property that is on the <see cref="InputProcessorConfiguration"/>/>
-    /// </summary>
-    /// <param name="propertyPath">The path to the property that will be the target of the validation result</param>
-    /// <param name="validation">The specific validation to set for the target</param>
-    /// <param name="message">A unique message that describes the reason for the validation</param>
-    /// <returns>A validation result tied to the input processor configuration</returns>
-    public static InputConfigurationValidationResult ForProcessorConfiguration(Expression<Func<InputProcessorConfiguration, object?>> propertyPath,
-        InputConfigurationValidation validation, string? message = null)
-        => ForConfiguration(ConfigurationType.InputProcessor, propertyPath, validation, message);
-
     private static InputConfigurationValidationResult ForConfiguration<T>(ConfigurationType configurationType,
         Expression<Func<T, object?>> expression, InputConfigurationValidation validation, string? message = null)
         => new()

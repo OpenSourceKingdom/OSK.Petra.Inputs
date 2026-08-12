@@ -33,7 +33,9 @@ internal class SelectedScheme: ISelectedScheme
         IsPreferred = isPreferred;
         InitiallyPreferred = isPreferred;
 
-        _deviceIdentities = [.. availableInputs.Select(pairing => pairing.DeviceIdentity)];
+        _deviceIdentities = availableInputs is not null && availableInputs.Any() 
+            ? [.. availableInputs.Select(pairing => pairing.DeviceIdentity)]
+            : [];
         _availableActionLookup = availableActions.ToDictionary(action => action.Name);
         _availableInputLookup = availableInputs.ToDictionary(deviceMapPairing => deviceMapPairing.DeviceIdentity, deviceMapPairing => deviceMapPairing.Items.ToDictionary(item => item.Id));
         _inputMaps = [];
@@ -43,7 +45,15 @@ internal class SelectedScheme: ISelectedScheme
             _inputMaps[deviceMapPair.Map.Action.Name] = new(deviceMapPair.DeviceIdentity, deviceMapPair.Map);
 
             _availableActionLookup.Remove(deviceMapPair.Map.Action.Name);
-            _availableInputLookup[deviceMapPair.DeviceIdentity].Remove(deviceMapPair.Map.Input.Id);
+
+            if (_availableInputLookup.TryGetValue(deviceMapPair.DeviceIdentity, out var deviceInputLookup))
+            {
+                deviceInputLookup.Remove(deviceMapPair.Map.Input.Id);
+                if (deviceInputLookup.Count is 0)
+                {
+                    _availableInputLookup.Remove(deviceMapPair.DeviceIdentity);
+                }
+            }
         }
     }
 
@@ -111,6 +121,11 @@ internal class SelectedScheme: ISelectedScheme
         // Deassociate any current pairs with the same input or action
         if (_inputMaps.TryGetValue(action.Name, out var currentMap))
         {
+            if (!_availableInputLookup.TryGetValue(currentMap.Item1, out var lookup))
+            {
+                _availableInputLookup[currentMap.Item1] = [];
+            }
+
             _availableInputLookup[currentMap.Item1][currentMap.Item2.Input.Id] = currentMap.Item2.Input;
             _inputMaps.Remove(action.Name);
         }
@@ -124,6 +139,16 @@ internal class SelectedScheme: ISelectedScheme
         }
 
         _availableActionLookup.Remove(action.Name);
+
+        if (_availableInputLookup.TryGetValue(deviceIdentity, out var deviceLookup))
+        {
+            deviceLookup.Remove(input.Id);
+            if (deviceLookup.Count is 0)
+            {
+                _availableInputLookup.Remove(deviceIdentity);
+            }
+        }
+
         _inputMaps[action.Name] = new(deviceIdentity, new InputActionMap(action, input));
 
         return Out.Success();

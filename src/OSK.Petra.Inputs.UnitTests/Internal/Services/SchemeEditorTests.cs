@@ -1,4 +1,5 @@
 using Moq;
+using OSK.Operations.Outputs;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
@@ -20,7 +21,7 @@ public class SchemeEditorTests
     private readonly Mock<IInputSystemConfigurationProvider> _mockConfigProvider;
     private readonly Mock<IUserManager> _mockUserManager;
     private readonly Mock<IInputSystemNotifier> _mockSystemNotifier;
-    private readonly Mock<DeviceCatalog> _mockCatalog;
+    private readonly DeviceCatalog _catalog;
     private readonly InputSystemConfiguration _validConfig;
 
     #endregion
@@ -38,24 +39,14 @@ public class SchemeEditorTests
         _mockUserManager = new Mock<IUserManager>();
         _mockSystemNotifier = new Mock<IInputSystemNotifier>();
 
-        var mockPart = new Mock<DeviceCatalogPart>();
-        mockPart.SetupGet(m => m.TopologyName).Returns(DeviceTopologyName.Keyboard);
-        mockPart.SetupGet(m => m.KnownDevices).Returns(Array.Empty<IDeviceDescriptor>());
-        mockPart.SetupGet(m => m.GenericDevice).Returns((IDeviceDescriptor?)null);
+        var catalogPart = new DeviceCatalogPart() 
+        {
+            TopologyName = DeviceTopologyName.Keyboard,
+            KnownDevices = [],
+            GenericDevice = null
+        };
 
-        _mockCatalog = new Mock<DeviceCatalog>(new[] { mockPart.Object });
-    }
-
-    private SchemeEditor CreateEditor(bool allowCustomScheme = true)
-    {
-        _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(allowCustomScheme);
-        return new SchemeEditor(
-            _mockUser.Object,
-            _mockCatalog.Object,
-            _mockSchemeService.Object,
-            _mockConfigProvider.Object,
-            _mockUserManager.Object,
-            _mockSystemNotifier.Object);
+        _catalog = new([catalogPart]);
     }
 
     #endregion
@@ -67,7 +58,7 @@ public class SchemeEditorTests
     {
         Assert.Throws<ArgumentNullException>(() => new SchemeEditor(
             null!,
-            _mockCatalog.Object,
+            _catalog,
             _mockSchemeService.Object,
             _mockConfigProvider.Object,
             _mockUserManager.Object,
@@ -91,7 +82,7 @@ public class SchemeEditorTests
     {
         Assert.Throws<ArgumentNullException>(() => new SchemeEditor(
             _mockUser.Object,
-            _mockCatalog.Object,
+            _catalog,
             null!,
             _mockConfigProvider.Object,
             _mockUserManager.Object,
@@ -103,7 +94,7 @@ public class SchemeEditorTests
     {
         Assert.Throws<ArgumentNullException>(() => new SchemeEditor(
             _mockUser.Object,
-            _mockCatalog.Object,
+            _catalog,
             _mockSchemeService.Object,
             null!,
             _mockUserManager.Object,
@@ -115,7 +106,7 @@ public class SchemeEditorTests
     {
         Assert.Throws<ArgumentNullException>(() => new SchemeEditor(
             _mockUser.Object,
-            _mockCatalog.Object,
+            _catalog,
             _mockSchemeService.Object,
             _mockConfigProvider.Object,
             null!,
@@ -127,7 +118,7 @@ public class SchemeEditorTests
     {
         Assert.Throws<ArgumentNullException>(() => new SchemeEditor(
             _mockUser.Object,
-            _mockCatalog.Object,
+            _catalog,
             _mockSchemeService.Object,
             _mockConfigProvider.Object,
             _mockUserManager.Object,
@@ -288,9 +279,11 @@ public class SchemeEditorTests
     {
         // Arrange
         var editor = CreateEditor();
-        var mockPart = new Mock<DeviceCatalogPart>();
-        mockPart.SetupGet(m => m.KnownDevices).Returns(Array.Empty<IDeviceDescriptor>());
-        mockPart.SetupGet(m => m.GenericDevice).Returns((IDeviceDescriptor?)null);
+        var mockPart = new DeviceCatalogPart()
+        {
+            KnownDevices = [],
+            GenericDevice = null,
+        };
 
         // Act
         var result = editor.SetSchemeDevice(DeviceTopologyName.Keyboard, "NonExistent");
@@ -304,6 +297,12 @@ public class SchemeEditorTests
     {
         // Arrange
         var editor = CreateEditor();
+
+        var mockDescriptor = new Mock<IDeviceDescriptor>();
+        mockDescriptor.SetupGet(m => m.Identity)
+            .Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.PlayStation, "TestDevice"));
+
+        _catalog.Parts[0].KnownDevices = [mockDescriptor.Object];
 
         // Act
         var result = editor.SetSchemeDevice(DeviceTopologyName.Keyboard, "TestDevice");
@@ -364,11 +363,11 @@ public class SchemeEditorTests
     {
         // Arrange
         var editor = CreateEditor();
-        // Make the scheme read-only by having it be a non-new, existing scheme
-        // The default selected scheme should be read-only in many cases
+        _mockSchemeService.Setup(m => m.DeleteCustomSchemeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Out.Success());
 
         // Act
-        var result = await editor.DeleteSchemeAsync();
+        var result = await editor.DeleteSchemeAsync(TestContext.Current.CancellationToken);
 
         // Assert - depends on whether scheme is readonly
         _ = result;
@@ -382,10 +381,13 @@ public class SchemeEditorTests
         mockRepo.SetupGet(m => m.AllowCustomSchemes).Returns(true);
         _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(true);
 
+        _mockSchemeService.Setup(m => m.DeleteCustomSchemeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Out.Success());
+
         var editor = CreateEditor(allowCustomScheme: true);
 
         // Act
-        var result = await editor.DeleteSchemeAsync();
+        var result = await editor.DeleteSchemeAsync(TestContext.Current.CancellationToken);
 
         // Assert - may succeed or fail depending on scheme state
         _ = result;
@@ -402,7 +404,7 @@ public class SchemeEditorTests
         var editor = CreateEditor(allowCustomScheme: false);
 
         // Act
-        var result = await editor.SaveSchemeAsync();
+        var result = await editor.SaveSchemeAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -415,8 +417,11 @@ public class SchemeEditorTests
         _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(true);
         var editor = CreateEditor(allowCustomScheme: true);
 
+        _mockSchemeService.Setup(m => m.SaveCustomSchemeAsync(It.IsAny<CustomInputScheme>(), It.IsAny<SchemeSavePermissions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Out.Success());
+
         // Act
-        var result = await editor.SaveSchemeAsync();
+        var result = await editor.SaveSchemeAsync(TestContext.Current.CancellationToken);
 
         // Assert - depends on scheme state
         _ = result;
@@ -450,6 +455,22 @@ public class SchemeEditorTests
 
         // Assert
         Assert.Null(result);
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private SchemeEditor CreateEditor(bool allowCustomScheme = true)
+    {
+        _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(allowCustomScheme);
+        return new SchemeEditor(
+            _mockUser.Object,
+            _catalog,
+            _mockSchemeService.Object,
+            _mockConfigProvider.Object,
+            _mockUserManager.Object,
+            _mockSystemNotifier.Object);
     }
 
     #endregion

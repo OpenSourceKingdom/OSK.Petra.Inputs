@@ -13,6 +13,7 @@ public class DeviceCatalogProviderTests
     #region Variables
 
     private readonly Mock<IInputSystemConfigurationProvider> _mockConfigProvider;
+    private readonly List<IDeviceProvider> _deviceProviders = [];
     private readonly DeviceCatalogProvider _provider;
 
     #endregion
@@ -35,7 +36,7 @@ public class DeviceCatalogProviderTests
         _mockConfigProvider = new Mock<IInputSystemConfigurationProvider>();
         _mockConfigProvider.SetupGet(m => m.Configuration).Returns(config);
 
-        _provider = new DeviceCatalogProvider(_mockConfigProvider.Object, Array.Empty<IDeviceProvider>());
+        _provider = new DeviceCatalogProvider(_mockConfigProvider.Object, _deviceProviders);
     }
 
     #endregion
@@ -47,13 +48,13 @@ public class DeviceCatalogProviderTests
     {
         // Arrange
         var mockProvider = new Mock<IDeviceProvider>();
-        mockProvider.Setup(p => p.GetDevicesAsync(default))
+        mockProvider.Setup(p => p.GetDevicesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Out.Success((IEnumerable<IDeviceDescriptor>)[]));
 
-        var provider = new DeviceCatalogProvider(_mockConfigProvider.Object, [mockProvider.Object]);
+        _deviceProviders.Add(mockProvider.Object);
 
         // Act
-        var result = await provider.GetCatalogAsync(TestContext.Current.CancellationToken);
+        var result = await _provider.GetCatalogAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -65,14 +66,14 @@ public class DeviceCatalogProviderTests
     {
         // Arrange
         var mockProvider = new Mock<IDeviceProvider>();
-        mockProvider.Setup(p => p.GetDevicesAsync(default))
+        mockProvider.Setup(p => p.GetDevicesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Out.Success((IEnumerable<IDeviceDescriptor>)[]));
 
-        var provider = new DeviceCatalogProvider(_mockConfigProvider.Object, [mockProvider.Object]);
+        _deviceProviders.Add(mockProvider.Object);
 
         // Act
-        var result1 = await provider.GetCatalogAsync(TestContext.Current.CancellationToken);
-        var result2 = await provider.GetCatalogAsync(TestContext.Current.CancellationToken);
+        var result1 = await _provider.GetCatalogAsync(TestContext.Current.CancellationToken);
+        var result2 = await _provider.GetCatalogAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Same(result1.Data, result2.Data);
@@ -83,13 +84,13 @@ public class DeviceCatalogProviderTests
     {
         // Arrange
         var mockProvider = new Mock<IDeviceProvider>();
-        mockProvider.Setup(p => p.GetDevicesAsync(default))
+        mockProvider.Setup(p => p.GetDevicesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Out.InvalidRequest<IEnumerable<IDeviceDescriptor>>("provider error"));
 
-        var catalogProvider = new DeviceCatalogProvider(_mockConfigProvider.Object, [mockProvider.Object]);
+        _deviceProviders.Add(mockProvider.Object);
 
         // Act
-        var result = await catalogProvider.GetCatalogAsync(TestContext.Current.CancellationToken);
+        var result = await _provider.GetCatalogAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -106,13 +107,13 @@ public class DeviceCatalogProviderTests
         mockDescriptor2.SetupGet(m => m.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Keyboard2"));
 
         var mockProvider = new Mock<IDeviceProvider>();
-        mockProvider.Setup(p => p.GetDevicesAsync(default))
+        mockProvider.Setup(p => p.GetDevicesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Out.Success((IEnumerable<IDeviceDescriptor>)[mockDescriptor1.Object, mockDescriptor2.Object]));
 
-        var catalogProvider = new DeviceCatalogProvider(_mockConfigProvider.Object, [mockProvider.Object]);
+        _deviceProviders.Add(mockProvider.Object);
 
         // Act
-        var result = await catalogProvider.GetCatalogAsync(TestContext.Current.CancellationToken);
+        var result = await _provider.GetCatalogAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);

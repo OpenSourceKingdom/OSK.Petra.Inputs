@@ -1,4 +1,3 @@
-using Moq;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal.Services;
@@ -42,11 +41,11 @@ public class InMemorySchemeRepositoryTests
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "TestScheme", ConfigurationId = "config-1" };
 
         // Act
-        var result = await _repository.SavePreferredSchemeAsync(scheme);
+        var result = await _repository.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
-        Assert.Same(scheme, result.Data);
+        Assert.Equal(scheme, result.Data);
     }
 
     [Fact]
@@ -54,14 +53,14 @@ public class InMemorySchemeRepositoryTests
     {
         // Arrange
         var scheme1 = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Scheme1", ConfigurationId = "config-1" };
-        var scheme2 = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Scheme2", ConfigurationId = "config-1" };
+        var scheme2 = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default2", SchemeName = "Scheme2", ConfigurationId = "config-1" };
 
         // Act
-        await _repository.SavePreferredSchemeAsync(scheme1);
-        await _repository.SavePreferredSchemeAsync(scheme2);
+        await _repository.SavePreferredSchemeAsync(scheme1, TestContext.Current.CancellationToken);
+        await _repository.SavePreferredSchemeAsync(scheme2, TestContext.Current.CancellationToken);
 
         // Assert
-        var allSchemes = await _repository.GetPreferredSchemesAsync();
+        var allSchemes = await _repository.GetPreferredSchemesAsync(TestContext.Current.CancellationToken);
         Assert.True(allSchemes.IsSuccessful);
         Assert.Equal(2, allSchemes.Data.Count());
     }
@@ -74,11 +73,11 @@ public class InMemorySchemeRepositoryTests
         var scheme2 = new PreferredInputScheme() { UserId = 1, DefinitionName = "Secondary", SchemeName = "Scheme2", ConfigurationId = "config-1" };
 
         // Act
-        await _repository.SavePreferredSchemeAsync(scheme1);
-        await _repository.SavePreferredSchemeAsync(scheme2);
+        await _repository.SavePreferredSchemeAsync(scheme1, TestContext.Current.CancellationToken);
+        await _repository.SavePreferredSchemeAsync(scheme2, TestContext.Current.CancellationToken);
 
         // Assert
-        var allSchemes = await _repository.GetPreferredSchemesAsync();
+        var allSchemes = await _repository.GetPreferredSchemesAsync(TestContext.Current.CancellationToken);
         Assert.True(allSchemes.IsSuccessful);
         Assert.Equal(2, allSchemes.Data.Count());
     }
@@ -91,11 +90,11 @@ public class InMemorySchemeRepositoryTests
         var scheme2 = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "NewScheme", ConfigurationId = "config-1" };
 
         // Act
-        await _repository.SavePreferredSchemeAsync(scheme1);
-        await _repository.SavePreferredSchemeAsync(scheme2);
+        await _repository.SavePreferredSchemeAsync(scheme1, TestContext.Current.CancellationToken);
+        await _repository.SavePreferredSchemeAsync(scheme2, TestContext.Current.CancellationToken);
 
         // Assert
-        var allSchemes = await _repository.GetPreferredSchemesAsync();
+        var allSchemes = await _repository.GetPreferredSchemesAsync(TestContext.Current.CancellationToken);
         Assert.True(allSchemes.IsSuccessful);
         var userSchemes = allSchemes.Data.Where(s => s.UserId == 1 && s.DefinitionName == "Default").ToList();
         Assert.Single(userSchemes);
@@ -110,7 +109,7 @@ public class InMemorySchemeRepositoryTests
     public async Task GetPreferredSchemesAsync_NoSchemes_ReturnsEmpty()
     {
         // Act
-        var result = await _repository.GetPreferredSchemesAsync();
+        var result = await _repository.GetPreferredSchemesAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -122,10 +121,10 @@ public class InMemorySchemeRepositoryTests
     {
         // Arrange
         var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "TestScheme", ConfigurationId = "config-1" };
-        await _repository.SavePreferredSchemeAsync(scheme);
+        await _repository.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
 
         // Act
-        var result = await _repository.GetPreferredSchemesAsync();
+        var result = await _repository.GetPreferredSchemesAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);

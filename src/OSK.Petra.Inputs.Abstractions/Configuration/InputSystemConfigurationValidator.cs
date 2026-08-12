@@ -320,7 +320,7 @@ public static class InputSystemConfigurationValidator
                 $"There are {duplicateDeviceMaps.Count()} device maps on input scheme {scheme.Name} with input definition {definition.Name} with the same device identity, the device maps are: {string.Join(", ", duplicateDeviceMaps)}.");
         }
 
-        var deviceMapsMissingInputMaps = scheme.DeviceMaps.Where(deviceMap => deviceMap.InputMaps is null || !deviceMap.InputMaps.Any())
+        var deviceMapsMissingInputMaps = scheme.DeviceMaps.Where(deviceMap => deviceMap.InputMaps is null)
             .Select(deviceMap => deviceMap.DeviceIdentity);
         if (deviceMapsMissingInputMaps.Any())
         {
