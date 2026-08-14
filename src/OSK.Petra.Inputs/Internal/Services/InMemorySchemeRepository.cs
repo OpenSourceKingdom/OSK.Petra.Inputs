@@ -43,19 +43,13 @@ internal class InMemorySchemeRepository : ISchemeRepository
     }
 
     public Task<Output> DeleteCustomSchemeAsync(string inputDefinitionId, string schemeName, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException($"Default scheme repository does not support custom schemes, please register a custom repository if this is desired.");
-    }
+        => Task.FromResult(Out.InvalidRequest("Default scheme repository does not support custom schemes, please register a custom repository if this is desired."));
 
     public Task<Output<IEnumerable<CustomInputScheme>>> GetCustomSchemesAsync(CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException($"Default scheme repository does not support custom schemes, please register a custom repository if this is desired.");
-    }
+        => Task.FromResult(Out.Success((IEnumerable<CustomInputScheme>)[]));
 
     public Task<Output<CustomInputScheme>> SaveCustomInputScheme(CustomInputScheme scheme, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException($"Default scheme repository does not support custom schemes, please register a custom repository if this is desired.");
-    }
+        => Task.FromResult(Out.InvalidRequest<CustomInputScheme>("Default scheme repository does not support custom schemes, please register a custom repository if this is desired."));
 
     #endregion
 }

@@ -1,6 +1,6 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class InputConfigurationValidationResultTests
 {
@@ -25,7 +25,7 @@ public class InputConfigurationValidationResultTests
     #region ForInputConfiguration
 
     [Fact]
-    public void ForInputConfiguration_SetsCorrectType()
+    public void ForInputConfiguration_SetsExpectedTargetAndType()
     {
         // Arrange & Act
         var result = InputConfigurationValidationResult.ForInputConfiguration(
@@ -43,7 +43,7 @@ public class InputConfigurationValidationResultTests
     #region ForInputSystem
 
     [Fact]
-    public void ForInputSystem_SetsCorrectType()
+    public void ForInputSystem_SetsExpectedTargetAndType()
     {
         // Arrange & Act
         var result = InputConfigurationValidationResult.ForInputSystem(
@@ -59,7 +59,7 @@ public class InputConfigurationValidationResultTests
     #region ForDefinition
 
     [Fact]
-    public void ForDefinition_SetsCorrectType()
+    public void ForDefinition_SetsExpectedTargetAndType()
     {
         // Arrange & Act
         var result = InputConfigurationValidationResult.ForDefinition(
@@ -75,7 +75,7 @@ public class InputConfigurationValidationResultTests
     #region ForInputAction
 
     [Fact]
-    public void ForInputAction_SetsCorrectType()
+    public void ForInputAction_SetsExpectedTargetAndType()
     {
         // Arrange & Act
         var result = InputConfigurationValidationResult.ForInputAction(
@@ -91,7 +91,7 @@ public class InputConfigurationValidationResultTests
     #region ForScheme
 
     [Fact]
-    public void ForScheme_SetsCorrectType()
+    public void ForScheme_SetsExpectedTargetAndType()
     {
         // Arrange & Act
         var result = InputConfigurationValidationResult.ForScheme(
@@ -107,7 +107,7 @@ public class InputConfigurationValidationResultTests
     #region ForDeviceMap
 
     [Fact]
-    public void ForDeviceMap_SetsCorrectType()
+    public void ForDeviceMap_SetsExpectedTargetAndType()
     {
         // Arrange & Act
         var result = InputConfigurationValidationResult.ForDeviceMap(
@@ -123,7 +123,7 @@ public class InputConfigurationValidationResultTests
     #region ForJoinPolicy
 
     [Fact]
-    public void ForJoinPolicy_SetsCorrectType()
+    public void ForJoinPolicy_SetsExpectedTargetAndType()
     {
         // Arrange & Act
         var result = InputConfigurationValidationResult.ForJoinPolicy(

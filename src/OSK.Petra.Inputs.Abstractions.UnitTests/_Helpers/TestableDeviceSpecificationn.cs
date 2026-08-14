@@ -16,6 +16,7 @@ public class TestableDeviceSpecification : DeviceSpecification
 
     public override IReadOnlyCollection<IInput> GetInputs()
     {
+        LookupPopulateCount++;
         return _testInputs.Values.ToList();
     }
 

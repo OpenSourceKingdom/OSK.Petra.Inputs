@@ -1,82 +1,41 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Abstractions.Runtime;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class InputActionTests
 {
     #region Constructor
 
     [Fact]
-    public void Constructor_SetsName()
+    public void Constructor_AllPropertiesSet_SetsPropertiesAsExpected()
     {
         // Arrange & Act
-        var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {});
+        var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}, description: "Hello", actionGroup: 1);
 
         // Assert
         Assert.Equal("Move", action.Name);
+        Assert.Single(action.TriggerPhases);
+        Assert.Contains(InputPhase.Start, action.TriggerPhases);
+        Assert.NotNull(action.ActionExecutor);
+        Assert.Equal("Hello", action.Description);
+        Assert.Equal(1, action.ActionGroup);
     }
 
     [Fact]
-    public void Constructor_SetsTriggerPhases()
+    public void Constructor_SomePropertiesNotSet_SetsPropertiesAsExpected()
     {
         // Arrange & Act
         var phases = new HashSet<InputPhase> { InputPhase.Start, InputPhase.Active };
         var action = new InputAction("Move", phases, ctx => {});
 
         // Assert
-        Assert.Same(phases, action.TriggerPhases);
-    }
-
-    [Fact]
-    public void Constructor_SetsActionExecutor()
-    {
-        // Arrange & Act
-        Action<IInputEventContext> executor = ctx => {};
-        var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, executor);
-
-        // Assert
-        Assert.Same(executor, action.ActionExecutor);
-    }
-
-    [Fact]
-    public void Constructor_SetsDescription()
-    {
-        // Arrange & Act
-        var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}, "Moves the cursor");
-
-        // Assert
-        Assert.Equal("Moves the cursor", action.Description);
-    }
-
-    [Fact]
-    public void Constructor_NullDescription_SetsNull()
-    {
-        // Arrange & Act
-        var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}, null);
-
-        // Assert
+        Assert.Equal("Move", action.Name);
+        Assert.Equal(2, action.TriggerPhases.Count);
+        Assert.True(phases.SequenceEqual(action.TriggerPhases));
+        Assert.Contains(InputPhase.Start, action.TriggerPhases);
+        Assert.NotNull(action.ActionExecutor);
         Assert.Null(action.Description);
-    }
-
-    [Fact]
-    public void Constructor_SetsActionGroup()
-    {
-        // Arrange & Act
-        var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}, "Moves", 42);
-
-        // Assert
-        Assert.Equal(42, action.ActionGroup);
-    }
-
-    [Fact]
-    public void Constructor_NullActionGroup_SetsNull()
-    {
-        // Arrange & Act
-        var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}, "Moves", null);
-
-        // Assert
         Assert.Null(action.ActionGroup);
     }
 

@@ -1,13 +1,18 @@
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using Moq;
+using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Runtime;
 
 public class InputStateExtensionsTests
 {
     #region Variables
 
     private readonly Mock<IInputState> _mockState;
+
+    #endregion
+
+    #region Constructors
 
     public InputStateExtensionsTests()
     {
@@ -29,18 +34,6 @@ public class InputStateExtensionsTests
 
         // Assert
         Assert.NotNull(result);
-    }
-
-    [Fact]
-    public void GetOrCreateDetails_NewDetail_CallsSetDetails()
-    {
-        // Arrange
-        _mockState.Setup(s => s.GetDetails<TestCapabilityDetails>()).Returns((TestCapabilityDetails?)null);
-
-        // Act
-        var result = _mockState.Object.GetOrCreateDetails<TestCapabilityDetails>();
-
-        // Assert
         _mockState.Verify(s => s.SetDetails(result), Times.Once);
     }
 
@@ -56,20 +49,7 @@ public class InputStateExtensionsTests
 
         // Assert
         Assert.Same(existing, result);
-    }
-
-    [Fact]
-    public void GetOrCreateDetails_ExistingDetail_DoesNotCallSetDetails()
-    {
-        // Arrange
-        var existing = new TestCapabilityDetails();
-        _mockState.Setup(s => s.GetDetails<TestCapabilityDetails>()).Returns(existing);
-
-        // Act
-        var result = _mockState.Object.GetOrCreateDetails<TestCapabilityDetails>();
-
-        // Assert
-        _mockState.Verify(s => s.SetDetails(It.IsAny<TestCapabilityDetails>()), Times.Never);
+        _mockState.Verify(s => s.SetDetails(result), Times.Never);
     }
 
     #endregion
@@ -88,19 +68,6 @@ public class InputStateExtensionsTests
 
         // Assert
         Assert.NotNull(result);
-    }
-
-    [Fact]
-    public void GetOrCreateDetails_Factory_NewDetail_CallsSetDetails()
-    {
-        // Arrange
-        _mockState.Setup(s => s.GetDetails<TestCapabilityDetails>()).Returns((TestCapabilityDetails?)null);
-        var factory = new Func<TestCapabilityDetails>(() => new TestCapabilityDetails());
-
-        // Act
-        var result = _mockState.Object.GetOrCreateDetails(factory);
-
-        // Assert
         _mockState.Verify(s => s.SetDetails(result), Times.Once);
     }
 
@@ -117,6 +84,7 @@ public class InputStateExtensionsTests
 
         // Assert
         Assert.Same(existing, result);
+        _mockState.Verify(s => s.SetDetails(result), Times.Never);
     }
 
     [Fact]
@@ -125,12 +93,6 @@ public class InputStateExtensionsTests
         // Arrange & Act & Assert
         Assert.Throws<ArgumentNullException>(() => _mockState.Object.GetOrCreateDetails<TestCapabilityDetails>(null!));
     }
-
-    #endregion
-
-    #region Helper Types
-
-    private class TestCapabilityDetails : ICapabilityDetails { }
 
     #endregion
 }

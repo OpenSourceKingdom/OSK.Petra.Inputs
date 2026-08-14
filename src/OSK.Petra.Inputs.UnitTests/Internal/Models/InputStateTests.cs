@@ -2,6 +2,7 @@ using Moq;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal.Models;
+using OSK.Petra.Inputs.UnitTests._Helpers;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Models;
 
@@ -11,6 +12,8 @@ public class InputStateTests
 
     private readonly Mock<IInput> _mockInput;
     private readonly RuntimeDeviceIdentifier _deviceIdentifier;
+
+    private InputState _state;
 
     #endregion
 
@@ -22,12 +25,10 @@ public class InputStateTests
         _mockInput.SetupGet(m => m.Id).Returns(1);
         var deviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test");
         _deviceIdentifier = new RuntimeDeviceIdentifier(100, deviceIdentity);
-    }
 
-    private InputState CreateState(IInput? input = null)
-    {
+
         var deviceContext = new DeviceInputContext(1, _deviceIdentifier);
-        return new InputState(input ?? _mockInput.Object, deviceContext);
+        _state = new InputState(_mockInput.Object, deviceContext);
     }
 
     #endregion
@@ -35,94 +36,65 @@ public class InputStateTests
     #region Constructor
 
     [Fact]
-    public void Constructor_SetsInput()
+    public void Constructor_New_ReturnsExpected()
     {
-        // Arrange
-        var state = CreateState();
-
-        // Assert
-        Assert.Same(_mockInput.Object, state.Input);
-    }
-
-    [Fact]
-    public void Constructor_SetsDeviceIdentifier()
-    {
-        // Arrange
-        var state = CreateState();
-
-        // Assert
-        Assert.Equal(_deviceIdentifier, state.DeviceIdentifier);
-    }
-
-    #endregion
-
-    #region IsNewActivation
-
-    [Fact]
-    public void IsNewActivation_DefaultValue_IsFalse()
-    {
-        // Arrange
-        var state = CreateState();
-
-        // Assert
-        Assert.True(state.IsNewActivation);
+        // Arrange/Assert
+        Assert.Same(_mockInput.Object, _state.Input);
+        Assert.Equal(_deviceIdentifier, _state.DeviceIdentifier);
+        Assert.True(_state.IsNewActivation);
+        Assert.Equal(InputPhase.Start, _state.Phase);
+        Assert.Equal(TimeSpan.Zero, _state.Duration);
     }
 
     #endregion
 
     #region Reset
 
+    [Fact]
     public void Reset_SetsIsNewActivationToFalse()
     {
         // Arrange
-        var state = CreateState();
-        Assert.True(state.IsNewActivation);
+        Assert.True(_state.IsNewActivation);
 
         // Act
-        state.Reset();
+        _state.Reset();
 
         // Assert
-        Assert.False(state.IsNewActivation);
+        Assert.False(_state.IsNewActivation);
     }
 
     #endregion
 
     #region Phase
 
-    [Fact]
-    public void Phase_DefaultValue_IsZero()
+    [Theory]
+    [InlineData(InputPhase.Start)]
+    [InlineData(InputPhase.Active)]
+    [InlineData(InputPhase.End)]
+    public void CombinePhase_FirstCombine_SetsPhase(InputPhase phase)
     {
-        // Arrange
-        var state = CreateState();
+        // Arrange/Act
+        _state.CombinePhase(phase);
 
         // Assert
-        Assert.Equal(InputPhase.Start, state.Phase);
+        Assert.Equal(phase, _state.Phase);
     }
 
-    [Fact]
-    public void CombinePhase_Active_SetsPhaseToActive()
+    [Theory]
+    // These tests aren't exhaustive as there are tests for the combine phase extension
+    [InlineData(InputPhase.Start, InputPhase.Start, InputPhase.Start)]
+    [InlineData(InputPhase.Active, InputPhase.Start, InputPhase.Start)]
+    [InlineData(InputPhase.End, InputPhase.Start, InputPhase.End)]
+    public void CombinePhase_SecondCall_CombinesPhaseToExpected(InputPhase initial, InputPhase newPhase, InputPhase expectedPhase)
     {
         // Arrange
-        var state = CreateState();
+        _state.CombinePhase(initial);
 
         // Act
-        state.CombinePhase(InputPhase.Active);
+        _state.CombinePhase(newPhase);
 
         // Assert
-        Assert.Equal(InputPhase.Active, state.Phase);
-    }
-
-    [Fact]
-    public void CombinePhase_End_SetsPhaseToEnd()
-    {
-        // Arrange
-        var state = CreateState();
-
-        // Act
-        state.CombinePhase(InputPhase.End);
-
-        // Assert
-        Assert.Equal(InputPhase.End, state.Phase);
+        Assert.Equal(expectedPhase, _state.Phase);
     }
 
     #endregion
@@ -130,27 +102,16 @@ public class InputStateTests
     #region Duration
 
     [Fact]
-    public void Duration_DefaultValue_IsZero()
-    {
-        // Arrange
-        var state = CreateState();
-
-        // Assert
-        Assert.Equal(TimeSpan.Zero, state.Duration);
-    }
-
-    [Fact]
     public void Duration_CanBeSet()
     {
         // Arrange
-        var state = CreateState();
         var expected = TimeSpan.FromSeconds(5);
 
         // Act
-        state.Duration = expected;
+        _state.Duration = expected;
 
         // Assert
-        Assert.Equal(expected, state.Duration);
+        Assert.Equal(expected, _state.Duration);
     }
 
     #endregion
@@ -160,25 +121,21 @@ public class InputStateTests
     [Fact]
     public void SetDetails_NullDetail_ThrowsArgumentNullException()
     {
-        // Arrange
-        var state = CreateState();
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => state.SetDetails<ICapabilityDetails>(null!));
+        // Arrange/Act/Assert
+        Assert.Throws<ArgumentNullException>(() => _state.SetDetails<ICapabilityDetails>(null!));
     }
 
     [Fact]
     public void SetDetails_ValidDetail_StoresDetail()
     {
         // Arrange
-        var state = CreateState();
-        var detail = new TestCapabilityDetails();
+        var detail = new PrimaryCapabilityDetails();
 
         // Act
-        state.SetDetails(detail);
+        _state.SetDetails(detail);
 
         // Assert
-        var retrieved = state.GetDetails<TestCapabilityDetails>();
+        var retrieved = _state.GetDetails<PrimaryCapabilityDetails>();
         Assert.NotNull(retrieved);
         Assert.Same(detail, retrieved);
     }
@@ -187,16 +144,15 @@ public class InputStateTests
     public void SetDetails_OverwritesExistingDetail()
     {
         // Arrange
-        var state = CreateState();
-        var detail1 = new TestCapabilityDetails();
-        var detail2 = new TestCapabilityDetails();
+        var detail1 = new PrimaryCapabilityDetails();
+        var detail2 = new PrimaryCapabilityDetails();
 
         // Act
-        state.SetDetails(detail1);
-        state.SetDetails(detail2);
+        _state.SetDetails(detail1);
+        _state.SetDetails(detail2);
 
         // Assert
-        var retrieved = state.GetDetails<TestCapabilityDetails>();
+        var retrieved = _state.GetDetails<PrimaryCapabilityDetails>();
         Assert.Same(detail2, retrieved);
     }
 
@@ -207,11 +163,8 @@ public class InputStateTests
     [Fact]
     public void GetDetails_NoDetail_Stored_ReturnsNull()
     {
-        // Arrange
-        var state = CreateState();
-
-        // Act
-        var result = state.GetDetails<TestCapabilityDetails>();
+        // Arrange/Act
+        var result = _state.GetDetails<PrimaryCapabilityDetails>();
 
         // Assert
         Assert.Null(result);
@@ -221,14 +174,28 @@ public class InputStateTests
     public void GetDetails_DifferentType_ReturnsNull()
     {
         // Arrange
-        var state = CreateState();
-        state.SetDetails(new TestCapabilityDetails());
+        _state.SetDetails(new PrimaryCapabilityDetails());
 
         // Act
-        var result = state.GetDetails<OtherCapabilityDetails>();
+        var result = _state.GetDetails<SecondaryCapabilityDetails>();
 
         // Assert
         Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetDetails_ValidType_ReturnsDetails()
+    {
+        // Arrange
+        var details = new PrimaryCapabilityDetails();
+        _state.SetDetails(details);
+
+        // Act
+        var result = _state.GetDetails<PrimaryCapabilityDetails>();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Same(details, result);
     }
 
     #endregion
@@ -236,32 +203,20 @@ public class InputStateTests
     #region Dispose
 
     [Fact]
-    public void Dispose_SetsIsDisposed()
+    public void Dispose_SetsIsDisposed_FiresDisposedEvent()
     {
         // Arrange
-        var state = CreateState();
-
-        // Act
-        state.Dispose();
-
-        // Assert
-        Assert.True(state.IsDisposed);
-    }
-
-    [Fact]
-    public void Disposed_Event_Fired()
-    {
-        // Arrange
-        var state = CreateState();
         IInputState? firedState = null;
-        state.Disposed += s => { firedState = s; };
+        _state.Disposed += s => { firedState = s; };
 
         // Act
-        state.Dispose();
+        _state.Dispose();
 
         // Assert
+        Assert.True(_state.IsDisposed);
+
         Assert.NotNull(firedState);
-        Assert.Same(state, firedState);
+        Assert.Same(_state, firedState);
     }
 
     [Fact]
@@ -278,13 +233,6 @@ public class InputStateTests
         var snapshot = deviceContext.GetInputStateSnapshot();
         Assert.Empty(snapshot);
     }
-
-    #endregion
-
-    #region Helper Classes
-
-    private class TestCapabilityDetails : ICapabilityDetails { }
-    private class OtherCapabilityDetails : ICapabilityDetails { }
 
     #endregion
 }

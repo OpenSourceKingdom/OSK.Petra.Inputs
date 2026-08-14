@@ -2,7 +2,7 @@ using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class InputConfigurationTests
 {
@@ -133,6 +133,46 @@ public class InputConfigurationTests
 
         // Assert
         Assert.Equal("Gamepad.Keyboard", result);
+    }
+
+    [Fact]
+    public void GetConfigurationId_SameTopologiesDifferentOrder_ReturnsSameId()
+    {
+        // Arrange
+        var topologiesA = new[]
+        {
+            DeviceTopologyName.Keyboard,
+            DeviceTopologyName.Mouse
+        };
+        var topologiesB = new[]
+        {
+            DeviceTopologyName.Mouse,
+            DeviceTopologyName.Keyboard            
+        };
+
+        // Act
+        var resultA = InputConfiguration.GetConfigurationId(topologiesA);
+        var resultB = InputConfiguration.GetConfigurationId(topologiesB);
+
+        // Assert
+        Assert.Equal(resultA, resultB);
+    }
+
+    [Fact]
+    public void GetConfigurationId_DuplicateTopologies_RemovesDuplicates()
+    {
+        // Arrange
+        var topologies = new[]
+        {
+            DeviceTopologyName.Keyboard,
+            DeviceTopologyName.Keyboard
+        };
+
+        // Act
+        var result = InputConfiguration.GetConfigurationId(topologies);
+
+        // Assert
+        Assert.Equal("Keyboard", result);
     }
 
     #endregion
@@ -492,7 +532,7 @@ public class InputConfigurationTests
     }
 
     [Fact]
-    public void AddScheme_ValidScheme_MakesQueryable()
+    public void AddScheme_ValidScheme_BecomesGettable()
     {
         // Arrange
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });

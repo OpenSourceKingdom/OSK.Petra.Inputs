@@ -75,10 +75,18 @@ public static class InputSystemConfigurationValidator
         }
 
         var existingScheme = inputConfiguration.GetScheme(scheme.DefinitionName, scheme.Name);
-        if (existingScheme is not null && (!existingScheme.IsCustom || (existingScheme.IsCustom && !allowDuplicateCustomScheme)))
+        if (existingScheme is not null)
         {
-            return InputConfigurationValidationResult.ForScheme(scheme => scheme.Name, InputConfigurationValidation.DuplicateData,
-                $"The custom scheme's name {customScheme.Name} already exists on input definition {definition.Name}.");
+            if (!existingScheme.IsCustom)
+            {
+                return InputConfigurationValidationResult.ForScheme(scheme => scheme.IsCustom, InputConfigurationValidation.InvalidData,
+                    $"The custom scheme {customScheme.Name} for definition {definition.Name} is not a custom scheme and can not be modified.");
+            }
+            if (!allowDuplicateCustomScheme)
+            {
+                return InputConfigurationValidationResult.ForScheme(scheme => scheme.Name, InputConfigurationValidation.DuplicateData,
+                    $"The custom scheme's name {customScheme.Name} already exists on input definition {definition.Name} and is not editable.");
+            }
         }
 
         return ValidateInputScheme(configuration, definition, customScheme.ToInputScheme());

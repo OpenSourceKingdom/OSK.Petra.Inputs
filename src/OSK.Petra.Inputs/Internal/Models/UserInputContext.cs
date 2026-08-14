@@ -4,11 +4,12 @@ using System.Collections.Generic;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
-internal class UserInputContext(int userId, InputScheme scheme)
+internal class UserInputContext(int userId)
 {
     #region Variables
 
     private bool _globalActionSuppression;
+    private InputScheme? _scheme;
     private readonly Dictionary<int, bool> _suppressedActions = [];
     private readonly Dictionary<RuntimeDeviceIdentifier, DeviceInputContext> _deviceContexts = [];
 
@@ -16,16 +17,18 @@ internal class UserInputContext(int userId, InputScheme scheme)
 
     #region Api
 
+    internal bool IsGloballySuppressed => _globalActionSuppression;
+
     public int UserId => userId;
 
     public IEnumerable<DeviceInputContext> DeviceInputContexts => _deviceContexts.Values;
 
-    public InputScheme Scheme 
+    public InputScheme? Scheme 
     { 
-        get => scheme;
+        get => _scheme;
         set
         {
-            scheme = value;
+            _scheme = value;
             _deviceContexts.Clear();
         }
     }

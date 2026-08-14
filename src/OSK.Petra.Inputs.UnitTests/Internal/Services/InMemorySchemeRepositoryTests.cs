@@ -136,10 +136,13 @@ public class InMemorySchemeRepositoryTests
     #region DeleteCustomSchemeAsync
 
     [Fact]
-    public async Task DeleteCustomSchemeAsync_ThrowsNotImplemented()
+    public async Task DeleteCustomSchemeAsync_ReturnsInvalidaRequest()
     {
-        // Act & Assert
-        await Assert.ThrowsAsync<NotImplementedException>(() => _repository.DeleteCustomSchemeAsync("Default", "Test", TestContext.Current.CancellationToken));
+        // Act
+        var result = await _repository.DeleteCustomSchemeAsync("Default", "Test", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(result.IsSuccessful);
     }
 
     #endregion
@@ -147,10 +150,14 @@ public class InMemorySchemeRepositoryTests
     #region GetCustomSchemesAsync
 
     [Fact]
-    public async Task GetCustomSchemesAsync_ThrowsNotImplemented()
+    public async Task GetCustomSchemesAsync_ReturnsEmpty()
     {
-        // Act & Assert
-        await Assert.ThrowsAsync<NotImplementedException>(() => _repository.GetCustomSchemesAsync(TestContext.Current.CancellationToken));
+        // Act 
+        var result = await _repository.GetCustomSchemesAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(result.IsSuccessful);
+        Assert.Empty(result.Data);
     }
 
     #endregion
@@ -158,13 +165,16 @@ public class InMemorySchemeRepositoryTests
     #region SaveCustomInputScheme
 
     [Fact]
-    public async Task SaveCustomInputScheme_ThrowsNotImplemented()
+    public async Task SaveCustomInputScheme_ReturnsInvalidRequest()
     {
         // Arrange
         var scheme = new CustomInputScheme() { DefinitionName = "Default", Name = "Test", DeviceMaps = [] };
 
-        // Act & Assert
-        await Assert.ThrowsAsync<NotImplementedException>(() => _repository.SaveCustomInputScheme(scheme, TestContext.Current.CancellationToken));
+        // Act
+        var result = await _repository.SaveCustomInputScheme(scheme, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(result.IsSuccessful);
     }
 
     #endregion

@@ -2,14 +2,14 @@ using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using Moq;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class InputSystemConfigurationTests
 {
     #region Constructor
 
     [Fact]
-    public void Constructor_SetsJoinPolicy()
+    public void Constructor_SetsExpectedValues()
     {
         // Arrange
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
@@ -18,9 +18,11 @@ public class InputSystemConfigurationTests
         config.AddScheme(scheme);
 
         // Act
-        var configuration = new InputSystemConfiguration([], new[] { config }, [], joinPolicy);
+        var configuration = new InputSystemConfiguration([CreateMockTopology(DeviceTopologyName.Keyboard)], new[] { config }, [], joinPolicy);
 
         // Assert
+        Assert.Single(configuration.SupportedDeviceTopologies);
+        Assert.Single(configuration.InputConfigurations);
         Assert.Same(joinPolicy, configuration.JoinPolicy);
     }
 
@@ -40,6 +42,8 @@ public class InputSystemConfigurationTests
 
         // Assert
         Assert.Equal(2, configuration.SupportedDeviceTopologies.Count);
+        Assert.Contains(DeviceTopologyName.Keyboard, configuration.SupportedDeviceTopologies.Select(d => d.Name));
+        Assert.Contains(DeviceTopologyName.Mouse, configuration.SupportedDeviceTopologies.Select(d => d.Name));
     }
 
     [Fact]

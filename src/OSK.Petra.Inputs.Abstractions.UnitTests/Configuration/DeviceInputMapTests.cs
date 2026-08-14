@@ -2,7 +2,7 @@ using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class DeviceInputMapTests
 {
@@ -15,21 +15,18 @@ public class DeviceInputMapTests
     #region Constructor (required properties)
 
     [Fact]
-    public void DeviceIdentity_RequiredProperty_SetsValue()
+    public void Constructor_DeviceIdentityAndEmptyMaps_SetsValuesAsExpected()
     {
         // Arrange & Act
         var map = new DeviceInputMap { DeviceIdentity = _keyboardIdentity, InputMaps = [] };
 
         // Assert
         Assert.Equal(_keyboardIdentity, map.DeviceIdentity);
+        Assert.Empty(map.InputMaps);
     }
 
-    #endregion
-
-    #region InputMaps
-
     [Fact]
-    public void InputMaps_Setter_PopulatesLookup()
+    public void Constructor_DeviceIdentityAndMaps_SetsValuesAsExpected()
     {
         // Arrange
         var input = new MockInput(1);
@@ -41,16 +38,6 @@ public class DeviceInputMapTests
 
         // Assert
         Assert.Single(map.InputMaps);
-    }
-
-    [Fact]
-    public void InputMaps_EmptyCollection_ReturnsEmpty()
-    {
-        // Arrange & Act
-        var map = new DeviceInputMap { DeviceIdentity = _keyboardIdentity, InputMaps = [] };
-
-        // Assert
-        Assert.Empty(map.InputMaps);
     }
 
     #endregion

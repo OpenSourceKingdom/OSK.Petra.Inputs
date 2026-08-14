@@ -1,7 +1,7 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class CustomInputSchemeTests
 {
@@ -49,7 +49,7 @@ public class CustomInputSchemeTests
         };
 
         // Act
-        var identities = scheme.GetDeviceIdentities().ToList();
+        var identities = scheme.GetDeviceIdentities();
 
         // Assert
         Assert.Single(identities);
@@ -68,7 +68,7 @@ public class CustomInputSchemeTests
         };
 
         // Act
-        var identities = scheme.GetDeviceIdentities().ToList();
+        var identities = scheme.GetDeviceIdentities();
 
         // Assert
         Assert.Empty(identities);

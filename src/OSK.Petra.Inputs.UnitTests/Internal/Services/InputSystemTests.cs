@@ -20,29 +20,27 @@ public class InputSystemTests
     private readonly Mock<IInternalSchemeService> _mockSchemeService;
     private readonly InputSystemConfiguration _validConfig;
 
+    private readonly InputSystem _inputSystem;
+
     #endregion
 
     #region Constructors
 
     public InputSystemTests()
     {
-        _validConfig = TestConfigurationFactory.CreateValidConfiguration();
-        _mockConfigProvider = TestConfigurationFactory.CreateConfigurationProvider(_validConfig);
+        _validConfig = TestConfigurationHelper.CreateValidConfiguration();
+        
+        _mockConfigProvider = new Mock<IInputSystemConfigurationProvider>();
+        _mockConfigProvider.SetupGet(m => m.Configuration)
+            .Returns(_validConfig);
+       
         _mockUserManager = new Mock<IUserManager>();
         _mockInputService = new Mock<IInputService>();
         _mockSystemNotifier = new Mock<IInputSystemNotifier>();
         _mockSchemeService = new Mock<IInternalSchemeService>();
         _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(false);
-    }
 
-    private InputSystem CreateSystem()
-    {
-        return new InputSystem(
-            _mockConfigProvider.Object,
-            _mockUserManager.Object,
-            _mockInputService.Object,
-            _mockSystemNotifier.Object,
-            _mockSchemeService.Object);
+        _inputSystem = new(_mockConfigProvider.Object, _mockUserManager.Object, _mockInputService.Object, _mockSystemNotifier.Object, _mockSchemeService.Object);
     }
 
     #endregion
@@ -52,11 +50,8 @@ public class InputSystemTests
     [Fact]
     public void Configuration_ReturnsConfigurationProviderValue()
     {
-        // Arrange
-        var system = CreateSystem();
-
-        // Act
-        var config = system.Configuration;
+        // Arrange/Act
+        var config = _inputSystem.Configuration;
 
         // Assert
         Assert.NotNull(config);
@@ -70,11 +65,8 @@ public class InputSystemTests
     [Fact]
     public void Notifier_ReturnsSystemNotifier()
     {
-        // Arrange
-        var system = CreateSystem();
-
-        // Act
-        var notifier = system.Notifier;
+        // Arrange/Act
+        var notifier = _inputSystem.Notifier;
 
         // Assert
         Assert.NotNull(notifier);
@@ -88,11 +80,8 @@ public class InputSystemTests
     [Fact]
     public void UserManager_ReturnsUserManager()
     {
-        // Arrange
-        var system = CreateSystem();
-
-        // Act
-        var userManager = system.UserManager;
+        // Arrange/Act
+        var userManager = _inputSystem.UserManager;
 
         // Assert
         Assert.NotNull(userManager);
@@ -106,11 +95,8 @@ public class InputSystemTests
     [Fact]
     public void SchemeService_ReturnsSchemeService()
     {
-        // Arrange
-        var system = CreateSystem();
-
-        // Act
-        var schemeService = system.SchemeService;
+        // Arrange/Act
+        var schemeService = _inputSystem.SchemeService;
 
         // Assert
         Assert.NotNull(schemeService);
@@ -122,10 +108,9 @@ public class InputSystemTests
     {
         // Arrange
         _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(true);
-        var system = CreateSystem();
 
-        // Act
-        Assert.True(system.AllowCustomSchemes);
+        // Act/Assert
+        Assert.True(_inputSystem.AllowCustomSchemes);
     }
 
     #endregion
@@ -135,24 +120,18 @@ public class InputSystemTests
     [Fact]
     public void PauseInput_GetDefault_ReturnsFalse()
     {
-        // Arrange
-        var system = CreateSystem();
-
-        // Assert
-        Assert.False(system.PauseInput);
+        // Arrange/Act/Assert
+        Assert.False(_inputSystem.PauseInput);
     }
 
     [Fact]
     public void PauseInput_SetToTrue_SetsInternalAndDelegates()
     {
-        // Arrange
-        var system = CreateSystem();
-
-        // Act
-        system.PauseInput = true;
+        // Arrange/Act
+        _inputSystem.PauseInput = true;
 
         // Assert
-        Assert.True(system.PauseInput);
+        Assert.True(_inputSystem.PauseInput);
         _mockInputService.VerifySet(s => s.PauseInput = true, Times.Once);
     }
 
@@ -160,27 +139,25 @@ public class InputSystemTests
     public void PauseInput_SetToFalse_SetsInternalAndDelegates()
     {
         // Arrange
-        var system = CreateSystem();
-        system.PauseInput = true;
+        _inputSystem.PauseInput = true;
+
+        _mockInputService.Reset();
 
         // Act
-        system.PauseInput = false;
+        _inputSystem.PauseInput = false;
 
         // Assert
-        Assert.False(system.PauseInput);
+        Assert.False(_inputSystem.PauseInput);
         _mockInputService.VerifySet(s => s.PauseInput = false, Times.Once);
     }
 
     [Fact]
     public void PauseInput_SetSameValue_DoesNotNotify()
     {
-        // Arrange
-        var system = CreateSystem();
-
-        // Act - set to true twice
-        system.PauseInput = true;
+        // Arrange/Act - set to true twice
+        _inputSystem.PauseInput = true;
         _mockSystemNotifier.Invocations.Clear();
-        system.PauseInput = true;
+        _inputSystem.PauseInput = true;
 
         // Assert
         _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<InputMonitorStatusChangedNotification>()), Times.Never);
@@ -189,11 +166,8 @@ public class InputSystemTests
     [Fact]
     public void PauseInput_SetTrue_RaisesMonitorStatusChangedNotification()
     {
-        // Arrange
-        var system = CreateSystem();
-
-        // Act
-        system.PauseInput = true;
+        // Arrange/Act
+        _inputSystem.PauseInput = true;
 
         // Assert
         _mockSystemNotifier.Verify(n => n.Notify(It.Is<InputMonitorStatusChangedNotification>(x => !x.IsMonitoringInput)), Times.Once);
@@ -203,12 +177,11 @@ public class InputSystemTests
     public void PauseInput_SetFalse_RaisesMonitorStatusChangedNotification()
     {
         // Arrange
-        var system = CreateSystem();
-        system.PauseInput = true;
+        _inputSystem.PauseInput = true;
         _mockSystemNotifier.Invocations.Clear();
 
         // Act
-        system.PauseInput = false;
+        _inputSystem.PauseInput = false;
 
         // Assert
         _mockSystemNotifier.Verify(n => n.Notify(It.Is<InputMonitorStatusChangedNotification>(x => x.IsMonitoringInput)), Times.Once);
@@ -222,53 +195,33 @@ public class InputSystemTests
     public async Task InitializeAsync_ValidConfiguration_ReturnsSuccess()
     {
         // Arrange
-        var system = CreateSystem();
         _mockSchemeService.Setup(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(Out.Success()));
 
         // Act
-        var result = await system.InitializeAsync(TestContext.Current.CancellationToken);
+        var result = await _inputSystem.InitializeAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
+
+        _mockSchemeService.Verify(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task InitializeAsync_InvalidConfiguration_ThrowsInvalidOperationException()
     {
         // Arrange
-        var invalidConfig = CreateInvalidConfiguration();
-        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(invalidConfig);
-        var system = CreateSystem();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => system.InitializeAsync(TestContext.Current.CancellationToken));
-    }
-
-    [Fact]
-    public async Task InitializeAsync_CallsSchemeServiceLoad()
-    {
-        // Arrange
-        var system = CreateSystem();
-        _mockSchemeService.Setup(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()))
-            .Returns(Task.FromResult(Out.Success()));
-
-        // Act
-        await system.InitializeAsync(TestContext.Current.CancellationToken);
-
-        // Assert
-        _mockSchemeService.Verify(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    private InputSystemConfiguration CreateInvalidConfiguration()
-    {
         var joinPolicy = new InputSystemJoinPolicy
         {
             MaxUsers = 0,
             UserJoinBehavior = UserJoinBehavior.DeviceActivation,
             DeviceJoinBehavior = DevicePairingBehavior.Balanced
         };
-        return new InputSystemConfiguration([], [], [], joinPolicy);
+        var invalidConfig = new InputSystemConfiguration([], [], [], joinPolicy);
+        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(invalidConfig);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _inputSystem.InitializeAsync(TestContext.Current.CancellationToken));
     }
 
     #endregion
@@ -279,11 +232,10 @@ public class InputSystemTests
     public void Update_WhenPaused_DoesNotDelegateToInputService()
     {
         // Arrange
-        var system = CreateSystem();
-        system.PauseInput = true;
+        _inputSystem.PauseInput = true;
 
         // Act
-        system.Update(TimeSpan.FromSeconds(1));
+        _inputSystem.Update(TimeSpan.FromSeconds(1));
 
         // Assert
         _mockInputService.Verify(s => s.Update(It.IsAny<TimeSpan>()), Times.Never);
@@ -293,26 +245,11 @@ public class InputSystemTests
     public void Update_WhenNotPaused_DelegatesToInputService()
     {
         // Arrange
-        var system = CreateSystem();
-        system.PauseInput = false;
+        _inputSystem.PauseInput = false;
         var delta = TimeSpan.FromSeconds(0.1);
 
         // Act
-        system.Update(delta);
-
-        // Assert
-        _mockInputService.Verify(s => s.Update(delta), Times.Once);
-    }
-
-    [Fact]
-    public void Update_PassesCorrectDeltaTime()
-    {
-        // Arrange
-        var system = CreateSystem();
-        var delta = TimeSpan.FromMilliseconds(16);
-
-        // Act
-        system.Update(delta);
+        _inputSystem.Update(delta);
 
         // Assert
         _mockInputService.Verify(s => s.Update(delta), Times.Once);

@@ -30,7 +30,7 @@ public class UserManagerTests
 
     public UserManagerTests()
     {
-        var config = TestConfigurationFactory.CreateValidConfiguration(4);
+        var config = TestConfigurationHelper.CreateValidConfiguration(4);
         _mockConfigProvider = new Mock<IInputSystemConfigurationProvider>();
         _mockConfigProvider.SetupGet(m => m.Configuration).Returns(config);
 
@@ -104,7 +104,7 @@ public class UserManagerTests
     public void CreateUser_MaxUsersReached_ReturnsError()
     {
         // Arrange
-        var config = TestConfigurationFactory.CreateValidConfiguration(2);
+        var config = TestConfigurationHelper.CreateValidConfiguration(2);
         _mockConfigProvider.SetupGet(m => m.Configuration).Returns(config);
 
         var userManager = new UserManager(
@@ -169,7 +169,7 @@ public class UserManagerTests
     public void CreateUser_WithDevicesToPair_PairsDevices()
     {
         // Arrange
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
         var options = new UserJoinOptions() { DevicesToPair = [device] };
 
         // Act
@@ -184,7 +184,7 @@ public class UserManagerTests
     public void CreateUser_WithDevicesToPair_RaisesDevicePairedNotification()
     {
         // Arrange
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
         var options = new UserJoinOptions() { DevicesToPair = [device] };
 
         // Act
@@ -198,10 +198,10 @@ public class UserManagerTests
     public void CreateUser_WithAlreadyPairedDevice_ReturnsInvalidRequest()
     {
         // Arrange
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 500);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 500);
         _userManager.CreateUser(new UserJoinOptions() { DevicesToPair = [device] });
 
-        var pairedDevice = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 500);
+        var pairedDevice = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 500);
         var options = new UserJoinOptions() { DevicesToPair = [pairedDevice] };
 
         // Act
@@ -362,7 +362,7 @@ public class UserManagerTests
     public void GetUserForDevice_DevicePaired_ReturnsUser()
     {
         // Arrange
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
         var createResult = _userManager.CreateUser(new UserJoinOptions() { DevicesToPair = [device] });
 
         // Act
@@ -462,7 +462,7 @@ public class UserManagerTests
     public void RemoveUser_UserWithPairedDevices_UnpairsAllDevices()
     {
         // Arrange
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
         _userManager.CreateUser(new UserJoinOptions() { DevicesToPair = [device] });
 
         // Act
@@ -480,7 +480,7 @@ public class UserManagerTests
     public void PairDevice_UserNotFound_ReturnsDataNotFound()
     {
         // Arrange
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
 
         // Act
         var result = _userManager.PairDevice(999, device);
@@ -493,7 +493,7 @@ public class UserManagerTests
     public void PairDevice_DeviceAlreadyPairedToOtherUser_ReturnsInvalidRequest()
     {
         // Arrange
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
         _userManager.CreateUser(new UserJoinOptions() { DevicesToPair = [device] });
         _userManager.CreateUser(new UserJoinOptions());
 
@@ -508,7 +508,7 @@ public class UserManagerTests
     public void PairDevice_DeviceAlreadyPairedToSameUser_ReturnsSuccess()
     {
         // Arrange
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
         var createUserResult = _userManager.CreateUser(new UserJoinOptions() { DevicesToPair = [device] });
 
         // Act
@@ -523,7 +523,7 @@ public class UserManagerTests
     {
         // Arrange
         _userManager.CreateUser(new UserJoinOptions());
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 800);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 800);
 
         // Act
         var result = _userManager.PairDevice(1, device);
@@ -566,7 +566,7 @@ public class UserManagerTests
     public void UnpairDevice_ValidUnpairing_RemovesDeviceAndNotifies()
     {
         // Arrange
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
         _userManager.CreateUser(new UserJoinOptions() { DevicesToPair = [device] });
 
         // Act

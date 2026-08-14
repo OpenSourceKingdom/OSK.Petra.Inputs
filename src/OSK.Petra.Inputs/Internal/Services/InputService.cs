@@ -20,7 +20,7 @@ internal partial class InputService : IInputService
 
     private bool _paused;
 
-    private readonly IInputCapability[] _capabilities;
+    private readonly IEnumerable<IInputCapability> _capabilities;
     private readonly IInputSystemConfigurationProvider _configurationProvider;
     private readonly ISchemeService _schemeService;
     private readonly IUserManager _userManager;
@@ -38,7 +38,7 @@ internal partial class InputService : IInputService
     public InputService(IEnumerable<IInputCapability> capabilities, IInputSystemConfigurationProvider configurationProvider, IUserManager userManager, ISchemeService schemeService, 
         IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
     {
-        _capabilities = capabilities?.ToArray() ?? throw new ArgumentNullException(nameof(capabilities));
+        _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
         _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
         _schemeService = schemeService ?? throw new ArgumentNullException(nameof(schemeService));
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
@@ -85,6 +85,30 @@ internal partial class InputService : IInputService
     #endregion
 
     #region Helpers
+
+    internal bool IsGlobalInputSuppressed => _globalActionSupression;
+
+    internal IEnumerable<UserInputContext> UserContexts => _userContexts.Values;
+
+    /// <summary>
+    /// An internal method to make testing easier to access and trigger
+    /// </summary>
+    /// <param name="notification">The notification to send for processing</param>
+    internal void ProcessNotificationForTest(IInputSystemNotification notification)
+    {
+        switch (notification)
+        {
+            case DeviceInputNotification inputNotification:
+                ProcessDeviceNotification(inputNotification);
+                break;
+            case UserNotification userNotification:
+                ProcessUserNotification(userNotification);
+                break;
+            case SystemNotification systemNotification:
+                ProcessSystemNotification(systemNotification);
+                break;
+        }
+    }
 
     private void ProcessSystemNotification(SystemNotification systemNotification)
     {
@@ -136,9 +160,14 @@ internal partial class InputService : IInputService
 
     private void ProcessUserNotification(UserNotification userNotification)
     {
-        if (userNotification is UserRemovedNotification userRemovedNotification)
+        switch (userNotification)
         {
-            _userContexts.Remove(userRemovedNotification.User.Id);
+            case UserRemovedNotification userRemovedNotification:
+                _userContexts.Remove(userRemovedNotification.User.Id);
+                break;
+            case UserJoinedNotification userJoinedNotification:
+                AddInputContext(userJoinedNotification.User);
+                break;
         }
     }
 
@@ -162,7 +191,7 @@ internal partial class InputService : IInputService
         if (!topologyDescriptor.IsCompatibleInput(inputNotification.Input))
         {
             LogUnsupportedInputInformation(_logger, inputNotification.DeviceIdentifier, inputNotification.Input.GetGlyph().Symbol);
-            _systemNotifier.Notify(new UnrecognizedDeviceNotification(inputNotification.DeviceIdentifier));
+            _systemNotifier.Notify(new UnrecognizedDeviceInputNotification(inputNotification.DeviceIdentifier, inputNotification.Input));
             return;
         }
 
@@ -170,7 +199,7 @@ internal partial class InputService : IInputService
         if (user is null)
         {
             LogNoInputUserForDeviceWarning(_logger, deviceNotification.DeviceIdentifier);
-            _systemNotifier.Notify(new UnrecognizedDeviceNotification(inputNotification.DeviceIdentifier));
+            _systemNotifier.Notify(new UnpairedDeviceInputNotification(inputNotification.DeviceIdentifier, inputNotification.Input));
             return;
         }
 
@@ -182,13 +211,7 @@ internal partial class InputService : IInputService
 
         if (!_userContexts.TryGetValue(user.Id, out var userContext))
         {
-            userContext = new UserInputContext(user.Id, setSchemeOutput.Data);
-            _userContexts[user.Id] = userContext;
-
-            if (_globalActionSupression)
-            {
-                userContext.Suppress(null, true);
-            }
+            userContext = AddInputContext(user, setSchemeOutput.Data);
         }
          
         if (userContext.EditorDelay is not null)
@@ -230,7 +253,7 @@ internal partial class InputService : IInputService
 
         inputState.Reset();
 
-        var inputMap = userContext.Scheme.GetInputMap(deviceContext.DeviceIdentifier.DeviceIdentity, inputState.Input.Id);
+        var inputMap = userContext.Scheme?.GetInputMap(deviceContext.DeviceIdentifier.DeviceIdentity, inputState.Input.Id);
         if (inputMap is null)
         {
             return;
@@ -316,6 +339,22 @@ internal partial class InputService : IInputService
             default:
                 return null;
         }
+    }
+
+    private UserInputContext AddInputContext(IInputUser user, InputScheme? scheme = null)
+    {
+        var userContext = new UserInputContext(user.Id)
+        {
+            Scheme = scheme
+        };
+        _userContexts[user.Id] = userContext;
+
+        if (_globalActionSupression)
+        {
+            userContext.Suppress(null, true);
+        }
+
+        return userContext;
     }
 
     #endregion

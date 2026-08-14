@@ -30,12 +30,16 @@ public class SchemeEditorTests
 
     public SchemeEditorTests()
     {
-        _validConfig = TestConfigurationFactory.CreateValidConfiguration();
+        _validConfig = TestConfigurationHelper.CreateValidConfiguration();
         _mockUser = new Mock<IInputUser>();
         _mockUser.SetupGet(m => m.Id).Returns(1);
         _mockSchemeService = new Mock<ISchemeService>();
         _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(true);
-        _mockConfigProvider = TestConfigurationFactory.CreateConfigurationProvider(_validConfig);
+        
+        _mockConfigProvider = new Mock<IInputSystemConfigurationProvider>();
+        _mockConfigProvider.SetupGet(m => m.Configuration)
+            .Returns(_validConfig);
+        
         _mockUserManager = new Mock<IUserManager>();
         _mockSystemNotifier = new Mock<IInputSystemNotifier>();
 

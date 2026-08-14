@@ -23,77 +23,29 @@ public class SelectedSchemeTests
         _deviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Keyboard");
     }
 
-    private SelectedScheme CreateScheme(bool isReadonly = false, bool isNew = false, bool isPreferred = false)
+    #endregion
+
+    #region Constructor
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Constructor_ReturnsExpectedProperties(bool isIt)
     {
-        var availableActions = new[] { _testAction };
-        var mockInput = new Mock<IInput>();
-        mockInput.SetupGet(m => m.Id).Returns(1);
+        // Arrange
+        var scheme = CreateScheme(isReadonly: isIt, isNew: isIt, isPreferred: isIt);
 
-        var availableInputs = new[]
-        {
-            new DeviceMapPairing<IInput>(_deviceIdentity, new[] { mockInput.Object })
-        };
-
-        return new SelectedScheme(
-            isNew ? "New Scheme" : "Default",
-            isReadonly,
-            isPreferred,
-            isNew,
-            availableActions,
-            availableInputs,
-            Array.Empty<DeviceMapPairing<InputActionMap>>());
-    }
-
-    private SelectedScheme CreateSchemeWithMapping()
-    {
-        var availableActions = new[] { _testAction };
-        var mockInput = new Mock<IInput>();
-        mockInput.SetupGet(m => m.Id).Returns(1);
-
-        var availableInputs = new[]
-        {
-            new DeviceMapPairing<IInput>(_deviceIdentity, new[] { mockInput.Object })
-        };
-
-        var actionMap = new InputActionMap(_testAction, mockInput.Object);
-        var deviceMapPairings = new[]
-        {
-            new DeviceMapPairing<InputActionMap>(_deviceIdentity, new[] { actionMap })
-        };
-
-        return new SelectedScheme(
-            "Default",
-            false,
-            false,
-            false,
-            availableActions,
-            availableInputs,
-            deviceMapPairings);
+        // Assert
+        // Helper sets the name
+        Assert.Equal(isIt ? "New Scheme" : "Default", scheme.Name);
+        Assert.Equal(isIt, scheme.IsReadonly);
+        Assert.Equal(isIt, scheme.IsNew);
+        Assert.Equal(isIt, scheme.IsPreferred);
     }
 
     #endregion
 
-    #region Name
-
-    [Fact]
-    public void Name_NewScheme_ReturnsNewSchemeName()
-    {
-        // Arrange
-        var scheme = CreateScheme(isNew: true);
-
-        // Assert
-        Assert.Equal("New Scheme", scheme.Name);
-    }
-
-    [Fact]
-    public void Name_DefaultScheme_ReturnsDefaultName()
-    {
-        // Arrange
-        var scheme = CreateScheme();
-
-        // Assert
-        Assert.Equal("Default", scheme.Name);
-    }
+    #region SetName
 
     [Fact]
     public void SetName_ValidName_SetsName()
@@ -109,27 +61,17 @@ public class SelectedSchemeTests
         Assert.Equal("NewName", scheme.Name);
     }
 
-    [Fact]
-    public void SetName_EmptyName_ReturnsInvalidRequest()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void SetName_InvalidName_ReturnsInvalidRequest(string name)
     {
         // Arrange
         var scheme = CreateScheme(isReadonly: false);
 
         // Act
-        var result = scheme.SetName("");
-
-        // Assert
-        Assert.False(result.IsSuccessful);
-    }
-
-    [Fact]
-    public void SetName_NullName_ReturnsInvalidRequest()
-    {
-        // Arrange
-        var scheme = CreateScheme(isReadonly: false);
-
-        // Act
-        var result = scheme.SetName(null!);
+        var result = scheme.SetName(name);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -148,83 +90,30 @@ public class SelectedSchemeTests
         Assert.False(result.IsSuccessful);
     }
 
-    #endregion
-
-    #region IsNew
-
     [Fact]
-    public void IsNew_NewScheme_ReturnsTrue()
-    {
-        // Arrange
-        var scheme = CreateScheme(isNew: true);
-
-        // Assert
-        Assert.True(scheme.IsNew);
-    }
-
-    [Fact]
-    public void IsNew_DefaultScheme_ReturnsFalse()
+    public void SetName_Valid_ReturrnsSuccessfully()
     {
         // Arrange
         var scheme = CreateScheme();
 
+        // Act
+        var result = scheme.SetName("Yes");
+
         // Assert
-        Assert.False(scheme.IsNew);
+        Assert.True(result.IsSuccessful);
+        Assert.Equal("Yes", scheme.Name);
     }
 
     #endregion
 
-    #region IsReadonly
-
-    [Fact]
-    public void IsReadonly_ReadonlyScheme_ReturnsTrue()
-    {
-        // Arrange
-        var scheme = CreateScheme(isReadonly: true);
-
-        // Assert
-        Assert.True(scheme.IsReadonly);
-    }
-
-    [Fact]
-    public void IsReadonly_WritableScheme_ReturnsFalse()
-    {
-        // Arrange
-        var scheme = CreateScheme(isReadonly: false);
-
-        // Assert
-        Assert.False(scheme.IsReadonly);
-    }
-
-    #endregion
-
-    #region IsPreferred
-
-    [Fact]
-    public void IsPreferred_DefaultValue_IsFalse()
-    {
-        // Arrange
-        var scheme = CreateScheme(isPreferred: false);
-
-        // Assert
-        Assert.False(scheme.IsPreferred);
-    }
-
-    [Fact]
-    public void IsPreferred_SetToTrue_ReturnsTrue()
-    {
-        // Arrange
-        var scheme = CreateScheme(isPreferred: true);
-
-        // Assert
-        Assert.True(scheme.IsPreferred);
-    }
+    #region MakePreferred
 
     [Fact]
     public void MakePreferred_SetsPreferred()
     {
         // Arrange
         var scheme = CreateScheme(isPreferred: false);
+        Assert.False(scheme.IsPreferred);
 
         // Act
         scheme.MakePreferred();
@@ -385,7 +274,7 @@ public class SelectedSchemeTests
     }
 
     [Fact]
-    public void SetInputMap_DeassociatesExistingSameAction()
+    public void SetInputMap_ActionNameIsNotValid_ReturnsInvalidRequest()
     {
         // Arrange
         var existingAction = new InputAction("Existing", new HashSet<InputPhase> { InputPhase.Start }, ctx => { });
@@ -398,23 +287,99 @@ public class SelectedSchemeTests
         var result = scheme.SetInputMap(_deviceIdentity, existingAction, mockInput.Object);
 
         // Assert
-        Assert.True(result.IsSuccessful);
+        Assert.False(result.IsSuccessful);
+    }
+
+    #endregion
+
+    #region ClearConfiguredMaps
+
+    [Fact]
+    public void ClearConfiguredMaps_IsReadonlyScheme_ReturnsInvalidRequest()
+    {
+        // Arrange
+        var scheme = CreateSchemeWithMapping(isReadOnly: true);
+
+        Assert.Single(scheme.ConfiguredInputMaps);
+
+        // Act
+        var result = scheme.ClearConfiguredMaps();
+
+        // Assert
+        Assert.False(result.IsSuccessful);
+        Assert.Single(scheme.ConfiguredInputMaps);
     }
 
     [Fact]
-    public void SetInputMap_DeassociatesExistingSameInput()
+    public void ClearConfiguredMaps_IsNotReadonly_ReturnsSuccess()
     {
         // Arrange
-        var scheme = CreateSchemeWithMapping();
-        var newAction = new InputAction("NewAction", new HashSet<InputPhase> { InputPhase.Start }, ctx => { });
-        var mockInput = new Mock<IInput>();
-        mockInput.SetupGet(m => m.Id).Returns(1); // Same ID as existing
+        var scheme = CreateSchemeWithMapping(isReadOnly: false);
+        Assert.Single(scheme.ConfiguredInputMaps);
+        Assert.Empty(scheme.UnpairedActions);
+        Assert.Empty(scheme.UnpairedInputs);
 
         // Act
-        var result = scheme.SetInputMap(_deviceIdentity, newAction, mockInput.Object);
+        var result = scheme.ClearConfiguredMaps();
 
         // Assert
         Assert.True(result.IsSuccessful);
+
+        Assert.Empty(scheme.ConfiguredInputMaps);
+        Assert.Single(scheme.UnpairedActions);
+        Assert.Single(scheme.UnpairedInputs);
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private SelectedScheme CreateScheme(bool isReadonly = false, bool isNew = false, bool isPreferred = false)
+    {
+        var availableActions = new[] { _testAction };
+        var mockInput = new Mock<IInput>();
+        mockInput.SetupGet(m => m.Id).Returns(1);
+
+        var availableInputs = new[]
+        {
+            new DeviceMapPairing<IInput>(_deviceIdentity, new[] { mockInput.Object })
+        };
+
+        return new SelectedScheme(
+            isNew ? "New Scheme" : "Default",
+            isReadonly,
+            isPreferred,
+            isNew,
+            availableActions,
+            availableInputs,
+            []);
+    }
+
+    private SelectedScheme CreateSchemeWithMapping(bool isReadOnly = false)
+    {
+        var availableActions = new[] { _testAction };
+        var mockInput = new Mock<IInput>();
+        mockInput.SetupGet(m => m.Id).Returns(1);
+
+        var availableInputs = new[]
+        {
+            new DeviceMapPairing<IInput>(_deviceIdentity, new[] { mockInput.Object })
+        };
+
+        var actionMap = new InputActionMap(_testAction, mockInput.Object);
+        var deviceMapPairings = new[]
+        {
+            new DeviceMapPairing<InputActionMap>(_deviceIdentity, new[] { actionMap })
+        };
+
+        return new SelectedScheme(
+            "Default",
+            isReadOnly,
+            false,
+            false,
+            availableActions,
+            availableInputs,
+            deviceMapPairings);
     }
 
     #endregion

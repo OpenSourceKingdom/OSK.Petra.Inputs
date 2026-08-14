@@ -1,7 +1,7 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class ActionDefinitionTests
 {
@@ -42,6 +42,7 @@ public class ActionDefinitionTests
 
         // Assert
         Assert.Equal(2, definition.Actions.Count);
+        Assert.True(_actions.Select(a => a.Name).Order().SequenceEqual(definition.Actions.Select(a => a.Name).Order()));
     }
 
     [Fact]

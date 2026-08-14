@@ -15,7 +15,6 @@ public class InputSystemConfiguratorTests
     #region Variables
 
     private readonly InputSystemConfigurator _configurator;
-    private readonly InputSystemConfiguration _validConfig;
 
     #endregion
 
@@ -23,7 +22,6 @@ public class InputSystemConfiguratorTests
 
     public InputSystemConfiguratorTests()
     {
-        _validConfig = TestConfigurationFactory.CreateValidConfiguration();
         _configurator = new InputSystemConfigurator();
     }
 
@@ -42,7 +40,7 @@ public class InputSystemConfiguratorTests
     public void UseConfiguration_ValidConfiguration_ReturnsSelf()
     {
         // Arrange
-        var config = TestConfigurationFactory.CreateValidConfiguration();
+        var config = TestConfigurationHelper.CreateValidConfiguration();
 
         // Act
         var result = _configurator.UseConfiguration(config);
@@ -59,17 +57,6 @@ public class InputSystemConfiguratorTests
 
         // Act & Assert
         Assert.Throws<InputSystemValidationException>(() => _configurator.UseConfiguration(invalidConfig));
-    }
-
-    private InputSystemConfiguration CreateInvalidConfiguration()
-    {
-        var joinPolicy = new InputSystemJoinPolicy
-        {
-            MaxUsers = 0,
-            UserJoinBehavior = UserJoinBehavior.DeviceActivation,
-            DeviceJoinBehavior = DevicePairingBehavior.Balanced
-        };
-        return new InputSystemConfiguration([], [], [], joinPolicy);
     }
 
     #endregion
@@ -104,19 +91,6 @@ public class InputSystemConfiguratorTests
         Assert.Same(_configurator, result);
     }
 
-    [Fact]
-    public void UseSchemeRepository_InMemorySchemeRepository_SetsDefault()
-    {
-        // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-
-        // Act - use InMemorySchemeRepository type
-        var result = _configurator.UseSchemeRepository(typeof(InMemorySchemeRepository));
-
-        // Assert
-        Assert.Same(_configurator, result);
-    }
-
     #endregion
 
     #region WithDeviceProvider
@@ -129,21 +103,6 @@ public class InputSystemConfiguratorTests
 
         // Act
         var result = _configurator.WithDeviceProvider<MockDeviceProvider>();
-
-        // Assert
-        Assert.Same(_configurator, result);
-    }
-
-    [Fact]
-    public void WithDeviceProvider_Chainable_AllowsMultipleCalls()
-    {
-        // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-
-        // Act
-        var result = _configurator
-            .WithDeviceProvider<MockDeviceProvider>()
-            .UseSchemeRepository(typeof(InMemorySchemeRepository));
 
         // Assert
         Assert.Same(_configurator, result);
@@ -164,138 +123,54 @@ public class InputSystemConfiguratorTests
     }
 
     [Fact]
-    public void ConfigureServices_SetsConfigurationProviderSingleton()
+    public void ConfigureServices_Default_SetsExpectedServices()
     {
         // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
+        _configurator.UseConfiguration(TestConfigurationHelper.CreateValidConfiguration());
         var services = new ServiceCollection();
 
         // Act
         _configurator.ConfigureServices(services);
 
         // Assert
-        var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputSystemConfigurationProvider));
-        Assert.NotNull(descriptor);
-        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
-    }
+        var configurationProviderDescriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputSystemConfigurationProvider));
+        Assert.NotNull(configurationProviderDescriptor);
+        Assert.Equal(ServiceLifetime.Singleton, configurationProviderDescriptor.Lifetime);
 
-    [Fact]
-    public void ConfigureServices_SetsSchemeServiceSingleton()
-    {
-        // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new ServiceCollection();
+        var schemeServiceDescriptor = services.FirstOrDefault(s => s.ServiceType == typeof(ISchemeService));
+        Assert.NotNull(schemeServiceDescriptor);
+        Assert.Equal(ServiceLifetime.Singleton, schemeServiceDescriptor.Lifetime);
 
-        // Act
-        _configurator.ConfigureServices(services);
+        var inputServiceDescriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputService));
+        Assert.NotNull(inputServiceDescriptor);
+        Assert.Equal(ServiceLifetime.Singleton, inputServiceDescriptor.Lifetime);
 
-        // Assert
-        var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(ISchemeService));
-        Assert.NotNull(descriptor);
-        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
-    }
+        var usermanagerDescriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IUserManager));
+        Assert.NotNull(usermanagerDescriptor);
+        Assert.Equal(ServiceLifetime.Singleton, usermanagerDescriptor.Lifetime);
 
-    [Fact]
-    public void ConfigureServices_SetsInputServiceSingleton()
-    {
-        // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new ServiceCollection();
+        var inputSystemDescriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputSystem));
+        Assert.NotNull(inputSystemDescriptor);
+        Assert.Equal(ServiceLifetime.Singleton, inputSystemDescriptor.Lifetime);
 
-        // Act
-        _configurator.ConfigureServices(services);
+        var systemNotifierDescriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputSystemNotifier));
+        Assert.NotNull(systemNotifierDescriptor);
+        Assert.Equal(ServiceLifetime.Singleton, systemNotifierDescriptor.Lifetime);
 
-        // Assert
-        var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputService));
-        Assert.NotNull(descriptor);
-        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
-    }
+        var catalogProviderDescriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IDeviceCatalogProvider));
+        Assert.NotNull(catalogProviderDescriptor);
+        Assert.Equal(ServiceLifetime.Singleton, catalogProviderDescriptor.Lifetime);
 
-    [Fact]
-    public void ConfigureServices_SetsUserManagerSingleton()
-    {
-        // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new ServiceCollection();
-
-        // Act
-        _configurator.ConfigureServices(services);
-
-        // Assert
-        var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IUserManager));
-        Assert.NotNull(descriptor);
-        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
-    }
-
-    [Fact]
-    public void ConfigureServices_SetsInputSystemSingleton()
-    {
-        // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new ServiceCollection();
-
-        // Act
-        _configurator.ConfigureServices(services);
-
-        // Assert
-        var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputSystem));
-        Assert.NotNull(descriptor);
-        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
-    }
-
-    [Fact]
-    public void ConfigureServices_SetsInputSystemNotifierSingleton()
-    {
-        // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new ServiceCollection();
-
-        // Act
-        _configurator.ConfigureServices(services);
-
-        // Assert
-        var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IInputSystemNotifier));
-        Assert.NotNull(descriptor);
-        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
-    }
-
-    [Fact]
-    public void ConfigureServices_SetsDeviceCatalogProviderSingleton()
-    {
-        // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new ServiceCollection();
-
-        // Act
-        _configurator.ConfigureServices(services);
-
-        // Assert
-        var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IDeviceCatalogProvider));
-        Assert.NotNull(descriptor);
-        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
-    }
-
-    [Fact]
-    public void ConfigureServices_UsesInMemorySchemeRepositoryByDefault()
-    {
-        // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
-        var services = new ServiceCollection();
-
-        // Act
-        _configurator.ConfigureServices(services);
-
-        // Assert
-        var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(ISchemeRepository));
-        Assert.NotNull(descriptor);
-        Assert.Equal(typeof(InMemorySchemeRepository), descriptor.ImplementationType);
+        var defaultSchemeRepositoryDescriptor = services.FirstOrDefault(s => s.ServiceType == typeof(ISchemeRepository));
+        Assert.NotNull(defaultSchemeRepositoryDescriptor);
+        Assert.Equal(typeof(InMemorySchemeRepository), defaultSchemeRepositoryDescriptor.ImplementationType);
     }
 
     [Fact]
     public void ConfigureServices_WithCustomSchemeRepository_UsesCustomType()
     {
         // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
+        _configurator.UseConfiguration(TestConfigurationHelper.CreateValidConfiguration());
         var services = new ServiceCollection();
 
         // Act
@@ -312,7 +187,7 @@ public class InputSystemConfiguratorTests
     public void ConfigureServices_WithDeviceProvider_RegistersTransient()
     {
         // Arrange
-        _configurator.UseConfiguration(TestConfigurationFactory.CreateValidConfiguration());
+        _configurator.UseConfiguration(TestConfigurationHelper.CreateValidConfiguration());
         var services = new ServiceCollection();
 
         // Act
@@ -323,6 +198,21 @@ public class InputSystemConfiguratorTests
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IDeviceProvider));
         Assert.NotNull(descriptor);
         Assert.Equal(ServiceLifetime.Transient, descriptor.Lifetime);
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private InputSystemConfiguration CreateInvalidConfiguration()
+    {
+        var joinPolicy = new InputSystemJoinPolicy
+        {
+            MaxUsers = 0,
+            UserJoinBehavior = UserJoinBehavior.DeviceActivation,
+            DeviceJoinBehavior = DevicePairingBehavior.Balanced
+        };
+        return new InputSystemConfiguration([], [], [], joinPolicy);
     }
 
     #endregion

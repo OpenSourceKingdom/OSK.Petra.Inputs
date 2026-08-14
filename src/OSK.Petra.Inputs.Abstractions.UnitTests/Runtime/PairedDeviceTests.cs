@@ -1,13 +1,13 @@
 using OSK.Petra.Inputs.Abstractions.Runtime;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Runtime;
 
 public class PairedDeviceTests
 {
     #region Constructor
 
     [Fact]
-    public void Constructor_SetsDeviceIdentifier()
+    public void Constructor_SetsPropertiesToExpectedValues()
     {
         // Arrange & Act
         var identifier = new RuntimeDeviceIdentifier(99, default);

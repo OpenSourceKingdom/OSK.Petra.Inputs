@@ -77,6 +77,7 @@ public class DeviceCatalogProviderTests
 
         // Assert
         Assert.Same(result1.Data, result2.Data);
+        mockProvider.Verify(m => m.GetDevicesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -118,6 +119,9 @@ public class DeviceCatalogProviderTests
         // Assert
         Assert.True(result.IsSuccessful);
         Assert.NotNull(result.Data);
+
+        Assert.Single(result.Data.Parts);
+        Assert.Equal(2, result.Data.Parts[0].KnownDevices.Count);
     }
 
     #endregion

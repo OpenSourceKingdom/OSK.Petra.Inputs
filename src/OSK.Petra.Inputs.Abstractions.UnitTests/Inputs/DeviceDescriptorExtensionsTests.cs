@@ -1,7 +1,7 @@
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using Moq;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Inputs;
 
 public class DeviceDescriptorExtensionsTests
 {

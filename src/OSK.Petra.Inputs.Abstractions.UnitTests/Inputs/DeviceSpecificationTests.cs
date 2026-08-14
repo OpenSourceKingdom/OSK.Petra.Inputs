@@ -1,37 +1,42 @@
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Inputs;
 
 public class DeviceSpecificationTests
 {
-    #region TryGetInput_FirstCall_PopulatesLookup
+    #region TryGetInput
 
     [Fact]
-    public void TryGetInput_FirstCall_PopulatesLookup()
+    public void TryGetInput_OnceCall_ReturnsExpectedInput()
     {
         // Arrange
         var spec = new TestableDeviceSpecification();
 
         // Act
-        var result = spec.TryGetInput(1, out _);
+        var result = spec.TryGetInput(1, out var input);
 
         // Assert
         Assert.True(result);
+        Assert.NotNull(input);
+        Assert.Equal(1, input!.Id);
+        Assert.Equal(1, spec.LookupPopulateCount);
     }
 
     [Fact]
-    public void TryGetInput_FirstCall_ReturnsCorrectInput()
+    public void TryGetInput_MultipleCalls_PopulatesLookupOnce()
     {
         // Arrange
         var spec = new TestableDeviceSpecification();
 
         // Act
-        var getResult = spec.TryGetInput(1, out var input);
+        spec.TryGetInput(1, out _);
+        spec.TryGetInput(1, out _);
+        spec.TryGetInput(1, out _);
+        spec.TryGetInput(1, out _);
+        spec.TryGetInput(1, out _);
 
         // Assert
-        Assert.True(getResult);
-        Assert.NotNull(input);
-        Assert.Equal(1, input!.Id);
+        Assert.Equal(1, spec.LookupPopulateCount);
     }
 
     [Fact]

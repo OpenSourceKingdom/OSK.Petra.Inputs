@@ -69,4 +69,10 @@ public interface ISelectedScheme
     /// <param name="action">The action to pair with the inputs</param>
     /// <param name="input">The input being mapped to the action</param>
     Output SetInputMap(DeviceIdentity deviceIdentity, InputAction action, IInput input);
+
+    /// <summary>
+    /// Clears the configured maps on the scheme
+    /// </summary>
+    /// <returns>An output for the operation</returns>
+    Output ClearConfiguredMaps();
 }

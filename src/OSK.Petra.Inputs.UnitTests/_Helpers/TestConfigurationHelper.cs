@@ -7,10 +7,10 @@ using OSK.Petra.Inputs.Internal.Models;
 
 namespace OSK.Petra.Inputs.UnitTests._Helpers;
 
-public static class TestConfigurationFactory
+public static class TestConfigurationHelper
 {
-    private static readonly DeviceIdentity _keyboardIdentity = new(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Keyboard");
-    private static readonly DeviceIdentity _mouseIdentity = new(DeviceTopologyName.Mouse, DeviceFamily.Generic, "Mouse");
+    public static readonly DeviceIdentity KeyboardIdentity = new(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Keyboard");
+    public static readonly DeviceIdentity MouseIdentity = new(DeviceTopologyName.Mouse, DeviceFamily.Generic, "Mouse");
 
     public static InputSystemConfiguration CreateValidConfiguration() => CreateValidConfiguration(4);
 
@@ -27,7 +27,7 @@ public static class TestConfigurationFactory
         {
             new DeviceInputMap
             {
-                DeviceIdentity = _keyboardIdentity,
+                DeviceIdentity = KeyboardIdentity,
                 InputMaps = new[]
                 {
                     new InputActionMap(actions[0], Mock.Of<IInput>())
@@ -35,7 +35,7 @@ public static class TestConfigurationFactory
             },
             new DeviceInputMap
             {
-                DeviceIdentity = _mouseIdentity,
+                DeviceIdentity = MouseIdentity,
                 InputMaps = new[]
                 {
                     new InputActionMap(actions[1], Mock.Of<IInput>())
@@ -63,18 +63,6 @@ public static class TestConfigurationFactory
         };
 
         return new InputSystemConfiguration([mockKeyboardTopology.Object, mockMouseTopology.Object], new[] { config }, new[] { definition }, joinPolicy);
-    }
-
-    internal static Mock<IInputSystemConfigurationProvider> CreateConfigurationProvider(InputSystemConfiguration? configuration = null)
-    {
-        var mock = new Mock<IInputSystemConfigurationProvider>();
-        mock.SetupGet(m => m.Configuration).Returns(configuration ?? CreateValidConfiguration());
-        return mock;
-    }
-
-    internal static InputUser CreateUser(int id = 1)
-    {
-        return new InputUser(id);
     }
 
     public static RuntimeDeviceIdentifier CreateDeviceIdentifier(DeviceTopologyName topology, int deviceId = 100)

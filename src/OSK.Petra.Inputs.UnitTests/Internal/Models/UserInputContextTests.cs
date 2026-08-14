@@ -13,6 +13,9 @@ public class UserInputContextTests
     private readonly RuntimeDeviceIdentifier _deviceIdentifier;
     private readonly InputScheme _scheme;
 
+    private readonly UserInputContext _context;
+    private readonly int _userId = 1;
+
     #endregion
 
     #region Constructors
@@ -27,25 +30,26 @@ public class UserInputContextTests
             new DeviceInputMap { DeviceIdentity = deviceIdentity, InputMaps = Array.Empty<InputActionMap>() }
         };
         _scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: false);
-    }
 
-    private UserInputContext CreateContext(int userId = 1)
-    {
-        return new UserInputContext(userId, _scheme);
+
+        _context = new UserInputContext(_userId)
+        {
+            Scheme = _scheme
+        };
     }
 
     #endregion
 
-    #region UserId
+    #region Constructor
 
     [Fact]
-    public void UserId_SetsCorrectly()
+    public void NewContext_SetsPropertiesAsExpected()
     {
-        // Arrange & Act
-        var context = CreateContext(42);
-
-        // Assert
-        Assert.Equal(42, context.UserId);
+        // Arrange/Act/Assert
+        Assert.Equal(_userId, _context.UserId);
+        Assert.Same(_scheme, _context.Scheme);
+        Assert.Empty(_context.DeviceInputContexts);
+        Assert.Null(_context.EditorDelay);
     }
 
     #endregion
@@ -53,30 +57,16 @@ public class UserInputContextTests
     #region Scheme
 
     [Fact]
-    public void Scheme_ReturnsScheme()
-    {
-        // Arrange
-        var context = CreateContext();
-
-        // Act
-        var scheme = context.Scheme;
-
-        // Assert
-        Assert.Same(_scheme, scheme);
-    }
-
-    [Fact]
     public void Scheme_SetClearsDeviceContexts()
     {
         // Arrange
-        var context = CreateContext();
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        context.GetOrAddDevice(device);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        _context.GetOrAddDevice(device);
 
         var newScheme = new InputScheme("New", "New", [], isDefault: false, isCustom: false);
 
         // Act
-        context.Scheme = newScheme;
+        _context.Scheme = newScheme;
 
         // Assert - the scheme should be updated (verified by checking it doesn't throw)
     }
@@ -89,44 +79,29 @@ public class UserInputContextTests
     public void GetOrAddDevice_NewDevice_CreatesContext()
     {
         // Arrange
-        var context = CreateContext();
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 200);
 
         // Act
-        var result = context.GetOrAddDevice(device);
+        var result = _context.GetOrAddDevice(device);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(device, result.DeviceIdentifier);
+        Assert.Equal(200, result.DeviceIdentifier.DeviceId);
     }
 
     [Fact]
     public void GetOrAddDevice_ExistingDevice_ReturnsSameContext()
     {
         // Arrange
-        var context = CreateContext();
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var first = context.GetOrAddDevice(device);
+        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var first = _context.GetOrAddDevice(device);
 
         // Act
-        var second = context.GetOrAddDevice(device);
+        var second = _context.GetOrAddDevice(device);
 
         // Assert
         Assert.Same(first, second);
-    }
-
-    [Fact]
-    public void GetOrAddDevice_DeviceIdMatches()
-    {
-        // Arrange
-        var context = CreateContext();
-        var device = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 500);
-
-        // Act
-        var result = context.GetOrAddDevice(device);
-
-        // Assert
-        Assert.Equal(500, result.DeviceIdentifier.DeviceId);
     }
 
     #endregion
@@ -134,30 +109,16 @@ public class UserInputContextTests
     #region DeviceInputContexts
 
     [Fact]
-    public void DeviceInputContexts_Empty_ReturnsEmpty()
-    {
-        // Arrange
-        var context = CreateContext();
-
-        // Act
-        var devices = context.DeviceInputContexts;
-
-        // Assert
-        Assert.Empty(devices);
-    }
-
-    [Fact]
     public void DeviceInputContexts_WithDevices_ReturnsAll()
     {
         // Arrange
-        var context = CreateContext();
-        var device1 = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 100);
-        var device2 = TestConfigurationFactory.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 200);
-        context.GetOrAddDevice(device1);
-        context.GetOrAddDevice(device2);
+        var device1 = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 100);
+        var device2 = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 200);
+        _context.GetOrAddDevice(device1);
+        _context.GetOrAddDevice(device2);
 
         // Act
-        var devices = context.DeviceInputContexts;
+        var devices = _context.DeviceInputContexts;
 
         // Assert
         Assert.Equal(2, devices.Count());
@@ -167,113 +128,69 @@ public class UserInputContextTests
 
     #region Suppress
 
-    [Fact]
-    public void Suppress_NullActionGroups_SetsGlobalSuppression()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Suppress_EmptyActionGroups_SetsGlobalSuppression(bool isNull)
     {
-        // Arrange
-        var context = CreateContext();
-
-        // Act
-        context.Suppress(null!, true);
-
+        // Arrange/Act
+        _context.Suppress(isNull ? null! : [], true);
+        
         // Assert
-        Assert.True(context.IsSuppressed(1));
-        Assert.True(context.IsSuppressed(999));
-    }
-
-    [Fact]
-    public void Suppress_EmptyActionGroups_SetsGlobalSuppression()
-    {
-        // Arrange
-        var context = CreateContext();
-
-        // Act
-        context.Suppress(Array.Empty<int>(), true);
-
-        // Assert
-        Assert.True(context.IsSuppressed(1));
+        Assert.True(_context.IsSuppressed(1));
+        Assert.True(_context.IsSuppressed(999));
     }
 
     [Fact]
     public void Suppress_GlobalUnsuppression_ClearsAll()
     {
         // Arrange
-        var context = CreateContext();
-        context.Suppress(null!, true);
+        _context.Suppress(null!, true);
 
         // Act
-        context.Suppress(null!, false);
+        _context.Suppress(null!, false);
 
         // Assert
-        Assert.False(context.IsSuppressed(1));
-        Assert.False(context.IsSuppressed(999));
+        Assert.False(_context.IsSuppressed(1));
+        Assert.False(_context.IsSuppressed(999));
     }
 
     [Fact]
     public void Suppress_ActionGroups_SuppressesSpecificGroup()
     {
-        // Arrange
-        var context = CreateContext();
-
-        // Act
-        context.Suppress(new[] { 5 }, true);
+        // Arrange/Act
+        _context.Suppress(new[] { 5 }, true);
 
         // Assert
-        Assert.True(context.IsSuppressed(5));
-        Assert.False(context.IsSuppressed(1));
+        Assert.True(_context.IsSuppressed(5));
+        Assert.False(_context.IsSuppressed(1));
     }
 
     [Fact]
     public void Suppress_MultipleActionGroups_SuppressesAll()
     {
-        // Arrange
-        var context = CreateContext();
-
-        // Act
-        context.Suppress(new[] { 1, 2, 3 }, true);
+        // Arrange/Act
+        _context.Suppress(new[] { 1, 2, 3 }, true);
 
         // Assert
-        Assert.True(context.IsSuppressed(1));
-        Assert.True(context.IsSuppressed(2));
-        Assert.True(context.IsSuppressed(3));
-        Assert.False(context.IsSuppressed(4));
+        Assert.True(_context.IsSuppressed(1));
+        Assert.True(_context.IsSuppressed(2));
+        Assert.True(_context.IsSuppressed(3));
+        Assert.False(_context.IsSuppressed(4));
     }
 
     [Fact]
     public void Suppress_UnsuppressSpecificGroup_ClearsOnlyThatGroup()
     {
         // Arrange
-        var context = CreateContext();
-        context.Suppress(new[] { 1, 2 }, true);
+        _context.Suppress(new[] { 1, 2 }, true);
 
         // Act
-        context.Suppress(new[] { 1 }, false);
+        _context.Suppress(new[] { 1 }, false);
 
         // Assert
-        Assert.False(context.IsSuppressed(1));
-        Assert.True(context.IsSuppressed(2));
-    }
-
-    [Fact]
-    public void IsSuppressed_GlobalSuppressionActive_ReturnsTrueForAnyGroup()
-    {
-        // Arrange
-        var context = CreateContext();
-        context.Suppress(null!, true);
-
-        // Act & Assert
-        Assert.True(context.IsSuppressed(1));
-        Assert.True(context.IsSuppressed(9999));
-    }
-
-    [Fact]
-    public void IsSuppressed_NoSuppression_ReturnsFalse()
-    {
-        // Arrange
-        var context = CreateContext();
-
-        // Act & Assert
-        Assert.False(context.IsSuppressed(1));
+        Assert.False(_context.IsSuppressed(1));
+        Assert.True(_context.IsSuppressed(2));
     }
 
     #endregion
@@ -281,42 +198,30 @@ public class UserInputContextTests
     #region EditorDelay
 
     [Fact]
-    public void EditorDelay_DefaultValue_IsNull()
-    {
-        // Arrange
-        var context = CreateContext();
-
-        // Assert
-        Assert.Null(context.EditorDelay);
-    }
-
-    [Fact]
     public void EditorDelay_CanBeSet()
     {
         // Arrange
-        var context = CreateContext();
         var delay = new SchemeEditorDelay() { Delay = TimeSpan.FromSeconds(5) };
 
         // Act
-        context.EditorDelay = delay;
+        _context.EditorDelay = delay;
 
         // Assert
-        Assert.NotNull(context.EditorDelay);
-        Assert.Equal(TimeSpan.FromSeconds(5), context.EditorDelay.Value.Delay);
+        Assert.NotNull(_context.EditorDelay);
+        Assert.Equal(TimeSpan.FromSeconds(5), _context.EditorDelay.Value.Delay);
     }
 
     [Fact]
     public void EditorDelay_SetToNull_Clears()
     {
         // Arrange
-        var context = CreateContext();
-        context.EditorDelay = new SchemeEditorDelay() { Delay = TimeSpan.FromSeconds(5) };
+        _context.EditorDelay = new SchemeEditorDelay() { Delay = TimeSpan.FromSeconds(5) };
 
         // Act
-        context.EditorDelay = null;
+        _context.EditorDelay = null;
 
         // Assert
-        Assert.Null(context.EditorDelay);
+        Assert.Null(_context.EditorDelay);
     }
 
     #endregion

@@ -99,26 +99,14 @@ public class InputCapabilityTests
         // Arrange
         var input = new MockInput(1);
         _mockState.Setup(s => s.Input).Returns(input);
-
-        // Act
-        _capability.Process(_mockContext.Object, _mockState.Object, TimeSpan.FromSeconds(1));
-
-        // Assert
-        Assert.True(_capability.AbstractProcessCalled);
-    }
-
-    [Fact]
-    public void Process_ValidInputs_PassesCorrectDeltaTime()
-    {
-        // Arrange
-        var input = new MockInput(1);
-        _mockState.Setup(s => s.Input).Returns(input);
         var expectedDelta = TimeSpan.FromSeconds(2.5);
+
 
         // Act
         _capability.Process(_mockContext.Object, _mockState.Object, expectedDelta);
 
         // Assert
+        Assert.True(_capability.AbstractProcessCalled);
         Assert.Equal(expectedDelta, _capability.ReceivedDeltaTime);
     }
 

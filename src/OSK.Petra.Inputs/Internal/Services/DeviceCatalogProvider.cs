@@ -56,8 +56,8 @@ internal class DeviceCatalogProvider(IInputSystemConfigurationProvider configura
         }
 
         var partDeviceLookup = allDevices.GroupBy(group => group.Identity.TopologyName)
-                                         .Select(topologyGroup => topologyGroup.GroupBy(descriptor => descriptor.Identity).First())
-                                         .ToDictionary(identityGroup => identityGroup.Key.TopologyName);
+                                         .Select(topologyGroup => new { TopologyName = topologyGroup.Key, Devices = topologyGroup.GroupBy(descriptor => descriptor.Identity).Select(identityGroups => identityGroups.First()) })
+                                         .ToDictionary(group => group.TopologyName, group => group.Devices);
 
         var catalogParts = configurationProvider.Configuration.SupportedDeviceTopologies.Select(toplogyDefinition => new DeviceCatalogPart()
         {

@@ -6,6 +6,7 @@ using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal;
+using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.Internal.Services;
 using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Notifications;
@@ -33,7 +34,7 @@ public class SchemeServiceTests
 
     public SchemeServiceTests()
     {
-        _validConfig = TestConfigurationFactory.CreateValidConfiguration();
+        _validConfig = TestConfigurationHelper.CreateValidConfiguration();
         _mockConfigProvider = new Mock<IInputSystemConfigurationProvider>();
         _mockConfigProvider.SetupGet(m => m.Configuration).Returns(_validConfig);
 
@@ -162,7 +163,7 @@ public class SchemeServiceTests
     public void GetActiveSchemeForUser_NoActiveScheme_ReturnsNull()
     {
         // Arrange
-        _mockUserManager.Setup(m => m.GetUser(1)).Returns(TestConfigurationFactory.CreateUser(1));
+        _mockUserManager.Setup(m => m.GetUser(1)).Returns(new InputUser(1));
         var service = CreateService();
 
         // Act
@@ -194,7 +195,7 @@ public class SchemeServiceTests
     public void SetActiveSchemeForDevice_AlreadyActiveForTopology_ReturnsSameScheme()
     {
         // Arrange
-        var user = TestConfigurationFactory.CreateUser(1);
+        var user = new InputUser(1);
         _mockUserManager.Setup(m => m.GetUser(1)).Returns(user);
 
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
@@ -216,11 +217,11 @@ public class SchemeServiceTests
     public void SetActiveSchemeForDevice_NoMatchingConfig_ReturnsInvalidRequest()
     {
         // Arrange
-        var user = TestConfigurationFactory.CreateUser(1);
+        var user = new InputUser(1);
         _mockUserManager.Setup(m => m.GetUser(1)).Returns(user);
 
         var configProvider = new Mock<IInputSystemConfigurationProvider>();
-        configProvider.SetupGet(m => m.Configuration).Returns(TestConfigurationFactory.CreateValidConfiguration());
+        configProvider.SetupGet(m => m.Configuration).Returns(TestConfigurationHelper.CreateValidConfiguration());
 
         var service = new SchemeService(
             configProvider.Object,
@@ -242,7 +243,7 @@ public class SchemeServiceTests
     public void SetActiveSchemeForDevice_ValidDevice_SetsActiveSchemeAndNotifies()
     {
         // Arrange
-        var user = TestConfigurationFactory.CreateUser(1);
+        var user = new InputUser(1);
         _mockUserManager.Setup(m => m.GetUser(1)).Returns(user);
 
         var service = CreateService();
@@ -527,7 +528,7 @@ public class SchemeServiceTests
     public async Task GetSchemeEditorAsync_DeviceCatalogFails_ReturnsError()
     {
         // Arrange
-        _mockUserManager.Setup(m => m.GetUser(1)).Returns(TestConfigurationFactory.CreateUser(1));
+        _mockUserManager.Setup(m => m.GetUser(1)).Returns(new InputUser(1));
         _mockDeviceCatalogProvider.Setup(p => p.GetCatalogAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(Out.InvalidRequest<DeviceCatalog>("catalog error")));
 

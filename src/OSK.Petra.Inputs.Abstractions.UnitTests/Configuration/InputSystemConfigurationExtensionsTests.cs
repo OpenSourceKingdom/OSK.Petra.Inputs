@@ -1,38 +1,10 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class InputSystemConfigurationExtensionsTests
 {
-    #region Variables
-
-    private static InputSystemConfiguration CreateValidConfig()
-    {
-        var deviceMapsXbox = new List<DeviceInputMap>
-        {
-            new DeviceInputMap
-            {
-                DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Xbox Keyboard"),
-                InputMaps = [new InputActionMap(
-                    new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
-                    new _Helpers.MockInput(1))]
-            }
-        };
-        var schemeXbox = new InputScheme("Default", "Default", deviceMapsXbox, isDefault: true, isCustom: false);
-
-        var inputConfig = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
-        inputConfig.AddScheme(schemeXbox);
-
-        var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}) };
-        var definition = new ActionDefinition("Default", actions, isDefault: true);
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
-
-        return new InputSystemConfiguration([], new[] { inputConfig }, new[] { definition }, joinPolicy);
-    }
-
-    #endregion
-
     #region GetBestFitInputConfiguration
 
     [Fact]
@@ -109,6 +81,34 @@ public class InputSystemConfigurationExtensionsTests
 
         // Assert
         Assert.NotNull(result);
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private static InputSystemConfiguration CreateValidConfig()
+    {
+        var deviceMapsXbox = new List<DeviceInputMap>
+        {
+            new DeviceInputMap
+            {
+                DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Xbox Keyboard"),
+                InputMaps = [new InputActionMap(
+                    new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
+                    new _Helpers.MockInput(1))]
+            }
+        };
+        var schemeXbox = new InputScheme("Default", "Default", deviceMapsXbox, isDefault: true, isCustom: false);
+
+        var inputConfig = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
+        inputConfig.AddScheme(schemeXbox);
+
+        var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
+        var definition = new ActionDefinition("Default", actions, isDefault: true);
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+
+        return new InputSystemConfiguration([], new[] { inputConfig }, new[] { definition }, joinPolicy);
     }
 
     #endregion

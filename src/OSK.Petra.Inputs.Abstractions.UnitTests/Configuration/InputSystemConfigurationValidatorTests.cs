@@ -3,7 +3,7 @@ using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class InputSystemConfigurationValidatorTests
 {
@@ -11,61 +11,6 @@ public class InputSystemConfigurationValidatorTests
 
     private static readonly DeviceIdentity _keyboardIdentity = new(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Keyboard");
     private static readonly DeviceIdentity _mouseIdentity = new(DeviceTopologyName.Mouse, DeviceFamily.Generic, "Mouse");
-
-    private static InputSystemConfiguration CreateValidConfiguration()
-    {
-        var actions = new[]
-        {
-            new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }, "Moves the cursor"),
-            new InputAction("Click", new HashSet<InputPhase> { InputPhase.Start, InputPhase.End }, ctx => { }, "Clicks")
-        };
-        var definition = new ActionDefinition("Default", actions, isDefault: true);
-
-        var deviceMaps = new List<DeviceInputMap>
-        {
-            new DeviceInputMap
-            {
-                DeviceIdentity = _keyboardIdentity,
-                InputMaps = new[]
-                {
-                    new InputActionMap(actions[0], new MockInput(1))
-                }
-            },
-            new DeviceInputMap
-            {
-                DeviceIdentity = _mouseIdentity,
-                InputMaps = new[]
-                {
-                    new InputActionMap(actions[1], new MockInput(2))
-                }
-            }
-        };
-
-        var mockKetyboardTopology = new Mock<IDeviceTopology>();
-        mockKetyboardTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
-            .Returns(true);
-        mockKetyboardTopology.SetupGet(m => m.Name)
-            .Returns(DeviceTopologyName.Keyboard);
-
-        var mockMouseTopology = new Mock<IDeviceTopology>();
-        mockMouseTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
-            .Returns(true);
-        mockMouseTopology.SetupGet(m => m.Name)
-            .Returns(DeviceTopologyName.Mouse);
-
-        var scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: false);
-        var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard, DeviceTopologyName.Mouse });
-        config.AddScheme(scheme);
-
-        var joinPolicy = new InputSystemJoinPolicy
-        {
-            MaxUsers = 4,
-            UserJoinBehavior = UserJoinBehavior.DeviceActivation,
-            DeviceJoinBehavior = DevicePairingBehavior.Balanced
-        };
-
-        return new InputSystemConfiguration([mockKetyboardTopology.Object, mockMouseTopology.Object], new[] { config }, new[] { definition }, joinPolicy);
-    }
 
     #endregion
 
@@ -683,6 +628,112 @@ public class InputSystemConfigurationValidatorTests
 
         // Assert
         Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void ValidateCustomScheme_DuplicateCustomSchemeNameAllowed_SchemeIsNotCustom_ReturnsInvalidData()
+    {
+        // Arrange
+        var deviceMaps = new List<DeviceInputMap>
+        {
+            new DeviceInputMap
+            {
+                DeviceIdentity = _keyboardIdentity,
+                InputMaps = [new InputActionMap(
+                    new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }),
+                    new MockInput(1))]
+            }
+        };
+        var existingScheme = new InputScheme("Default", "Custom", deviceMaps, isDefault: false, isCustom: false);
+        var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
+        config.AddScheme(existingScheme);
+
+        var mockTopology = new Mock<IDeviceTopology>();
+        mockTopology.SetupGet(m => m.Name)
+            .Returns(DeviceTopologyName.Keyboard);
+        mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
+            .Returns(true);
+
+        var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
+        var definition = new ActionDefinition("Default", actions, isDefault: true);
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+
+        var configuration = new InputSystemConfiguration([mockTopology.Object], new[] { config }, new[] { definition }, joinPolicy);
+
+        var customScheme = new CustomInputScheme
+        {
+            DefinitionName = "Default",
+            Name = "Custom",
+            DeviceMaps = deviceMaps
+        };
+
+        // Act
+        var result = InputSystemConfigurationValidator.ValidateCustomScheme(configuration, customScheme, allowDuplicateCustomScheme: true);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("IsCustom", result.TargetName);
+        Assert.Equal(InputConfigurationValidation.InvalidData, result.Result);
+    }
+
+
+    #endregion
+
+    #region Helpers
+
+    private static InputSystemConfiguration CreateValidConfiguration()
+    {
+        var actions = new[]
+        {
+            new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }, "Moves the cursor"),
+            new InputAction("Click", new HashSet<InputPhase> { InputPhase.Start, InputPhase.End }, ctx => { }, "Clicks")
+        };
+        var definition = new ActionDefinition("Default", actions, isDefault: true);
+
+        var deviceMaps = new List<DeviceInputMap>
+        {
+            new DeviceInputMap
+            {
+                DeviceIdentity = _keyboardIdentity,
+                InputMaps = new[]
+                {
+                    new InputActionMap(actions[0], new MockInput(1))
+                }
+            },
+            new DeviceInputMap
+            {
+                DeviceIdentity = _mouseIdentity,
+                InputMaps = new[]
+                {
+                    new InputActionMap(actions[1], new MockInput(2))
+                }
+            }
+        };
+
+        var mockKetyboardTopology = new Mock<IDeviceTopology>();
+        mockKetyboardTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
+            .Returns(true);
+        mockKetyboardTopology.SetupGet(m => m.Name)
+            .Returns(DeviceTopologyName.Keyboard);
+
+        var mockMouseTopology = new Mock<IDeviceTopology>();
+        mockMouseTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
+            .Returns(true);
+        mockMouseTopology.SetupGet(m => m.Name)
+            .Returns(DeviceTopologyName.Mouse);
+
+        var scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: false);
+        var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard, DeviceTopologyName.Mouse });
+        config.AddScheme(scheme);
+
+        var joinPolicy = new InputSystemJoinPolicy
+        {
+            MaxUsers = 4,
+            UserJoinBehavior = UserJoinBehavior.DeviceActivation,
+            DeviceJoinBehavior = DevicePairingBehavior.Balanced
+        };
+
+        return new InputSystemConfiguration([mockKetyboardTopology.Object, mockMouseTopology.Object], new[] { config }, new[] { definition }, joinPolicy);
     }
 
     #endregion

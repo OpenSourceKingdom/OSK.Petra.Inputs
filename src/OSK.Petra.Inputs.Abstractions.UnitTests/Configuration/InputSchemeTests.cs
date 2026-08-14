@@ -2,7 +2,7 @@ using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
 public class InputSchemeTests
 {
@@ -18,47 +18,26 @@ public class InputSchemeTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void Constructor_SetsDefinitionName(bool isIt)
+    public void Constructor_SetsSchemeProperies(bool isIt)
     {
-        // Arrange & Act
-        var scheme = new InputScheme("Default", "MyScheme", [], isDefault: isIt, isCustom: isIt);
+        // Arrange
+
+        var maps = isIt
+            ? new List<DeviceInputMap>
+            {
+                new DeviceInputMap { DeviceIdentity = _keyboardIdentity, InputMaps = [] },
+                new DeviceInputMap { DeviceIdentity = _mouseIdentity, InputMaps = [] }
+            }
+            : [];
+        var scheme = new InputScheme("Default", "MyScheme", maps, isDefault: isIt, isCustom: isIt);
+
 
         // Assert
         Assert.Equal("MyScheme", scheme.Name);
         Assert.Equal("Default", scheme.DefinitionName);
         Assert.Equal(isIt, scheme.IsDefault);
         Assert.Equal(isIt, scheme.IsCustom);
-    }
-
-    #endregion
-
-    #region DeviceMaps
-
-    [Fact]
-    public void DeviceMaps_EmptyCollection_ReturnsEmpty()
-    {
-        // Arrange & Act
-        var scheme = new InputScheme("Default", "MyScheme", [], isDefault: true, isCustom: false);
-
-        // Assert
-        Assert.Empty(scheme.DeviceMaps);
-    }
-
-    [Fact]
-    public void DeviceMaps_ValidDeviceMaps_ReturnsMaps()
-    {
-        // Arrange
-        var deviceMaps = new List<DeviceInputMap>
-        {
-            new DeviceInputMap { DeviceIdentity = _keyboardIdentity, InputMaps = [] },
-            new DeviceInputMap { DeviceIdentity = _mouseIdentity, InputMaps = [] }
-        };
-
-        // Act
-        var scheme = new InputScheme("Default", "MyScheme", deviceMaps, isDefault: true, isCustom: false);
-
-        // Assert
-        Assert.Equal(2, scheme.DeviceMaps.Count);
+        Assert.Equal(maps.Count, scheme.DeviceMaps.Count);
     }
 
     [Fact]
@@ -135,6 +114,29 @@ public class InputSchemeTests
 
         // Assert
         Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void GetInputMap_BadInputId_ReturnsNull()
+    {
+        // Arrange
+        var input = new MockInput(1);
+        var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { });
+        var deviceMaps = new List<DeviceInputMap>
+        {
+            new DeviceInputMap
+            {
+                DeviceIdentity = _keyboardIdentity,
+                InputMaps = [new InputActionMap(action, input)]
+            }
+        };
+        var scheme = new InputScheme("Default", "MyScheme", deviceMaps, isDefault: true, isCustom: false);
+
+        // Act
+        var result = scheme.GetInputMap(_keyboardIdentity, 2);
+
+        // Assert
+        Assert.Null(result);
     }
 
     [Fact]
