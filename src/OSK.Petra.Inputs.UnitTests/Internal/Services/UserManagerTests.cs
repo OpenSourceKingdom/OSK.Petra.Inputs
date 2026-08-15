@@ -107,20 +107,15 @@ public class UserManagerTests
         var config = TestConfigurationHelper.CreateValidConfiguration(2);
         _mockConfigProvider.SetupGet(m => m.Configuration).Returns(config);
 
-        var userManager = new UserManager(
-            _mockConfigProvider.Object,
-            _mockSystemNotifier.Object,
-            _mockSchemeRepository.Object,
-            _mockLogger.Object);
-
-        userManager.CreateUser(new UserJoinOptions());
-        userManager.CreateUser(new UserJoinOptions());
+        _userManager.CreateUser(new UserJoinOptions());
+        _userManager.CreateUser(new UserJoinOptions());
 
         // Act
-        var result = userManager.CreateUser(new UserJoinOptions());
+        var result = _userManager.CreateUser(new UserJoinOptions());
 
         // Assert
         Assert.False(result.IsSuccessful);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<UserJoinedNotification>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -135,6 +130,8 @@ public class UserManagerTests
         // Assert
         Assert.True(result.IsSuccessful);
         Assert.Equal(1, result.Data.Id);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<UserJoinedNotification>()), Times.Once);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<DevicePairedNotification>()), Times.Never);
     }
 
     [Fact]
@@ -150,19 +147,7 @@ public class UserManagerTests
         // Assert
         Assert.True(result.IsSuccessful);
         Assert.Equal(2, result.Data.Id);
-    }
-
-    [Fact]
-    public void CreateUser_RaisesUserJoinedNotification()
-    {
-        // Arrange
-        var options = new UserJoinOptions();
-
-        // Act
-        _userManager.CreateUser(options);
-
-        // Assert
-        _mockSystemNotifier.Verify(n => n.Notify(It.Is<UserJoinedNotification>(x => true)), Times.Once);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<UserJoinedNotification>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -178,20 +163,8 @@ public class UserManagerTests
         // Assert
         Assert.True(result.IsSuccessful);
         Assert.Single(result.Data.PairedDevices);
-    }
-
-    [Fact]
-    public void CreateUser_WithDevicesToPair_RaisesDevicePairedNotification()
-    {
-        // Arrange
-        var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var options = new UserJoinOptions() { DevicesToPair = [device] };
-
-        // Act
-        _userManager.CreateUser(options);
-
-        // Assert
-        _mockSystemNotifier.Verify(n => n.Notify(It.Is<DevicePairedNotification>(x => true)), Times.Once);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<UserJoinedNotification>()), Times.Once);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<DevicePairedNotification>()), Times.Once);
     }
 
     [Fact]
@@ -234,17 +207,11 @@ public class UserManagerTests
         mockTopology.SetupGet(m => m.Name).Returns(DeviceTopologyName.Keyboard);
         mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>())).Returns(true);
 
-        var configProvider = new Mock<IInputSystemConfigurationProvider>();
-        configProvider.SetupGet(m => m.Configuration).Returns(new InputSystemConfiguration([mockTopology.Object], new[] { config }, new[] { def1, def2 }, joinPolicy));
-
-        var userManager = new UserManager(
-            configProvider.Object,
-            _mockSystemNotifier.Object,
-            _mockSchemeRepository.Object,
-            _mockLogger.Object);
+        _mockConfigProvider.SetupGet(m => m.Configuration)
+            .Returns(new InputSystemConfiguration([mockTopology.Object], new[] { config }, new[] { def1, def2 }, joinPolicy));
 
         // Act
-        var result = userManager.CreateUser(new UserJoinOptions() { ActiveDefinitionName = "Secondary" });
+        var result = _userManager.CreateUser(new UserJoinOptions() { ActiveDefinitionName = "Secondary" });
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -278,27 +245,17 @@ public class UserManagerTests
         Assert.False(result.IsSuccessful);
     }
 
-    [Fact]
-    public void SetActiveDefinition_EmptyDefinitionName_ReturnsInvalidRequest()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void SetActiveDefinition_EmptyDefinitionName_ReturnsInvalidRequest(string? name)
     {
         // Arrange
         _userManager.CreateUser(new UserJoinOptions());
 
         // Act
-        var result = _userManager.SetActiveDefinition(1, "");
-
-        // Assert
-        Assert.False(result.IsSuccessful);
-    }
-
-    [Fact]
-    public void SetActiveDefinition_NullDefinitionName_ReturnsInvalidRequest()
-    {
-        // Arrange
-        _userManager.CreateUser(new UserJoinOptions());
-
-        // Act
-        var result = _userManager.SetActiveDefinition(1, null!);
+        var result = _userManager.SetActiveDefinition(1, name!);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -328,7 +285,7 @@ public class UserManagerTests
 
         // Assert
         Assert.True(result.IsSuccessful);
-        _mockSystemNotifier.Verify(n => n.Notify(It.Is<UserActiveDefinitionChangeNotification>(x => true)), Times.Once);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<UserActiveDefinitionChangeNotification>()), Times.Once);
     }
 
     #endregion
@@ -441,10 +398,11 @@ public class UserManagerTests
 
         // Assert
         Assert.False(result);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<UserRemovedNotification>()), Times.Never);
     }
 
     [Fact]
-    public void RemoveUser_UserExists_RemovesAndNotifies()
+    public void RemoveUser_UserExists_NoPairedDevices_RemovesAndNotifiesExpected()
     {
         // Arrange
         var createUserResult = _userManager.CreateUser(new UserJoinOptions());
@@ -455,11 +413,12 @@ public class UserManagerTests
         // Assert
         Assert.True(result);
         Assert.Null(_userManager.GetUser(createUserResult.Data.Id));
-        _mockSystemNotifier.Verify(n => n.Notify(It.Is<UserRemovedNotification>(x => true)), Times.Once);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<UserRemovedNotification>()), Times.Once);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<DeviceUnpairedNotification>()), Times.Never);
     }
 
     [Fact]
-    public void RemoveUser_UserWithPairedDevices_UnpairsAllDevices()
+    public void RemoveUser_UserWithPairedDevices_UnpairsAllDevices_RemovesAndNotifiesExpected()
     {
         // Arrange
         var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
@@ -469,7 +428,8 @@ public class UserManagerTests
         _userManager.RemoveUser(1);
 
         // Assert
-        _mockSystemNotifier.Verify(n => n.Notify(It.Is<DeviceUnpairedNotification>(x => true)), Times.Once);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<UserRemovedNotification>()), Times.Once);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<DeviceUnpairedNotification>()), Times.Once);
     }
 
     #endregion
@@ -487,6 +447,7 @@ public class UserManagerTests
 
         // Assert
         Assert.False(result.IsSuccessful);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<DevicePairedNotification>()), Times.Never);
     }
 
     [Fact]
@@ -497,11 +458,14 @@ public class UserManagerTests
         _userManager.CreateUser(new UserJoinOptions() { DevicesToPair = [device] });
         _userManager.CreateUser(new UserJoinOptions());
 
+        _mockSystemNotifier.Reset();
+
         // Act
         var result = _userManager.PairDevice(2, device);
 
         // Assert
         Assert.False(result.IsSuccessful);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<DevicePairedNotification>()), Times.Never);
     }
 
     [Fact]
@@ -511,11 +475,14 @@ public class UserManagerTests
         var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
         var createUserResult = _userManager.CreateUser(new UserJoinOptions() { DevicesToPair = [device] });
 
+        _mockSystemNotifier.Reset();
+
         // Act
         var result = _userManager.PairDevice(createUserResult.Data.Id, device);
 
         // Assert
         Assert.True(result.IsSuccessful);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<DevicePairedNotification>()), Times.Never);
     }
 
     [Fact]
@@ -533,6 +500,7 @@ public class UserManagerTests
         var user = _userManager.GetUser(1);
         Assert.NotNull(user);
         Assert.Single(user!.PairedDevices);
+        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<DevicePairedNotification>()), Times.Once);
     }
 
     #endregion
@@ -547,6 +515,7 @@ public class UserManagerTests
 
         // Assert
         Assert.False(result);
+        _mockSystemNotifier.Verify(m => m.Notify(It.IsAny<DeviceUnpairedNotification>()), Times.Never);
     }
 
     [Fact]
@@ -560,6 +529,7 @@ public class UserManagerTests
 
         // Assert
         Assert.False(result);
+        _mockSystemNotifier.Verify(m => m.Notify(It.IsAny<DeviceUnpairedNotification>()), Times.Never);
     }
 
     [Fact]
@@ -577,109 +547,7 @@ public class UserManagerTests
         var user = _userManager.GetUser(1);
         Assert.NotNull(user);
         Assert.Empty(user!.PairedDevices);
-    }
-
-    #endregion
-
-    #region SavePreferredSchemeAsync
-
-    [Fact]
-    public async Task SavePreferredSchemeAsync_UserIdOutOfRange_ReturnsInvalidRequest()
-    {
-        // Arrange
-        var scheme = new PreferredInputScheme() { UserId = -1, DefinitionName = "Default", SchemeName = "Test", ConfigurationId = "1" };
-
-        // Act
-        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.False(result.IsSuccessful);
-    }
-
-    [Fact]
-    public async Task SavePreferredSchemeAsync_EmptyDefinitionName_ReturnsInvalidRequest()
-    {
-        // Arrange
-        var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "", SchemeName = "Test", ConfigurationId = "1" };
-
-        // Act
-        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.False(result.IsSuccessful);
-    }
-
-    [Fact]
-    public async Task SavePreferredSchemeAsync_NonExistentDefinition_ReturnsDataNotFound()
-    {
-        // Arrange
-        var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "NonExistent", SchemeName = "Test", ConfigurationId = "1" };
-
-        // Act
-        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.False(result.IsSuccessful);
-    }
-
-    [Fact]
-    public async Task SavePreferredSchemeAsync_EmptySchemeName_ReturnsInvalidRequest()
-    {
-        // Arrange
-        var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "", ConfigurationId = "1" };
-
-        // Act
-        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.False(result.IsSuccessful);
-    }
-
-    [Fact]
-    public async Task SavePreferredSchemeAsync_EmptyConfigurationId_ReturnsInvalidRequest()
-    {
-        // Arrange
-        var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Test", ConfigurationId = "" };
-
-        // Act
-        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.False(result.IsSuccessful);
-    }
-
-    [Fact]
-    public async Task SavePreferredSchemeAsync_NonExistentConfigurationId_ReturnsDataNotFound()
-    {
-        // Arrange
-        var scheme = new PreferredInputScheme() { UserId = 1, DefinitionName = "Default", SchemeName = "Test", ConfigurationId = "nonexistent" };
-
-        // Act
-        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.False(result.IsSuccessful);
-    }
-
-    [Fact]
-    public async Task SavePreferredSchemeAsync_ValidScheme_DelegatesToRepository()
-    {
-        // Arrange
-        var scheme = new PreferredInputScheme() {
-            UserId = 1, 
-            DefinitionName = "Default", 
-            SchemeName = "Default", 
-            ConfigurationId = InputConfiguration.GetConfigurationId(DeviceTopologyName.Keyboard, DeviceTopologyName.Mouse) 
-        };
-        _mockSchemeRepository.Setup(r => r.SavePreferredSchemeAsync(scheme, It.IsAny<CancellationToken>()))
-            .Returns(Task.FromResult(Out.Success(scheme)));
-
-        // Act
-        var result = await _userManager.SavePreferredSchemeAsync(scheme, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.True(result.IsSuccessful);
-        _mockSchemeRepository.Verify(r => r.SavePreferredSchemeAsync(scheme, It.IsAny<CancellationToken>()), Times.Once);
+        _mockSystemNotifier.Verify(m => m.Notify(It.IsAny<DeviceUnpairedNotification>()), Times.Once);
     }
 
     #endregion

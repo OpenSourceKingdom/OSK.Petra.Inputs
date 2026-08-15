@@ -51,7 +51,7 @@ internal class SchemeEditor: ISchemeEditor
         _systemNotifier = systemNotifier ?? throw new ArgumentNullException(nameof(systemNotifier));
 
         UpdateNavigators();
-        UpdateSelectedScheme(isNew: false);
+        UpdateSelectedScheme(isNew: false, readOnlyOverride: null);
 
         systemNotifier.OnSystemNotification += systemNotification =>
         {
@@ -136,7 +136,7 @@ internal class SchemeEditor: ISchemeEditor
         }
 
         _deviceSchemeDescriptors[topologyName] = deviceDescriptor;
-        UpdateSelectedScheme(isNew: _selectedScheme.IsNew);
+        UpdateSelectedScheme(isNew: _selectedScheme.IsNew, readOnlyOverride: null);
 
         TryPubishEditorEvent(SchemeEditorUpdateTarget.DeviceSelection);
 
@@ -150,7 +150,7 @@ internal class SchemeEditor: ISchemeEditor
             return Out.InvalidRequest("Unable to create an input scheme as it is not supported.");
         }
 
-        UpdateSelectedScheme(isNew: true);
+        RefreshEditor(isNew: true);
 
         TryPubishEditorEvent(SchemeEditorUpdateTarget.NewScheme);
 
@@ -170,8 +170,7 @@ internal class SchemeEditor: ISchemeEditor
             return deleteOutput;
         }
 
-        UpdateNavigators();
-        UpdateSelectedScheme(isNew: false); 
+        RefreshEditor(isNew: false);
         TryPubishEditorEvent(SchemeEditorUpdateTarget.DeleteScheme);
 
         return Out.Success();
@@ -215,8 +214,7 @@ internal class SchemeEditor: ISchemeEditor
             });
         }
 
-        UpdateNavigators();
-        UpdateSelectedScheme(isNew: false); 
+        RefreshEditor(isNew: false);
         TryPubishEditorEvent(SchemeEditorUpdateTarget.SaveScheme);
 
         return Out.Success();
@@ -225,6 +223,12 @@ internal class SchemeEditor: ISchemeEditor
     #endregion
 
     #region Helpers
+
+    internal void RefreshEditor(bool isNew, bool? readOnlyOverride = null)
+    {
+        UpdateNavigators();
+        UpdateSelectedScheme(isNew: isNew, readOnlyOverride: readOnlyOverride);
+    }
 
     private void CaptureInput(int userId, DeviceIdentity deviceIdentity, IInput input)
     {
@@ -303,7 +307,7 @@ internal class SchemeEditor: ISchemeEditor
         {
             SetupSchemeNavigator();
 
-            UpdateSelectedScheme(isNew: false);
+            UpdateSelectedScheme(isNew: false, readOnlyOverride: null);
             TryPubishEditorEvent(SchemeEditorUpdateTarget.DefinitionNavigation);
         };
     }
@@ -314,13 +318,13 @@ internal class SchemeEditor: ISchemeEditor
         SchemeNavigator = new CollectionNavigator<InputScheme>(InputConfigurationNavigator.Current!.Schemes.Where(scheme => scheme.DefinitionName.Equals(DefinitionNavigator.Current!.Name)), wrapNavigation: true);
         SchemeNavigator.Navigated += _ =>
         {
-            UpdateSelectedScheme(isNew: false);
+            UpdateSelectedScheme(isNew: false, readOnlyOverride: null);
             TryPubishEditorEvent(SchemeEditorUpdateTarget.SchemeNavigation);
         };
     }
 
     [MemberNotNull(nameof(_selectedScheme))]
-    private void UpdateSelectedScheme(bool isNew)
+    private void UpdateSelectedScheme(bool isNew, bool? readOnlyOverride)
     {
         Debug.Assert(InputConfigurationNavigator.Current is not null);
         Debug.Assert(DefinitionNavigator.Current is not null);
@@ -335,7 +339,7 @@ internal class SchemeEditor: ISchemeEditor
             : SchemeNavigator.Current.DeviceMaps.Select(deviceMap => new DeviceMapPairing<InputActionMap>(deviceMap.DeviceIdentity, deviceMap.InputMaps));
         var availableInputs = _deviceSchemeDescriptors.Select(kvp => new DeviceMapPairing<IInput>(kvp.Value.Identity, kvp.Value.Inputs));
 
-        _selectedScheme = new SelectedScheme(SchemeNavigator.Current.Name, SchemeNavigator.Current.IsCustom, isPreferred, isNew, DefinitionNavigator.Current.Actions, availableInputs, currentMaps);
+        _selectedScheme = new SelectedScheme(SchemeNavigator.Current.Name, readOnlyOverride.GetValueOrDefault(!SchemeNavigator.Current.IsCustom), isPreferred, isNew, DefinitionNavigator.Current.Actions, availableInputs, currentMaps);
     }
 
     private void TryPubishEditorEvent(SchemeEditorUpdateTarget updateTarget)

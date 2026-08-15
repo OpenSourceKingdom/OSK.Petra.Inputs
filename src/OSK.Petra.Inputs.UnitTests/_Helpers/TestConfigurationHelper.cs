@@ -14,7 +14,7 @@ public static class TestConfigurationHelper
 
     public static InputSystemConfiguration CreateValidConfiguration() => CreateValidConfiguration(4);
 
-    public static InputSystemConfiguration CreateValidConfiguration(int maxUsers)
+    public static InputSystemConfiguration CreateValidConfiguration(int maxUsers, bool markSchemeAsCustom = false)
     {
         var actions = new[]
         {
@@ -51,7 +51,7 @@ public static class TestConfigurationHelper
         mockMouseTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>())).Returns(true);
         mockMouseTopology.SetupGet(m => m.Name).Returns(DeviceTopologyName.Mouse);
 
-        var scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: false);
+        var scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: markSchemeAsCustom);
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard, DeviceTopologyName.Mouse });
         config.AddScheme(scheme);
 

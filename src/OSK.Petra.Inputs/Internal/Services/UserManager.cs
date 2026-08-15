@@ -171,6 +171,7 @@ internal partial class UserManager: IUserManager
         }
 
         user.AddDevice(device);
+        _systemNotifier.Notify(new DevicePairedNotification(userId, device));
         return Out.Success();
     }
 
@@ -189,50 +190,6 @@ internal partial class UserManager: IUserManager
         }
 
         return false;
-    }
-
-    public async Task<Output> SavePreferredSchemeAsync(PreferredInputScheme scheme, CancellationToken cancellationToken = default)
-    {
-        if (scheme.UserId < 0 || scheme.UserId >= _configurationProvider.Configuration.JoinPolicy.MaxUsers)
-        {
-            return Out.InvalidRequest($"The provided user id must be non-zero and less than the max users ({_configurationProvider.Configuration.JoinPolicy.MaxUsers}) for the input system.");
-        }
-
-        if (string.IsNullOrWhiteSpace(scheme.DefinitionName))
-        {
-            return Out.InvalidRequest("Definition name can not be empty.");
-        }
-
-        var definition = _configurationProvider.Configuration.GetDefinition(scheme.DefinitionName);
-        if (definition is null)
-        {
-            return Out.DataNotFound($"No input definition with the name '{scheme.DefinitionName}' exists.");
-        }
-
-        if (string.IsNullOrWhiteSpace(scheme.SchemeName))
-        {
-            return Out.InvalidRequest("Scheme name can not be empty.");
-        }
-
-
-        if (string.IsNullOrWhiteSpace(scheme.ConfigurationId))
-        {
-            return Out.InvalidRequest("Configuration Id can not be empty.");
-        }
-
-        var inputConfiguration = _configurationProvider.Configuration.GetInputConfiguration(scheme.ConfigurationId);
-        if (inputConfiguration is null)
-        {
-            return Out.DataNotFound($"No input configuration for '{scheme.ConfigurationId}' exists.");
-        }
-
-        if (inputConfiguration.GetScheme(scheme.DefinitionName, scheme.SchemeName) is null)
-        {
-            return Out.DataNotFound($"No input scheme named '{scheme.SchemeName}' exists on the definition '{scheme.DefinitionName}' for the input configuration '{scheme.ConfigurationId}'");
-        }
-
-        // Fix scheme not taking effect
-        return await _schemeRepository.SavePreferredSchemeAsync(scheme, cancellationToken);
     }
 
     #endregion

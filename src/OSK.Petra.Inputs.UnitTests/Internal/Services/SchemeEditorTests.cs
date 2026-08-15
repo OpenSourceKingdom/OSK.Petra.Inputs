@@ -24,6 +24,8 @@ public class SchemeEditorTests
     private readonly DeviceCatalog _catalog;
     private readonly InputSystemConfiguration _validConfig;
 
+    private readonly SchemeEditor _schemeEditor;
+
     #endregion
 
     #region Constructors
@@ -34,7 +36,8 @@ public class SchemeEditorTests
         _mockUser = new Mock<IInputUser>();
         _mockUser.SetupGet(m => m.Id).Returns(1);
         _mockSchemeService = new Mock<ISchemeService>();
-        _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(true);
+        _mockSchemeService.SetupGet(s => s.AllowCustomSchemes)
+            .Returns(false);
         
         _mockConfigProvider = new Mock<IInputSystemConfigurationProvider>();
         _mockConfigProvider.SetupGet(m => m.Configuration)
@@ -51,6 +54,9 @@ public class SchemeEditorTests
         };
 
         _catalog = new([catalogPart]);
+
+        _schemeEditor = new SchemeEditor(_mockUser.Object, _catalog, _mockSchemeService.Object, _mockConfigProvider.Object,
+            _mockUserManager.Object, _mockSystemNotifier.Object);
     }
 
     #endregion
@@ -130,13 +136,10 @@ public class SchemeEditorTests
     }
 
     [Fact]
-    public void Constructor_SetsSelectedScheme()
+    public void Constructor_Valid_SetsPropertiesAsExpected()
     {
-        // Arrange
-        var editor = CreateEditor();
-
         // Assert
-        Assert.NotNull(editor.SelectedScheme);
+        Assert.NotNull(_schemeEditor.SelectedScheme);
     }
 
     #endregion
@@ -146,11 +149,8 @@ public class SchemeEditorTests
     [Fact]
     public void SelectedScheme_ReturnsCurrentScheme()
     {
-        // Arrange
-        var editor = CreateEditor();
-
-        // Act
-        var scheme = editor.SelectedScheme;
+        // Arrange/Act
+        var scheme = _schemeEditor.SelectedScheme;
 
         // Assert
         Assert.NotNull(scheme);
@@ -160,24 +160,17 @@ public class SchemeEditorTests
 
     #region AllowCustomScheme
 
-    [Fact]
-    public void AllowCustomScheme_WhenTrue_ReturnsTrue()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void AllowCustomScheme_ReturnsExpected(bool allow)
     {
         // Arrange
-        var editor = CreateEditor(allowCustomScheme: true);
+        _mockSchemeService.SetupGet(m => m.AllowCustomSchemes)
+            .Returns(allow);
 
         // Assert
-        Assert.True(editor.AllowCustomScheme);
-    }
-
-    [Fact]
-    public void AllowCustomScheme_WhenFalse_ReturnsFalse()
-    {
-        // Arrange
-        var editor = CreateEditor(allowCustomScheme: false);
-
-        // Assert
-        Assert.False(editor.AllowCustomScheme);
+        Assert.Equal(allow, _schemeEditor.AllowCustomScheme);
     }
 
     #endregion
@@ -187,26 +180,38 @@ public class SchemeEditorTests
     [Fact]
     public void InitiateInputCapture_NullAction_ThrowsArgumentNullException()
     {
-        // Arrange
-        var editor = CreateEditor();
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => editor.InitiateInputCapture(null!));
+        // Arrange/Act/Assert
+        Assert.Throws<ArgumentNullException>(() => _schemeEditor.InitiateInputCapture(null!));
     }
 
     [Fact]
     public void InitiateInputCapture_AlreadyCapturing_ReturnsInvalidRequest()
     {
         // Arrange
-        var editor = CreateEditor();
         var actions = _validConfig.Definitions;
         var action = actions.First().Actions.First();
 
         // Act - first capture
-        editor.InitiateInputCapture(action);
+        _schemeEditor.InitiateInputCapture(action);
 
         // Act & Assert - second capture while still capturing
-        var result = editor.InitiateInputCapture(action);
+        var result = _schemeEditor.InitiateInputCapture(action);
+
+        // Assert
+        Assert.False(result.IsSuccessful);
+    }
+
+    [Fact]
+    public void InitiateInputCapture_NonexistentAction_ReturnsInvalidRequest()
+    {
+        // Arrange
+        var action = new InputAction("abc", new HashSet<InputPhase>(), _ => { });
+
+        // Act - first capture
+        _schemeEditor.InitiateInputCapture(action);
+
+        // Act & Assert - second capture while still capturing
+        var result = _schemeEditor.InitiateInputCapture(action);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -216,12 +221,11 @@ public class SchemeEditorTests
     public void InitiateInputCapture_ValidAction_InitiatesCaptureAndNotifies()
     {
         // Arrange
-        var editor = CreateEditor();
         var actions = _validConfig.Definitions;
         var action = actions.First().Actions.First();
 
         // Act
-        var result = editor.InitiateInputCapture(action);
+        var result = _schemeEditor.InitiateInputCapture(action);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -235,11 +239,8 @@ public class SchemeEditorTests
     [Fact]
     public void AbortInputCapture_NoActiveCapture_DoesNothing()
     {
-        // Arrange
-        var editor = CreateEditor();
-
-        // Act
-        editor.AbortInputCapture();
+        // Arrange/Act
+        _schemeEditor.AbortInputCapture();
 
         // Assert - no exception, no notification expected since no capture was active
         _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<SchemeEditorInputCaptureTimeoutNotification>()), Times.Never);
@@ -249,13 +250,12 @@ public class SchemeEditorTests
     public void AbortInputCapture_ActiveCapture_AbortsAndNotifies()
     {
         // Arrange
-        var editor = CreateEditor();
         var actions = _validConfig.Definitions;
         var action = actions.First().Actions.First();
-        editor.InitiateInputCapture(action);
+        _schemeEditor.InitiateInputCapture(action);
 
         // Act
-        editor.AbortInputCapture();
+        _schemeEditor.AbortInputCapture();
 
         // Assert
         _mockSystemNotifier.Verify(n => n.Notify(It.Is<SchemeEditorInputCaptureTimeoutNotification>(x => true)), Times.Once);
@@ -268,11 +268,8 @@ public class SchemeEditorTests
     [Fact]
     public void SetSchemeDevice_UnsupportedTopology_ReturnsInvalidRequest()
     {
-        // Arrange
-        var editor = CreateEditor();
-
-        // Act
-        var result = editor.SetSchemeDevice(DeviceTopologyName.Gamepad, "Gamepad");
+        // Arrange/Act
+        var result = _schemeEditor.SetSchemeDevice(DeviceTopologyName.Gamepad, "Gamepad");
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -282,7 +279,6 @@ public class SchemeEditorTests
     public void SetSchemeDevice_NonExistentDevice_ReturnsInvalidRequest()
     {
         // Arrange
-        var editor = CreateEditor();
         var mockPart = new DeviceCatalogPart()
         {
             KnownDevices = [],
@@ -290,7 +286,7 @@ public class SchemeEditorTests
         };
 
         // Act
-        var result = editor.SetSchemeDevice(DeviceTopologyName.Keyboard, "NonExistent");
+        var result = _schemeEditor.SetSchemeDevice(DeviceTopologyName.Keyboard, "NonExistent");
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -300,8 +296,6 @@ public class SchemeEditorTests
     public void SetSchemeDevice_ValidDevice_SetsDeviceAndNotifies()
     {
         // Arrange
-        var editor = CreateEditor();
-
         var mockDescriptor = new Mock<IDeviceDescriptor>();
         mockDescriptor.SetupGet(m => m.Identity)
             .Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.PlayStation, "TestDevice"));
@@ -309,7 +303,7 @@ public class SchemeEditorTests
         _catalog.Parts[0].KnownDevices = [mockDescriptor.Object];
 
         // Act
-        var result = editor.SetSchemeDevice(DeviceTopologyName.Keyboard, "TestDevice");
+        var result = _schemeEditor.SetSchemeDevice(DeviceTopologyName.Keyboard, "TestDevice");
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -322,11 +316,8 @@ public class SchemeEditorTests
     [Fact]
     public void CreateNewScheme_CustomSchemesNotAllowed_ReturnsInvalidRequest()
     {
-        // Arrange
-        var editor = CreateEditor(allowCustomScheme: false);
-
-        // Act
-        var result = editor.CreateNewScheme();
+        // Arrange/Act
+        var result = _schemeEditor.CreateNewScheme();
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -336,26 +327,20 @@ public class SchemeEditorTests
     public void CreateNewScheme_CustomSchemesAllowed_CreatesAndNotifies()
     {
         // Arrange
-        var editor = CreateEditor(allowCustomScheme: true);
+        _mockSchemeService.SetupGet(m => m.AllowCustomSchemes)
+            .Returns(true);
+
+        SchemeEditorUpdateTarget? target = null;
+        _schemeEditor.EditorUpdated += t => target = t;
 
         // Act
-        var result = editor.CreateNewScheme();
+        var result = _schemeEditor.CreateNewScheme();
 
         // Assert
         Assert.True(result.IsSuccessful);
-    }
-
-    [Fact]
-    public void CreateNewScheme_SetsNewSchemeState()
-    {
-        // Arrange
-        var editor = CreateEditor(allowCustomScheme: true);
-
-        // Act
-        _ = editor.CreateNewScheme();
-
-        // Assert
-        Assert.True(editor.SelectedScheme.IsNew);
+        Assert.True(_schemeEditor.SelectedScheme.IsNew);
+        Assert.NotNull(target);
+        Assert.Equal(SchemeEditorUpdateTarget.NewScheme, target);
     }
 
     #endregion
@@ -365,36 +350,34 @@ public class SchemeEditorTests
     [Fact]
     public async Task DeleteSchemeAsync_ReadonlyScheme_ReturnsInvalidRequest()
     {
-        // Arrange
-        var editor = CreateEditor();
-        _mockSchemeService.Setup(m => m.DeleteCustomSchemeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Out.Success());
+        // Arrange/Act
+        var result = await _schemeEditor.DeleteSchemeAsync(TestContext.Current.CancellationToken);
 
-        // Act
-        var result = await editor.DeleteSchemeAsync(TestContext.Current.CancellationToken);
+        // Assert
+        Assert.False(result.IsSuccessful);
 
-        // Assert - depends on whether scheme is readonly
-        _ = result;
+        _mockSchemeService.Verify(m => m.DeleteCustomSchemeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task DeleteSchemeAsync_ValidDelete_DelegatesToSchemeService()
     {
         // Arrange
-        var mockRepo = new Mock<ISchemeRepository>();
-        mockRepo.SetupGet(m => m.AllowCustomSchemes).Returns(true);
-        _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(true);
+        _mockSchemeService.SetupGet(s => s.AllowCustomSchemes)
+            .Returns(true);
+
+        _schemeEditor.RefreshEditor(isNew: false, readOnlyOverride: false);
 
         _mockSchemeService.Setup(m => m.DeleteCustomSchemeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Out.Success());
 
-        var editor = CreateEditor(allowCustomScheme: true);
 
         // Act
-        var result = await editor.DeleteSchemeAsync(TestContext.Current.CancellationToken);
+        var result = await _schemeEditor.DeleteSchemeAsync(TestContext.Current.CancellationToken);
 
-        // Assert - may succeed or fail depending on scheme state
-        _ = result;
+        // Assert
+        Assert.True(result.IsSuccessful);
+        _mockSchemeService.Verify(m => m.DeleteCustomSchemeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -404,31 +387,12 @@ public class SchemeEditorTests
     [Fact]
     public async Task SaveSchemeAsync_CustomSchemesNotAllowed_ReturnsInvalidRequest()
     {
-        // Arrange
-        var editor = CreateEditor(allowCustomScheme: false);
-
-        // Act
-        var result = await editor.SaveSchemeAsync(TestContext.Current.CancellationToken);
+        // Arrange/Act
+        var result = await _schemeEditor.SaveSchemeAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
-    }
-
-    [Fact]
-    public async Task SaveSchemeAsync_HasUnpairedActions_ReturnsInvalidRequest()
-    {
-        // Arrange
-        _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(true);
-        var editor = CreateEditor(allowCustomScheme: true);
-
-        _mockSchemeService.Setup(m => m.SaveCustomSchemeAsync(It.IsAny<CustomInputScheme>(), It.IsAny<SchemeSavePermissions>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Out.Success());
-
-        // Act
-        var result = await editor.SaveSchemeAsync(TestContext.Current.CancellationToken);
-
-        // Assert - depends on scheme state
-        _ = result;
+        _mockSchemeService.Verify(m => m.SaveCustomSchemeAsync(It.IsAny<CustomInputScheme>(), It.IsAny<SchemeSavePermissions>()), Times.Never);
     }
 
     #endregion
@@ -438,43 +402,22 @@ public class SchemeEditorTests
     [Fact]
     public void GetDeviceCatalog_ExistingTopology_ReturnsPart()
     {
-        // Arrange
-        var editor = CreateEditor();
-
-        // Act
-        var result = editor.GetDeviceCatalog(DeviceTopologyName.Keyboard);
+        // Arrange/Act
+        var result = _schemeEditor.GetDeviceCatalog(DeviceTopologyName.Keyboard);
 
         // Assert
         Assert.NotNull(result);
+        Assert.Equal(DeviceTopologyName.Keyboard, result.TopologyName);
     }
 
     [Fact]
     public void GetDeviceCatalog_NonExistentTopology_ReturnsNull()
     {
-        // Arrange
-        var editor = CreateEditor();
-
-        // Act
-        var result = editor.GetDeviceCatalog(DeviceTopologyName.Gamepad);
+        // Arrange/Act
+        var result = _schemeEditor.GetDeviceCatalog(DeviceTopologyName.Gamepad);
 
         // Assert
         Assert.Null(result);
-    }
-
-    #endregion
-
-    #region Helpers
-
-    private SchemeEditor CreateEditor(bool allowCustomScheme = true)
-    {
-        _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(allowCustomScheme);
-        return new SchemeEditor(
-            _mockUser.Object,
-            _catalog,
-            _mockSchemeService.Object,
-            _mockConfigProvider.Object,
-            _mockUserManager.Object,
-            _mockSystemNotifier.Object);
     }
 
     #endregion

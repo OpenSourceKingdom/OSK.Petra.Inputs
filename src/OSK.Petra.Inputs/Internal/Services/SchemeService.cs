@@ -38,7 +38,7 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
     /// </summary>
     private readonly Dictionary<int, Dictionary<string, Dictionary<string, PreferredInputScheme>>> _userPreferredSchemesLookup = [];
 
-    private readonly Dictionary<int, InputScheme> _activeUserSchemesLookup = [];
+    internal readonly Dictionary<int, InputScheme> _activeUserSchemesLookup = [];
 
     #endregion
 
