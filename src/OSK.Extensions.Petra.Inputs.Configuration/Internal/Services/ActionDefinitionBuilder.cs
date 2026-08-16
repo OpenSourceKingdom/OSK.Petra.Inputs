@@ -81,7 +81,13 @@ internal class ActionDefinitionBuilder(string definitionName) : IActionDefinitio
 
         var newScheme = schemeBuilder.Build();
         var configurationId = InputConfiguration.GetConfigurationId(newScheme.GetDeviceIdentities());
-        if (_schemeLookup.TryGetValue(configurationId, out var configurationSchemeLookup) && configurationSchemeLookup.TryGetValue(name, out _))
+        if (!_schemeLookup.TryGetValue(configurationId, out var configurationSchemeLookup))
+        {
+            configurationSchemeLookup = new(StringComparer.OrdinalIgnoreCase);
+            _schemeLookup[configurationId] = configurationSchemeLookup;
+        }
+
+        if (configurationSchemeLookup.TryGetValue(name, out _))
         {
             throw new InvalidOperationException($"Unable to create the scheme '{name}' for input configuration '{string.Join(",", newScheme.GetDeviceIdentities())}' because a scheme with that name already exists for the configuration.");
         }

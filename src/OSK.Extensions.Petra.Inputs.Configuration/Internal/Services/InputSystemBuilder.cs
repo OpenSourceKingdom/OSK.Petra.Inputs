@@ -52,6 +52,8 @@ internal class InputSystemBuilder : IInputSystemBuilder
             throw new InvalidOperationException($"An action definition '{definition.Name}' already exists.");
         }
 
+        _definitionLookup[definition.Name] = definition;
+
         return this;
     }
 

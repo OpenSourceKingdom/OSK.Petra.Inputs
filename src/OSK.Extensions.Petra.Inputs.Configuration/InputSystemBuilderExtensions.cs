@@ -71,9 +71,5 @@ public static class InputSystemBuilderExtensions
         }
 
         #endregion
-
-        #region Schemes
-
-        #endregion
     }
 }
