@@ -4,21 +4,21 @@ using System.Linq;
 
 namespace OSK.Petra.Inputs.Models;
 
-public class DeviceCatalog(IEnumerable<DeviceCatalogPart> parts)
+public class DeviceCatalog(IEnumerable<DevicePage> pages)
 {
     #region Variables
 
-    private readonly Dictionary<DeviceTopologyName, DeviceCatalogPart> _partLookup = parts.ToDictionary(part => part.TopologyName);
+    private readonly Dictionary<DeviceTopologyName, DevicePage> _pageLookup = pages.ToDictionary(part => part.TopologyName);
 
     #endregion
 
     #region Api
 
 
-    public IReadOnlyList<DeviceCatalogPart> Parts => [.. _partLookup.Values];
+    public IReadOnlyList<DevicePage> Pages => [.. _pageLookup.Values];
 
-    public DeviceCatalogPart? GetPart(DeviceTopologyName topologyName)
-        => _partLookup.TryGetValue(topologyName, out var part)
+    public DevicePage? GetPage(DeviceTopologyName topologyName)
+        => _pageLookup.TryGetValue(topologyName, out var part)
             ? part
             : null;
 

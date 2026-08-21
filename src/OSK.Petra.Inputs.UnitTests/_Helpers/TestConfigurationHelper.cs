@@ -2,8 +2,6 @@ using Moq;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
-using OSK.Petra.Inputs.Internal;
-using OSK.Petra.Inputs.Internal.Models;
 
 namespace OSK.Petra.Inputs.UnitTests._Helpers;
 
@@ -43,14 +41,6 @@ public static class TestConfigurationHelper
             }
         };
 
-        var mockKeyboardTopology = new Mock<IDeviceTopology>();
-        mockKeyboardTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>())).Returns(true);
-        mockKeyboardTopology.SetupGet(m => m.Name).Returns(DeviceTopologyName.Keyboard);
-
-        var mockMouseTopology = new Mock<IDeviceTopology>();
-        mockMouseTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>())).Returns(true);
-        mockMouseTopology.SetupGet(m => m.Name).Returns(DeviceTopologyName.Mouse);
-
         var scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: markSchemeAsCustom);
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard, DeviceTopologyName.Mouse });
         config.AddScheme(scheme);
@@ -62,7 +52,7 @@ public static class TestConfigurationHelper
             DeviceJoinBehavior = DevicePairingBehavior.Balanced
         };
 
-        return new InputSystemConfiguration([mockKeyboardTopology.Object, mockMouseTopology.Object], new[] { config }, new[] { definition }, joinPolicy);
+        return new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
     }
 
     public static RuntimeDeviceIdentifier CreateDeviceIdentifier(DeviceTopologyName topology, int deviceId = 100)

@@ -6,13 +6,13 @@ using System;
 
 namespace OSK.Petra.Inputs.Capabilities.Pointer;
 
-public class PointerCapability(IOptions<PointerCapabilityOptions> options) : InputCapability<IPointer>
+public class PointerCapability(IOptions<PointerCapabilityOptions> options) : InputCapability<PointerEvent, PointerSettings>
 {
     #region InputCapability Overrides
 
-    protected override void Process(IDeviceInputContext context, IInputState state, IPointer input, TimeSpan deltaTime)
+    protected override void Process(IDeviceInputContext context, IInputState state, PointerEvent pointerEvent, PointerSettings settings, TimeSpan deltaTime)
     {
-        var details = state.GetOrCreateDetails(() => new PointerDetails(input.Position, options.Value.MaxPositionEntries, input.Settings.DistanceThresholdd));
+        var details = state.GetOrCreateDetails(() => new PointerDetails(pointerEvent.Position, options.Value.MaxPositionEntries, settings.DistanceThreshold));
         if (state.IsNewActivation)
         {
             var feature = context.GetOrCreateFeature<PointerFeature>();
@@ -24,7 +24,7 @@ public class PointerCapability(IOptions<PointerCapabilityOptions> options) : Inp
             return;
         }
 
-         details.UpdatePosition(input.Position, state.Duration);
+         details.UpdatePosition(pointerEvent.Position, state.Duration);
     }
 
     #endregion

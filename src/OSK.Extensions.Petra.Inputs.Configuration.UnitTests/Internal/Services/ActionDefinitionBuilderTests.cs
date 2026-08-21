@@ -1,3 +1,4 @@
+using Moq;
 using OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 using OSK.Extensions.Petra.Inputs.Configuration.Ports;
 using OSK.Petra.Inputs.Abstractions.Configuration;
@@ -31,8 +32,8 @@ public class ActionDefinitionBuilderTests
         _builder.MakeDefault();
 
         // Assert
-        var definition = _builder.Build();
-        Assert.True(definition.IsDefault);
+        var output = _builder.Build();
+        Assert.True(output.Definition.IsDefault);
     }
 
     [Fact]
@@ -135,9 +136,9 @@ public class ActionDefinitionBuilderTests
         _builder.WithAction(action);
 
         // Assert
-        var definition = _builder.Build();
-        Assert.Single(definition.Actions);
-        Assert.Equal("TestAction", definition.Actions.First().Name);
+        var output = _builder.Build();
+        Assert.Single(output.Definition.Actions);
+        Assert.Equal("TestAction", output.Definition.Actions.First().Name);
     }
 
     #endregion
@@ -184,17 +185,14 @@ public class ActionDefinitionBuilderTests
     public void WithScheme_ValidScheme_CreatesScheme()
     {
         // Act
+        _builder.WithAction(new InputAction("Abc", new HashSet<InputPhase>() { InputPhase.Start }, _ => { }));
         _builder.WithScheme("MyScheme", schemeBuilder =>
         {
-            schemeBuilder.WithDevice(new DeviceInputMap
-            {
-                DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test"),
-                InputMaps = Array.Empty<InputActionMap>()
-            });
+            schemeBuilder.WithMap(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test"), Mock.Of<IInput>(), "Abc");
         });
 
         // Assert
-        var schemes = _builder.GetInputSchemes().ToList();
+        var schemes = _builder.Build().Schemes.ToList();
         Assert.Single(schemes);
         Assert.Equal("MyScheme", schemes[0].Name);
     }
@@ -207,12 +205,12 @@ public class ActionDefinitionBuilderTests
     public void Build_Default_ReturnsExpectedDefinition()
     {
         // Act
-        var definition = _builder.Build();
+        var output = _builder.Build();
 
         // Assert
-        Assert.Equal("TestDefinition", definition.Name);
-        Assert.Empty(definition.Actions);
-        Assert.False(definition.IsDefault);
+        Assert.Equal("TestDefinition", output.Definition.Name);
+        Assert.Empty(output.Definition.Actions);
+        Assert.False(output.Definition.IsDefault);
     }
 
     [Fact]
@@ -227,11 +225,11 @@ public class ActionDefinitionBuilderTests
         _builder.MakeDefault();
 
         // Act
-        var definition = _builder.Build();
+        var output = _builder.Build();
 
         // Assert
-        Assert.Equal(2, definition.Actions.Count());
-        Assert.True(definition.IsDefault);
+        Assert.Equal(2, output.Definition.Actions.Count());
+        Assert.True(output.Definition.IsDefault);
     }
 
     #endregion

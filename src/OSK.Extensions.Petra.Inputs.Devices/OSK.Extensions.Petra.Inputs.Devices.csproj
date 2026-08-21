@@ -5,4 +5,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="OSK.Operations.Outputs" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OSK.Extensions.Petra.Inputs.Configuration\OSK.Extensions.Petra.Inputs.Configuration.csproj" />
+    <ProjectReference Include="..\OSK.Petra.Inputs.Abstractions\OSK.Petra.Inputs.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

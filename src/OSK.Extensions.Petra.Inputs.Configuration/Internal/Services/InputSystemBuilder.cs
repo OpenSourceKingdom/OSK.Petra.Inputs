@@ -1,7 +1,6 @@
 ﻿using OSK.Extensions.Petra.Inputs.Configuration.Ports;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +13,6 @@ internal class InputSystemBuilder : IInputSystemBuilder
 
     private Type? _schemeRepositoryType;
     private readonly Dictionary<string, ActionDefinition> _definitionLookup = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<DeviceTopologyName, IDeviceTopology> _topologyLookup = [];
 
     /// <summary>
     /// Lookup keys for the schemes:
@@ -54,21 +52,6 @@ internal class InputSystemBuilder : IInputSystemBuilder
 
         _definitionLookup[definition.Name] = definition;
 
-        return this;
-    }
-
-    public IInputSystemBuilder WithDeviceTopology(IDeviceTopology topology)
-    {
-        if (topology is null)
-        {
-            throw new ArgumentNullException(nameof(topology), "Topology definitions can not be null.");
-        }
-        if (_topologyLookup.TryGetValue(topology.Name, out _))
-        {
-            throw new InvalidOperationException($"Topology definitions must be unique and '{topology.Name}' was already added.");
-        }
-
-        _topologyLookup[topology.Name] = topology;
         return this;
     }
 
@@ -151,7 +134,7 @@ internal class InputSystemBuilder : IInputSystemBuilder
         };
         _joinPolicyConfigurator?.Invoke(joinPolicy);
 
-        return new InputSystemConfiguration(_topologyLookup.Values, inputConfigurations, _definitionLookup.Values, joinPolicy);
+        return new InputSystemConfiguration(inputConfigurations, _definitionLookup.Values, joinPolicy);
     }
 
     #endregion

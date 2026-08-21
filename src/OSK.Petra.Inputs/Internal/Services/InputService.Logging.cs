@@ -34,5 +34,8 @@ internal partial class InputService
     [LoggerMessage(eventId: 9, LogLevel.Warning, "An attempt was made to pair device {deviceIdentifier} to user {userId} but it failed.")]
     private static partial void LogDevicePairingFailedWarning(ILogger logger, int userId, RuntimeDeviceIdentifier deviceIdentifier);
 
+    [LoggerMessage(eventId: 10, LogLevel.Warning, "An attempt to process input was made but the input system has not been initialized.")]
+    private static partial void LogInputSystemNotInitializedWarning(ILogger logger);
+
     #endregion
 }

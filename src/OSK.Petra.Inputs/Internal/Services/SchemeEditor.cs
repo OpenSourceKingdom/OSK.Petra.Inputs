@@ -78,8 +78,8 @@ internal class SchemeEditor: ISchemeEditor
 
     public ICollectionNavigator<InputScheme> SchemeNavigator { get; private set; }
 
-    public DeviceCatalogPart? GetDeviceCatalog(DeviceTopologyName topologyName)
-        => _deviceCatalog.GetPart(topologyName);
+    public DevicePage? GetDevicePage(DeviceTopologyName topologyName)
+        => _deviceCatalog.GetPage(topologyName);
 
     public Output InitiateInputCapture(InputAction action, TimeSpan? captureTimeout = null)
     {
@@ -116,7 +116,7 @@ internal class SchemeEditor: ISchemeEditor
 
     public Output SetSchemeDevice(DeviceTopologyName topologyName, string deviceName)
     {
-        var catalogPart = _deviceCatalog.GetPart(topologyName); 
+        var catalogPart = _deviceCatalog.GetPage(topologyName); 
         if (catalogPart is null)
         {
             return Out.InvalidRequest($"The topology '{topologyName}' is not supported and can not be used for schemes.");
@@ -129,7 +129,7 @@ internal class SchemeEditor: ISchemeEditor
                 : Out.Success(catalogPart.GenericDevice);
         }
 
-        var deviceDescriptor = catalogPart.KnownDevices.FirstOrDefault(device => device.Identity.Name.Equals(deviceName));
+        var deviceDescriptor = catalogPart.Devices.FirstOrDefault(device => device.Identity.Name.Equals(deviceName));
         if (deviceDescriptor is null)
         {
             return Out.InvalidRequest($"The device name '{deviceName}' is not a supported device and can not be used for schemes.");
@@ -268,10 +268,10 @@ internal class SchemeEditor: ISchemeEditor
         _deviceSchemeDescriptors.Count();
         foreach (var topologyName in configuration.TopologyNames)
         {
-            var genericDevice = _inputConfigurationProvider.Configuration.GetTopology(topologyName)?.CreateGeneric();
-            if (genericDevice is not null)
+            var devicePage = GetDevicePage(topologyName);
+            if (devicePage?.GenericDevice is not null)
             {
-                _deviceSchemeDescriptors[topologyName] = genericDevice;
+                _deviceSchemeDescriptors[topologyName] = devicePage.GenericDevice;
             }
         }
     }

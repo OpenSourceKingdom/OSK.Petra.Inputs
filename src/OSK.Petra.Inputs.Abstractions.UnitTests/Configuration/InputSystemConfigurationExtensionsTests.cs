@@ -72,7 +72,7 @@ public class InputSystemConfigurationExtensionsTests
         var definition = new ActionDefinition("Default", actions, isDefault: true);
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
 
-        var genericConfig = new InputSystemConfiguration([], new[] { inputConfig }, new[] { definition }, joinPolicy);
+        var genericConfig = new InputSystemConfiguration(new[] { inputConfig }, new[] { definition }, joinPolicy);
 
         var identity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Steam, "Steam Keyboard");
 
@@ -108,7 +108,7 @@ public class InputSystemConfigurationExtensionsTests
         var definition = new ActionDefinition("Default", actions, isDefault: true);
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
 
-        return new InputSystemConfiguration([], new[] { inputConfig }, new[] { definition }, joinPolicy);
+        return new InputSystemConfiguration(new[] { inputConfig }, new[] { definition }, joinPolicy);
     }
 
     #endregion

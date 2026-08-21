@@ -1,12 +1,13 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Abstractions.Runtime;
+﻿using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
 
 namespace OSK.Petra.Inputs.Notifications;
 
-public class DeviceInputNotification(RuntimeDeviceIdentifier deviceIdentifier, IInput input, TimeSpan deltaTime): DeviceNotification(deviceIdentifier)
+public class DeviceInputNotification(RuntimeDeviceIdentifier deviceIdentifier, int inputId, TimeSpan deltaTime, params IInputEvent[] inputEvents): DeviceNotification(deviceIdentifier)
 {
-    public IInput Input => input;
+    public int InputId => inputId;
 
     public TimeSpan DeltaTime => deltaTime;
+
+    public IInputEvent[] InputEvents => inputEvents;
 }

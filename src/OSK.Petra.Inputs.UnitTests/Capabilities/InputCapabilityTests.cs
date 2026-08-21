@@ -1,9 +1,11 @@
 using Moq;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
-using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
+using OSK.Petra.Inputs.Capabilities.Pointer;
+using OSK.Petra.Inputs.Capabilities.Power;
+using OSK.Petra.Inputs.UnitTests._Helpers;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests;
+namespace OSK.Petra.Inputs.UnitTests.Capabilities;
 
 public class InputCapabilityTests
 {
@@ -22,29 +24,29 @@ public class InputCapabilityTests
 
     #endregion
 
-    #region CanProces
+    #region CanProcess
 
     [Fact]
-    public void CanProces_InputIsTInput_ReturnsTrue()
+    public void CanProcess_InputIsTInput_ReturnsTrue()
     {
         // Arrange
-        var input = new MockInput(1);
+        var input = new PowerEvent();
 
         // Act
-        var result = _capability.CanProces(input);
+        var result = _capability.CanProcess(input);
 
         // Assert
         Assert.True(result);
     }
 
     [Fact]
-    public void CanProces_InputIsNotTInput_ReturnsFalse()
+    public void CanProcess_InputIsNotTInput_ReturnsFalse()
     {
         // Arrange
-        var differentInput = new MockInput(2, "Y");
+        var differentInput = new PowerEvent();
 
         // Act
-        var result = _capability.CanProces(differentInput);
+        var result = _capability.CanProcess(differentInput);
 
         // Assert
         Assert.True(result);
@@ -61,7 +63,7 @@ public class InputCapabilityTests
         _mockState.Setup(s => s.Input).Returns(new MockInput(1));
 
         // Act
-        _capability.Process(null!, _mockState.Object, TimeSpan.Zero);
+        _capability.Process(null!, _mockState.Object, new PowerEvent(), TimeSpan.Zero);
 
         // Assert
         Assert.False(_capability.AbstractProcessCalled);
@@ -74,7 +76,7 @@ public class InputCapabilityTests
         var input = new MockInput(1);
 
         // Act
-        _capability.Process(_mockContext.Object, null!, TimeSpan.Zero);
+        _capability.Process(_mockContext.Object, null!, new PowerEvent(), TimeSpan.Zero);
 
         // Assert
         Assert.False(_capability.AbstractProcessCalled);
@@ -87,7 +89,7 @@ public class InputCapabilityTests
         _mockState.Setup(s => s.Input).Returns(Mock.Of<IInput>());
 
         // Act
-        _capability.Process(_mockContext.Object, _mockState.Object, TimeSpan.Zero);
+        _capability.Process(_mockContext.Object, _mockState.Object, new PointerEvent(), TimeSpan.Zero);
 
         // Assert
         Assert.False(_capability.AbstractProcessCalled);
@@ -103,7 +105,7 @@ public class InputCapabilityTests
 
 
         // Act
-        _capability.Process(_mockContext.Object, _mockState.Object, expectedDelta);
+        _capability.Process(_mockContext.Object, _mockState.Object, new PowerEvent(), expectedDelta);
 
         // Assert
         Assert.True(_capability.AbstractProcessCalled);

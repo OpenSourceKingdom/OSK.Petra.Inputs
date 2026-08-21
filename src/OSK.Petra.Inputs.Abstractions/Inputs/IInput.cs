@@ -1,7 +1,7 @@
 ﻿namespace OSK.Petra.Inputs.Abstractions.Inputs;
 
 /// <summary>
-/// An input for an <see cref="DeviceSpecification"/>
+/// An input for an <see cref="IDeviceDescriptor"/>
 /// </summary>
 public interface IInput
 {

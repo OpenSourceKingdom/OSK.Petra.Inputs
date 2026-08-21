@@ -1,5 +1,4 @@
-﻿using OSK.Extensions.Petra.Inputs.Configuration.Ports;
-using OSK.Petra.Inputs.Abstractions.Configuration;
+﻿using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using System;
 using System.Collections.Generic;
@@ -7,7 +6,7 @@ using System.Linq;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 
-internal class DeviceMapBuilder(DeviceIdentity identity): IDeviceMapBuilder
+internal class DeviceMapBuilder(DeviceIdentity identity)
 {
     #region Variables
 
@@ -17,35 +16,9 @@ internal class DeviceMapBuilder(DeviceIdentity identity): IDeviceMapBuilder
 
     #region IDeviceMapBuilder
 
-    public IDeviceMapBuilder WithMap(IInput input, string actionName)
-    {
-        if (input is null)
-        {
-            throw new ArgumentNullException(nameof(input));
-        }
-        if (string.IsNullOrWhiteSpace(actionName))
-        {
-            throw new ArgumentNullException(nameof(actionName));
-        }
+    public DeviceIdentity DeviceIdentity => identity;
 
-        if (_maps.TryGetValue(input.Id, out _))
-        {
-            throw new InvalidOperationException($"Unable to add device action map for input '{input.GetGlyph().Symbol}' on device '{identity}' for action '{actionName}' since the input has already been mapped.");
-        }
-        if (_maps.Values.Any(map => map.ActionName.Equals(actionName, StringComparison.OrdinalIgnoreCase)))
-        {
-            throw new InvalidOperationException($"Unable to add device action map for input '{input.GetGlyph().Symbol}' on device '{identity}' for action '{actionName}' since the action has already been mapped.");
-        }
-
-        _maps[input.Id] = new(actionName, input);
-        return this;
-    }
-
-    #endregion
-
-    #region Helpers
-
-    internal DeviceInputMap Build(ActionDefinition definition)
+    public DeviceInputMap Build(ActionDefinition definition)
     {
         if (definition is null)
         {
@@ -69,6 +42,29 @@ internal class DeviceMapBuilder(DeviceIdentity identity): IDeviceMapBuilder
             DeviceIdentity = identity,
             InputMaps = actionMaps
         };
+    }
+
+    public void AddMap(IInput input, string actionName)
+    {
+        if (input is null)
+        {
+            throw new ArgumentNullException(nameof(input));
+        }
+        if (string.IsNullOrWhiteSpace(actionName))
+        {
+            throw new ArgumentNullException(nameof(actionName));
+        }
+
+        if (_maps.TryGetValue(input.Id, out _))
+        {
+            throw new InvalidOperationException($"Unable to add device action map for input '{input.GetGlyph().Symbol}' on device '{identity}' for action '{actionName}' since the input has already been mapped.");
+        }
+        if (_maps.Values.Any(map => map.ActionName.Equals(actionName, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException($"Unable to add device action map for input '{input.GetGlyph().Symbol}' on device '{identity}' for action '{actionName}' since the action has already been mapped.");
+        }
+
+        _maps[input.Id] = new(actionName, input);
     }
 
     #endregion

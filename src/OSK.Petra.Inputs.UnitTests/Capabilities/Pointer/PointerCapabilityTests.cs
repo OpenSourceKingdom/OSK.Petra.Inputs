@@ -3,6 +3,7 @@ using Moq;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Capabilities.Pointer;
+using OSK.Petra.Inputs.Capabilities.Power;
 using System.Numerics;
 
 namespace OSK.Petra.Inputs.UnitTests.Capabilities.Pointer;
@@ -23,7 +24,6 @@ public class PointerCapabilityTests
     public PointerCapabilityTests()
     {
         _mockInput = new Mock<IPointer>();
-        _mockInput.SetupGet(m => m.Position).Returns(Vector2.Zero);
         _mockInput.SetupGet(m => m.Settings).Returns(new PointerSettings());
 
         _mockContext = new Mock<IDeviceInputContext>();
@@ -36,29 +36,29 @@ public class PointerCapabilityTests
 
     #endregion
 
-    #region CanProces
+    #region CanProcess
 
     [Fact]
-    public void CanProces_InputIsPointer_ReturnsTrue()
+    public void CanProcess_InputIsPointer_ReturnsTrue()
     {
         // Arrange
         _mockState.SetupGet(m => m.Input).Returns(_mockInput.Object);
 
         // Act
-        var result = _capability.CanProces(_mockInput.Object);
+        var result = _capability.CanProcess(new PointerEvent());
 
         // Assert
         Assert.True(result);
     }
 
     [Fact]
-    public void CanProces_InputIsNotPointer_ReturnsFalse()
+    public void CanProcess_InputIsNotPointer_ReturnsFalse()
     {
         // Arrange
         var mockNonPointer = new Mock<IInput>();
 
         // Act
-        var result = _capability.CanProces(mockNonPointer.Object);
+        var result = _capability.CanProcess(new PowerEvent());
 
         // Assert
         Assert.False(result);
@@ -75,7 +75,7 @@ public class PointerCapabilityTests
         _mockState.SetupGet(m => m.Input).Returns(_mockInput.Object);
 
         // Act
-        _capability.Process(null!, _mockState.Object, TimeSpan.Zero);
+        _capability.Process(null!, _mockState.Object, new PointerEvent(), TimeSpan.Zero);
 
         // Assert - no exception thrown
     }
@@ -84,7 +84,7 @@ public class PointerCapabilityTests
     public void Process_NullState_DoesNotProcess()
     {
         // Act
-        _capability.Process(_mockContext.Object, null!, TimeSpan.Zero);
+        _capability.Process(_mockContext.Object, null!, new PointerEvent(), TimeSpan.Zero);
 
         // Assert - no exception thrown
     }
@@ -97,7 +97,7 @@ public class PointerCapabilityTests
         _mockState.SetupGet(m => m.Input).Returns(mockNonPointer.Object);
 
         // Act
-        _capability.Process(_mockContext.Object, _mockState.Object, TimeSpan.Zero);
+        _capability.Process(_mockContext.Object, _mockState.Object, new PointerEvent(), TimeSpan.Zero);
 
         // Assert - no exception thrown
     }
@@ -110,7 +110,7 @@ public class PointerCapabilityTests
         _mockState.SetupGet(m => m.IsNewActivation).Returns(true);
 
         // Act
-        _capability.Process(_mockContext.Object, _mockState.Object, TimeSpan.Zero);
+        _capability.Process(_mockContext.Object, _mockState.Object, new PointerEvent(), TimeSpan.Zero);
 
         // Assert
         _mockState.Verify(s => s.CombinePhase(InputPhase.Active), Times.Once);
@@ -124,7 +124,7 @@ public class PointerCapabilityTests
         _mockState.SetupGet(m => m.IsNewActivation).Returns(true);
 
         // Act
-        _capability.Process(_mockContext.Object, _mockState.Object, TimeSpan.Zero);
+        _capability.Process(_mockContext.Object, _mockState.Object, new PointerEvent(), TimeSpan.Zero);
 
         // Assert - should not throw
     }
@@ -138,25 +138,9 @@ public class PointerCapabilityTests
         var existingDetails = new PointerDetails(Vector2.Zero, 10, 0);
 
         // Act
-        _capability.Process(_mockContext.Object, _mockState.Object, TimeSpan.FromSeconds(1));
+        _capability.Process(_mockContext.Object, _mockState.Object, new PointerEvent(), TimeSpan.FromSeconds(1));
 
         // Assert - should not throw
-    }
-
-    #endregion
-
-    #region Helper Classes
-
-    private class TestPointerCapability : PointerCapability
-    {
-        public bool ProcessCalled { get; private set; }
-
-        public TestPointerCapability() : base(Microsoft.Extensions.Options.Options.Create(new PointerCapabilityOptions())) { }
-
-        protected override void Process(IDeviceInputContext context, IInputState state, IPointer input, TimeSpan deltaTime)
-        {
-            ProcessCalled = true;
-        }
     }
 
     #endregion

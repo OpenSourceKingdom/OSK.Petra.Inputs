@@ -37,7 +37,7 @@ public class DeviceMapBuilderTests
         IInput? input = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _builder.WithMap(input!, "Action1"));
+        Assert.Throws<ArgumentNullException>(() => _builder.AddMap(input!, "Action1"));
     }
 
     [Theory]
@@ -47,7 +47,7 @@ public class DeviceMapBuilderTests
     public void WithMap_EmptyActionName_ThrowsArgumentNullException(string? name)
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _builder.WithMap(_testInput1, name!));
+        Assert.Throws<ArgumentNullException>(() => _builder.AddMap(_testInput1, name!));
     }
 
     [Fact]
@@ -55,10 +55,10 @@ public class DeviceMapBuilderTests
     {
         // Arrange
         var input = new TestInput(1, "A");
-        _builder.WithMap(input, "Action1");
+        _builder.AddMap(input, "Action1");
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => _builder.WithMap(input, "Action2"));
+        Assert.Throws<InvalidOperationException>(() => _builder.AddMap(input, "Action2"));
     }
 
     [Fact]
@@ -67,10 +67,10 @@ public class DeviceMapBuilderTests
         // Arrange
         var input1 = new TestInput(1, "A");
         var input2 = new TestInput(2, "B");
-        _builder.WithMap(input1, "Click");
+        _builder.AddMap(input1, "Click");
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => _builder.WithMap(input2, "Click"));
+        Assert.Throws<InvalidOperationException>(() => _builder.AddMap(input2, "Click"));
     }
 
     [Fact]
@@ -79,10 +79,10 @@ public class DeviceMapBuilderTests
         // Arrange
         var input1 = new TestInput(1, "A");
         var input2 = new TestInput(2, "B");
-        _builder.WithMap(input1, "Click");
+        _builder.AddMap(input1, "Click");
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => _builder.WithMap(input2, "CLICK"));
+        Assert.Throws<InvalidOperationException>(() => _builder.AddMap(input2, "CLICK"));
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class DeviceMapBuilderTests
         var definition = new ActionDefinition("Test", new InputAction[] { new InputAction("Click", new HashSet<InputPhase>(), _ => { }) }, isDefault: false);
 
         // Act
-        _builder.WithMap(_testInput1, "Click");
+        _builder.AddMap(_testInput1, "Click");
         var result = _builder.Build(definition);
 
         // Assert
@@ -110,8 +110,8 @@ public class DeviceMapBuilderTests
         }, isDefault: false);
 
         // Act
-        _builder.WithMap(_testInput1, "Click");
-        _builder.WithMap(_testInput2, "Move");
+        _builder.AddMap(_testInput1, "Click");
+        _builder.AddMap(_testInput2, "Move");
         var result = _builder.Build(definition);
 
         // Assert
@@ -139,7 +139,7 @@ public class DeviceMapBuilderTests
         var action = new InputAction("Click", new HashSet<InputPhase> { InputPhase.Start }, ctx => { });
         var definition = new ActionDefinition("Test", new[] { action }, isDefault: false);
 
-        _builder.WithMap(_testInput1, "NonExistent");
+        _builder.AddMap(_testInput1, "NonExistent");
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => _builder.Build(definition));
@@ -152,7 +152,7 @@ public class DeviceMapBuilderTests
         var action = new InputAction("Click", new HashSet<InputPhase> { InputPhase.Start }, ctx => { });
         var definition = new ActionDefinition("Test", new[] { action }, isDefault: false);
 
-        _builder.WithMap(_testInput1, "Click");
+        _builder.AddMap(_testInput1, "Click");
 
         // Act
         var result = _builder.Build(definition);
@@ -172,8 +172,8 @@ public class DeviceMapBuilderTests
         var action2 = new InputAction("Move", new HashSet<InputPhase> { InputPhase.End }, ctx => { });
         var definition = new ActionDefinition("Test", new[] { action1, action2 }, isDefault: false);
 
-        _builder.WithMap(_testInput1, "Click");
-        _builder.WithMap(_testInput2, "Move");
+        _builder.AddMap(_testInput1, "Click");
+        _builder.AddMap(_testInput2, "Move");
 
         // Act
         var result = _builder.Build(definition);

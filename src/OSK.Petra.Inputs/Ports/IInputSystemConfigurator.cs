@@ -1,6 +1,7 @@
 ﻿using OSK.Hexagonal.MetaData;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using System;
+using OSK.Petra.Inputs.Abstractions.Inputs;
 
 namespace OSK.Petra.Inputs.Ports;
 

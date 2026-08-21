@@ -65,13 +65,13 @@ public class SelectedSchemeTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("  ")]
-    public void SetName_InvalidName_ReturnsInvalidRequest(string name)
+    public void SetName_InvalidName_ReturnsInvalidRequest(string? name)
     {
         // Arrange
         var scheme = CreateScheme(isReadonly: false);
 
         // Act
-        var result = scheme.SetName(name);
+        var result = scheme.SetName(name!);
 
         // Assert
         Assert.False(result.IsSuccessful);

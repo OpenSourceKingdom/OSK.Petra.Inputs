@@ -9,7 +9,7 @@ public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
     {
-        IServiceCollection AddStatndardInputCapabilities()
+        public IServiceCollection AddStandardInputCapabilities()
         {
             services.AddTransient<IInputCapability, PowerCapability>();
             services.AddTransient<IInputCapability, PointerCapability>();

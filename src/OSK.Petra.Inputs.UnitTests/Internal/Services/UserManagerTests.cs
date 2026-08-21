@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Moq;
-using OSK.Operations.Outputs;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Services;
 using OSK.Petra.Inputs.Notifications;
@@ -203,12 +201,8 @@ public class UserManagerTests
             DeviceJoinBehavior = DevicePairingBehavior.Balanced
         };
 
-        var mockTopology = new Mock<IDeviceTopology>();
-        mockTopology.SetupGet(m => m.Name).Returns(DeviceTopologyName.Keyboard);
-        mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>())).Returns(true);
-
         _mockConfigProvider.SetupGet(m => m.Configuration)
-            .Returns(new InputSystemConfiguration([mockTopology.Object], new[] { config }, new[] { def1, def2 }, joinPolicy));
+            .Returns(new InputSystemConfiguration(new[] { config }, new[] { def1, def2 }, joinPolicy));
 
         // Act
         var result = _userManager.CreateUser(new UserJoinOptions() { ActiveDefinitionName = "Secondary" });

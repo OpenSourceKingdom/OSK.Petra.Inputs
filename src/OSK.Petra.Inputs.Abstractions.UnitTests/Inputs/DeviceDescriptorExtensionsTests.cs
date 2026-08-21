@@ -12,13 +12,10 @@ public class DeviceDescriptorExtensionsTests
     {
         // Arrange
         var mock = new Mock<IDeviceDescriptor>();
-        mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Generic"));
+        mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, DeviceNames.Generic));
 
-        // Act
-        var result = mock.Object.IsGeneric();
-
-        // Assert
-        Assert.True(result);
+        // Act/Assert
+        Assert.True(mock.Object.IsGeneric());
     }
 
     [Fact]
@@ -28,11 +25,8 @@ public class DeviceDescriptorExtensionsTests
         var mock = new Mock<IDeviceDescriptor>();
         mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "GENERIC"));
 
-        // Act
-        var result = mock.Object.IsGeneric();
-
-        // Assert
-        Assert.True(result);
+        // Act/Assert
+        Assert.True(mock.Object.IsGeneric());
     }
 
     [Fact]
@@ -42,11 +36,19 @@ public class DeviceDescriptorExtensionsTests
         var mock = new Mock<IDeviceDescriptor>();
         mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Xbox Controller"));
 
-        // Act
-        var result = mock.Object.IsGeneric();
+        // Act/Assert
+        Assert.False(mock.Object.IsGeneric());
+    }
 
-        // Assert
-        Assert.False(result);
+    [Fact]
+    public void IsGeneric_GenericFamily_NonGenericName_ReturnsFalse()
+    {
+        // Arrange
+        var mock = new Mock<IDeviceDescriptor>();
+        mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Xbox Controller"));
+
+        // Act/Assert
+        Assert.False(mock.Object.IsGeneric());
     }
 
     #endregion

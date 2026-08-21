@@ -27,7 +27,7 @@ public class InputStateTests
         _deviceIdentifier = new RuntimeDeviceIdentifier(100, deviceIdentity);
 
 
-        var deviceContext = new DeviceInputContext(1, _deviceIdentifier);
+        var deviceContext = new DeviceInputContext(1, _deviceIdentifier, Mock.Of<IDeviceDescriptor>());
         _state = new InputState(_mockInput.Object, deviceContext);
     }
 
@@ -223,7 +223,7 @@ public class InputStateTests
     public void Dispose_RemovesFromDeviceContext()
     {
         // Arrange
-        var deviceContext = new DeviceInputContext(1, _deviceIdentifier);
+        var deviceContext = new DeviceInputContext(1, _deviceIdentifier, Mock.Of<IDeviceDescriptor>());
         var state = new InputState(_mockInput.Object, deviceContext);
 
         // Act

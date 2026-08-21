@@ -1,12 +1,8 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Abstractions.Runtime;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using OSK.Petra.Inputs.Abstractions.Runtime;
 
 namespace OSK.Petra.Inputs.Notifications;
 
-public class UnpairedDeviceInputNotification(RuntimeDeviceIdentifier device, IInput input): DeviceNotification(device)
+public class UnpairedDeviceInputNotification(RuntimeDeviceIdentifier device, int inputId): DeviceNotification(device)
 {
-    public IInput Input => input;
+    public int InputId => inputId;
 }

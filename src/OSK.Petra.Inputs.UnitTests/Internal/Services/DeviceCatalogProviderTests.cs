@@ -1,10 +1,7 @@
 using Moq;
 using OSK.Operations.Outputs;
-using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Services;
-using OSK.Petra.Inputs.Ports;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Services;
 
@@ -12,7 +9,6 @@ public class DeviceCatalogProviderTests
 {
     #region Variables
 
-    private readonly Mock<IInputSystemConfigurationProvider> _mockConfigProvider;
     private readonly List<IDeviceProvider> _deviceProviders = [];
     private readonly DeviceCatalogProvider _provider;
 
@@ -22,21 +18,7 @@ public class DeviceCatalogProviderTests
 
     public DeviceCatalogProviderTests()
     {
-        var mockTopology = new Mock<IDeviceTopology>();
-        mockTopology.SetupGet(m => m.Name).Returns(DeviceTopologyName.Keyboard);
-        mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>())).Returns(true);
-        mockTopology.Setup(m => m.CreateGeneric()).Returns(Mock.Of<IDeviceDescriptor>());
-
-        var config = new InputSystemConfiguration(
-            [mockTopology.Object],
-            [],
-            [],
-            new InputSystemJoinPolicy());
-
-        _mockConfigProvider = new Mock<IInputSystemConfigurationProvider>();
-        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(config);
-
-        _provider = new DeviceCatalogProvider(_mockConfigProvider.Object, _deviceProviders);
+        _provider = new DeviceCatalogProvider(_deviceProviders);
     }
 
     #endregion
@@ -120,8 +102,8 @@ public class DeviceCatalogProviderTests
         Assert.True(result.IsSuccessful);
         Assert.NotNull(result.Data);
 
-        Assert.Single(result.Data.Parts);
-        Assert.Equal(2, result.Data.Parts[0].KnownDevices.Count);
+        Assert.Single(result.Data.Pages);
+        Assert.Equal(2, result.Data.Pages[0].Devices.Count);
     }
 
     #endregion

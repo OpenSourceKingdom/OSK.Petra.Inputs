@@ -18,6 +18,7 @@ public class InputConfiguration
 
     public static string GetConfigurationId(params DeviceIdentity[] deviceIdentities)
         => GetConfigurationId(deviceIdentities.Select(identity => identity.TopologyName));
+
     public static string GetConfigurationId(params DeviceTopologyName[] topologies)
         => GetConfigurationId((IEnumerable<DeviceTopologyName>)topologies);
 

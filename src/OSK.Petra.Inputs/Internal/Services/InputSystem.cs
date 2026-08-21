@@ -45,7 +45,7 @@ internal class InputSystem(IInputSystemConfigurationProvider configurationProvid
         }
     }
 
-    public Task<Output> InitializeAsync(CancellationToken cancellationToken = default)
+    public async Task<Output> InitializeAsync(CancellationToken cancellationToken = default)
     {
         var validationResult = InputSystemConfigurationValidator.ValidateConfiguration(configurationProvider.Configuration);
         if (!validationResult.IsValid)
@@ -53,7 +53,13 @@ internal class InputSystem(IInputSystemConfigurationProvider configurationProvid
             throw new InvalidOperationException($"The provided input configuration was invalid. Message: {validationResult}");
         }
 
-        return schemeService.LoadSchemeConfigurationAsync(cancellationToken);
+        var schemeInitializationOutput = await schemeService.LoadSchemeConfigurationAsync(cancellationToken);
+        if (!schemeInitializationOutput.IsSuccessful)
+        {
+            return schemeInitializationOutput;
+        }
+
+        return await inputService.InitializeAsync(cancellationToken);
     }
 
     public void Update(TimeSpan deltaTime)

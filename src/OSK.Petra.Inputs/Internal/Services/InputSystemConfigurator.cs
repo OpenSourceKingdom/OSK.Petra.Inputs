@@ -6,6 +6,8 @@ using OSK.Petra.Inputs.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Collections.Generic;
+using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Capabilities;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
@@ -90,6 +92,8 @@ internal class InputSystemConfigurator : IInputSystemConfigurator
         services.TryAddSingleton<IInputSystem, InputSystem>();
         services.TryAddSingleton<IInputSystemNotifier, InputSystemNotifier>();
         services.TryAddSingleton<IDeviceCatalogProvider, DeviceCatalogProvider>();
+
+        services.AddStandardInputCapabilities();
     }
 
     #endregion

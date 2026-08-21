@@ -1,3 +1,4 @@
+using Moq;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
@@ -49,7 +50,7 @@ public class UserInputContextTests
         Assert.Equal(_userId, _context.UserId);
         Assert.Same(_scheme, _context.Scheme);
         Assert.Empty(_context.DeviceInputContexts);
-        Assert.Null(_context.EditorDelay);
+        Assert.Null(_context.EditorInputCaptureTimeout);
     }
 
     #endregion
@@ -61,7 +62,7 @@ public class UserInputContextTests
     {
         // Arrange
         var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        _context.GetOrAddDevice(device);
+        _context.GetOrAddDevice(device, _ => Mock.Of<IDeviceDescriptor>());
 
         var newScheme = new InputScheme("New", "New", [], isDefault: false, isCustom: false);
 
@@ -82,7 +83,7 @@ public class UserInputContextTests
         var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 200);
 
         // Act
-        var result = _context.GetOrAddDevice(device);
+        var result = _context.GetOrAddDevice(device, _ => Mock.Of<IDeviceDescriptor>());
 
         // Assert
         Assert.NotNull(result);
@@ -95,10 +96,10 @@ public class UserInputContextTests
     {
         // Arrange
         var device = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var first = _context.GetOrAddDevice(device);
+        var first = _context.GetOrAddDevice(device, _ => Mock.Of<IDeviceDescriptor>());
 
         // Act
-        var second = _context.GetOrAddDevice(device);
+        var second = _context.GetOrAddDevice(device, _ => Mock.Of<IDeviceDescriptor>());
 
         // Assert
         Assert.Same(first, second);
@@ -114,8 +115,8 @@ public class UserInputContextTests
         // Arrange
         var device1 = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 100);
         var device2 = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 200);
-        _context.GetOrAddDevice(device1);
-        _context.GetOrAddDevice(device2);
+        _context.GetOrAddDevice(device1, _ => Mock.Of<IDeviceDescriptor>());
+        _context.GetOrAddDevice(device2, _ => Mock.Of<IDeviceDescriptor>());
 
         // Act
         var devices = _context.DeviceInputContexts;
@@ -204,24 +205,24 @@ public class UserInputContextTests
         var delay = new SchemeEditorDelay() { Delay = TimeSpan.FromSeconds(5) };
 
         // Act
-        _context.EditorDelay = delay;
+        _context.EditorInputCaptureTimeout = delay;
 
         // Assert
-        Assert.NotNull(_context.EditorDelay);
-        Assert.Equal(TimeSpan.FromSeconds(5), _context.EditorDelay.Value.Delay);
+        Assert.NotNull(_context.EditorInputCaptureTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(5), _context.EditorInputCaptureTimeout.Value.Delay);
     }
 
     [Fact]
     public void EditorDelay_SetToNull_Clears()
     {
         // Arrange
-        _context.EditorDelay = new SchemeEditorDelay() { Delay = TimeSpan.FromSeconds(5) };
+        _context.EditorInputCaptureTimeout = new SchemeEditorDelay() { Delay = TimeSpan.FromSeconds(5) };
 
         // Act
-        _context.EditorDelay = null;
+        _context.EditorInputCaptureTimeout = null;
 
         // Assert
-        Assert.Null(_context.EditorDelay);
+        Assert.Null(_context.EditorInputCaptureTimeout);
     }
 
     #endregion

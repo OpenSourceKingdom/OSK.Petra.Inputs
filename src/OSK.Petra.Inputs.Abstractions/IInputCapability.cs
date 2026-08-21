@@ -1,12 +1,11 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Abstractions.Runtime;
+﻿using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
 
 namespace OSK.Petra.Inputs.Abstractions;
 
 public interface IInputCapability
 {
-    bool CanProces(IInput input);
+    bool CanProcess(IInputEvent inputEvent);
 
-    void Process(IDeviceInputContext context, IInputState state, TimeSpan deltaTime);
+    void Process(IDeviceInputContext context, IInputState state, IInputEvent inputEvent, TimeSpan deltaTime);
 }

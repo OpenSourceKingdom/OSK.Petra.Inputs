@@ -9,10 +9,10 @@ using OSK.Petra.Inputs.Capabilities.Pointer;
 using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.Internal.Services;
+using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Notifications;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.UnitTests._Helpers;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Services;
 
@@ -26,6 +26,7 @@ public class InputServiceTests
     private readonly Mock<IInputSystemNotifier> _mockSystemNotifier;
     private readonly Mock<IServiceProvider> _mockServiceProvider;
     private readonly Mock<ILogger<InputService>> _mockLogger;
+    private readonly Mock<IDeviceCatalogProvider> _mockDeviceCatalogProvider;
     private readonly InputSystemConfiguration _validConfig;
     private readonly List<IInputCapability> _capabilities;
 
@@ -47,11 +48,12 @@ public class InputServiceTests
         _mockSystemNotifier = new Mock<IInputSystemNotifier>();
         _mockServiceProvider = new Mock<IServiceProvider>();
         _mockLogger = new Mock<ILogger<InputService>>();
+        _mockDeviceCatalogProvider = new();
 
         _mockSchemeService.SetupGet(s => s.AllowCustomSchemes).Returns(false);
         _capabilities = [];
         _service = new(_capabilities, _mockConfigProvider.Object, _mockUserManager.Object, _mockSchemeService.Object,
-            _mockSystemNotifier.Object, _mockServiceProvider.Object, _mockLogger.Object);
+            _mockDeviceCatalogProvider.Object, _mockSystemNotifier.Object, _mockServiceProvider.Object, _mockLogger.Object);
     }
 
     #endregion
@@ -66,7 +68,8 @@ public class InputServiceTests
             null!,
             _mockConfigProvider.Object,
             _mockUserManager.Object,
-            _mockSchemeService.Object,
+            _mockSchemeService.Object, 
+            _mockDeviceCatalogProvider.Object,
             _mockSystemNotifier.Object,
             _mockServiceProvider.Object,
             _mockLogger.Object));
@@ -83,7 +86,8 @@ public class InputServiceTests
             Array.Empty<IInputCapability>(),
             null!,
             _mockUserManager.Object,
-            _mockSchemeService.Object,
+            _mockSchemeService.Object, 
+            _mockDeviceCatalogProvider.Object,
             _mockSystemNotifier.Object,
             _mockServiceProvider.Object,
             _mockLogger.Object));
@@ -97,6 +101,22 @@ public class InputServiceTests
             Array.Empty<IInputCapability>(),
             _mockConfigProvider.Object,
             _mockUserManager.Object,
+            null!, 
+            _mockDeviceCatalogProvider.Object,
+            _mockSystemNotifier.Object,
+            _mockServiceProvider.Object,
+            _mockLogger.Object));
+    }
+
+    [Fact]
+    public void Constructor_NullTopologyCatalogProvider_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new InputService(
+            Array.Empty<IInputCapability>(),
+            _mockConfigProvider.Object,
+            _mockUserManager.Object,
+            _mockSchemeService.Object,
             null!,
             _mockSystemNotifier.Object,
             _mockServiceProvider.Object,
@@ -112,6 +132,7 @@ public class InputServiceTests
             _mockConfigProvider.Object,
             null!,
             _mockSchemeService.Object,
+            _mockDeviceCatalogProvider.Object,
             _mockSystemNotifier.Object,
             _mockServiceProvider.Object,
             _mockLogger.Object));
@@ -126,6 +147,7 @@ public class InputServiceTests
             _mockConfigProvider.Object,
             _mockUserManager.Object,
             _mockSchemeService.Object,
+            _mockDeviceCatalogProvider.Object,
             null!,
             _mockServiceProvider.Object,
             _mockLogger.Object));
@@ -140,6 +162,7 @@ public class InputServiceTests
             _mockConfigProvider.Object,
             _mockUserManager.Object,
             _mockSchemeService.Object,
+            _mockDeviceCatalogProvider.Object,
             _mockSystemNotifier.Object,
             null!,
             _mockLogger.Object));
@@ -154,6 +177,7 @@ public class InputServiceTests
             _mockConfigProvider.Object,
             _mockUserManager.Object,
             _mockSchemeService.Object,
+            _mockDeviceCatalogProvider.Object,
             _mockSystemNotifier.Object,
             _mockServiceProvider.Object,
             null!));
@@ -202,7 +226,7 @@ public class InputServiceTests
     }
 
     [Fact]
-    public void Update_CallsCapabilitiesWithDeltaTime()
+    public async Task Update_CallsCapabilitiesWithDeltaTime()
     {
         // Arrange
         var capability = new TestablePointerCapability();
@@ -215,8 +239,20 @@ public class InputServiceTests
         mockInput.SetupGet(m => m.Id)
             .Returns(1);
         var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+
         mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Symbol = "A" });
-        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object, TimeSpan.Zero);
+
+        var mockDevice = new Mock<IDeviceDescriptor>();
+        mockDevice.Setup(m => m.GetInput(It.IsAny<int>()))
+            .Returns(mockInput.Object);
+        mockDevice.Setup(m => m.Identity)
+            .Returns(new DeviceIdentity(deviceIdentifier.DeviceIdentity.TopologyName, deviceIdentifier.DeviceIdentity.DeviceFamily, DeviceNames.Generic));
+        _mockDeviceCatalogProvider.Setup(m => m.GetCatalogAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Out.Success(new DeviceCatalog([new DevicePage(DeviceTopologyName.Keyboard, [mockDevice.Object])])));
+
+        await _service.InitializeAsync(TestContext.Current.CancellationToken);
+
+        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object.Id, TimeSpan.Zero, new PointerEvent());
 
         var action = new InputAction("TestAction", new HashSet<InputPhase> { InputPhase.Start }, ctx => { });
         var deviceMaps = new List<DeviceInputMap>
@@ -247,13 +283,21 @@ public class InputServiceTests
     #region ProcessDeviceNotification
 
     [Fact]
-    public void ProcessDeviceNotification_UnsupportedTopology_NotifyUnrecognizedDevice()
+    public async Task ProcessDeviceNotification_UnsupportedTopology_NotifyUnrecognizedDevice()
     {
         // Arrange
         var mockInput = new Mock<IInput>();
+        mockInput.SetupGet(m => m.Id)
+            .Returns(1);
+
+        _mockDeviceCatalogProvider.Setup(m => m.GetCatalogAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Out.Success(new DeviceCatalog([new DevicePage(DeviceTopologyName.Keyboard, [])])));
+
+        await _service.InitializeAsync(TestContext.Current.CancellationToken);
+
         var notification = new DeviceInputNotification(
             TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Gamepad),
-            mockInput.Object,
+             mockInput.Object.Id,
             TimeSpan.Zero);
 
         _service.ProcessNotificationForTest(notification);
@@ -263,12 +307,46 @@ public class InputServiceTests
     }
 
     [Fact]
-    public void ProcessDeviceNotification_IncompatibleInput_NotifyUnrecognizedDeviceInput()
+    public async Task ProcessDeviceNotification_IncompatibleInput_NotifyUnrecognizedDeviceInput()
     {
         // Arrange
-        var mockTopology = new Mock<IDeviceTopology>();
-        mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>())).Returns(false);
-        mockTopology.SetupGet(m => m.Name).Returns(DeviceTopologyName.Keyboard);
+        var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var mockInput = new Mock<IInput>();
+        mockInput.SetupGet(m => m.Id).Returns(1);
+        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Symbol = "A" });
+
+        var mockDevice = new Mock<IDeviceDescriptor>();
+        mockDevice.Setup(m => m.GetInput(It.IsAny<int>()))
+            .Returns((IInput?)null);
+        mockDevice.SetupGet(m => m.Identity)
+            .Returns(deviceIdentifier.DeviceIdentity);
+
+        _mockDeviceCatalogProvider.Setup(m => m.GetCatalogAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Out.Success(new DeviceCatalog([new DevicePage(DeviceTopologyName.Keyboard, [mockDevice.Object])])));
+
+        await _service.InitializeAsync(TestContext.Current.CancellationToken);
+
+        var action = new InputAction("TestAction", new HashSet<InputPhase> { InputPhase.End }, ctx => { });
+        var definition = new ActionDefinition("Default", [action], isDefault: true);
+
+        var deviceMaps = new List<DeviceInputMap>
+        {
+            new DeviceInputMap
+            {
+                DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Keyboard"),
+                InputMaps = new[] { new InputActionMap(action, new MockInput(1)) }
+            }
+        };
+
+        var scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: false);
+        var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
+        config.AddScheme(scheme);
+
+        _mockSchemeService.Setup(s => s.SetActiveSchemeForDevice(It.IsAny<int>(), It.IsAny<DeviceIdentity>()))
+            .Returns(Out.Updated(scheme));
+
+        var mockUser = new InputUser(1);
+        _mockUserManager.Setup(m => m.GetUserForDevice(It.IsAny<int>())).Returns(mockUser);
 
         var joinPolicy = new InputSystemJoinPolicy
         {
@@ -277,12 +355,9 @@ public class InputServiceTests
             DeviceJoinBehavior = DevicePairingBehavior.Balanced
         };
 
-        var config = new InputSystemConfiguration([mockTopology.Object], [], [], joinPolicy);
-        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(config);
-        var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var mockInput = new Mock<IInput>();
-        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Symbol = "A" });
-        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object, TimeSpan.Zero);
+        var systemConfiguration = new InputSystemConfiguration([config], [], joinPolicy);
+        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(systemConfiguration);
+        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object.Id, TimeSpan.Zero);
 
         _service.ProcessNotificationForTest(notification);
 
@@ -291,17 +366,26 @@ public class InputServiceTests
     }
 
     [Fact]
-    public void ProcessDeviceNotification_ManualUserJoin_ManualPairing_NoPairedUser_ReturnsWithoutProcessing()
+    public async Task ProcessDeviceNotification_ManualUserJoin_ManualPairing_NoPairedUser_ReturnsWithoutProcessing()
     {
         // Arrange
-        var mockTopolopgy = new Mock<IDeviceTopology>();
-        mockTopolopgy.Setup(m => m.Name)
-            .Returns(DeviceTopologyName.Keyboard);
-        mockTopolopgy.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
-            .Returns(true);
+        var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var mockInput = new Mock<IInput>();
+        mockInput.SetupGet(m => m.Id).Returns(1);
+        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Symbol = "A" });
+
+        var mockDevice = new Mock<IDeviceDescriptor>();
+        mockDevice.Setup(m => m.GetInput(It.IsAny<int>()))
+            .Returns(mockInput.Object);
+        mockDevice.SetupGet(m => m.Identity)
+            .Returns(deviceIdentifier.DeviceIdentity);
+        _mockDeviceCatalogProvider.Setup(m => m.GetCatalogAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Out.Success(new DeviceCatalog([new DevicePage(DeviceTopologyName.Keyboard, [mockDevice.Object])])));
+
+        await _service.InitializeAsync(TestContext.Current.CancellationToken);
 
         _mockConfigProvider.SetupGet(m => m.Configuration).Returns(() => {
-            return new InputSystemConfiguration([mockTopolopgy.Object], [], [], new InputSystemJoinPolicy
+            return new InputSystemConfiguration([new([DeviceTopologyName.Keyboard]) ], [], new InputSystemJoinPolicy
             {
                 MaxUsers = 4,
                 UserJoinBehavior = UserJoinBehavior.Manual,
@@ -309,9 +393,7 @@ public class InputServiceTests
             });
         });
 
-        var mockInput = new Mock<IInput>();
-        var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object, TimeSpan.Zero);
+        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object.Id, TimeSpan.Zero);
 
         _mockUserManager.Setup(m => m.GetUserForDevice(deviceIdentifier.DeviceId)).Returns((IInputUser?)null);
 
@@ -323,17 +405,26 @@ public class InputServiceTests
     }
 
     [Fact]
-    public void ProcessDeviceNotification_AutomaticUserJoin_ManualDevicePairing_ReturnsWithoutProcessing()
+    public async Task ProcessDeviceNotification_AutomaticUserJoin_ManualDevicePairing_ReturnsWithoutProcessing()
     {
         // Arrange
-        var mockTopolopgy = new Mock<IDeviceTopology>();
-        mockTopolopgy.Setup(m => m.Name)
-            .Returns(DeviceTopologyName.Keyboard);
-        mockTopolopgy.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
-            .Returns(true);
+        var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var mockInput = new Mock<IInput>();
+        mockInput.SetupGet(m => m.Id).Returns(1);
+        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Symbol = "A" });
+
+        var mockDevice = new Mock<IDeviceDescriptor>();
+        mockDevice.Setup(m => m.GetInput(It.IsAny<int>()))
+            .Returns(mockInput.Object);
+        mockDevice.SetupGet(m => m.Identity)
+            .Returns(deviceIdentifier.DeviceIdentity);
+        _mockDeviceCatalogProvider.Setup(m => m.GetCatalogAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Out.Success(new DeviceCatalog([new DevicePage(DeviceTopologyName.Keyboard, [mockDevice.Object])])));
+
+        await _service.InitializeAsync(TestContext.Current.CancellationToken);
 
         _mockConfigProvider.SetupGet(m => m.Configuration).Returns(() => {
-            return new InputSystemConfiguration([mockTopolopgy.Object], [], [], new InputSystemJoinPolicy
+            return new InputSystemConfiguration([new InputConfiguration([DeviceTopologyName.Keyboard])], [], new InputSystemJoinPolicy
             {
                 MaxUsers = 4,
                 UserJoinBehavior = UserJoinBehavior.DeviceActivation,
@@ -341,9 +432,7 @@ public class InputServiceTests
             });
         });
 
-        var mockInput = new Mock<IInput>();
-        var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object, TimeSpan.Zero);
+        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object.Id, TimeSpan.Zero);
 
         _mockUserManager.Setup(m => m.GetUserForDevice(deviceIdentifier.DeviceId)).Returns((IInputUser?)null);
 
@@ -382,11 +471,7 @@ public class InputServiceTests
             DeviceJoinBehavior = DevicePairingBehavior.Balanced
         };
 
-        var mockTopology = new Mock<IDeviceTopology>();
-        mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>())).Returns(true);
-        mockTopology.SetupGet(m => m.Name).Returns(DeviceTopologyName.Keyboard);
-
-        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(new InputSystemConfiguration([mockTopology.Object], new[] { config }, new[] { definition }, joinPolicy));
+        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy));
 
         _mockSchemeService.Setup(s => s.SetActiveSchemeForDevice(It.IsAny<int>(), It.IsAny<DeviceIdentity>()))
             .Returns(Out.Updated(scheme));
@@ -400,7 +485,7 @@ public class InputServiceTests
         mockInput.SetupGet(m => m.Id).Returns(1);
         mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Symbol = "A" });
 
-        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object, TimeSpan.Zero);
+        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object.Id, TimeSpan.Zero);
 
         // Act
         _service.ProcessNotificationForTest(notification);
@@ -410,9 +495,25 @@ public class InputServiceTests
     }
 
     [Fact]
-    public void ProcessInput_ActionWithMatchingPhase_TriggersActionExecutor()
+    public async Task ProcessInput_ActionWithMatchingPhase_TriggersActionExecutor()
     {
         // Arrange
+
+        var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
+        var mockInput = new Mock<IInput>();
+        mockInput.SetupGet(m => m.Id).Returns(1);
+        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Symbol = "A" });
+
+        var mockDevice = new Mock<IDeviceDescriptor>();
+        mockDevice.Setup(m => m.Identity)
+            .Returns(deviceIdentifier.DeviceIdentity);
+        mockDevice.Setup(m => m.GetInput(It.IsAny<int>()))
+            .Returns(mockInput.Object);
+        _mockDeviceCatalogProvider.Setup(m => m.GetCatalogAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Out.Success(new DeviceCatalog([new DevicePage(DeviceTopologyName.Keyboard, [mockDevice.Object])])));
+        
+        await _service.InitializeAsync(TestContext.Current.CancellationToken);
+
         IInputEventContext? capturedContext = null;
         var action = new InputAction("TestAction", new HashSet<InputPhase> { InputPhase.Start }, ctx => { capturedContext = ctx; });
         var definition = new ActionDefinition("Default", [action], isDefault: true);
@@ -437,11 +538,7 @@ public class InputServiceTests
             DeviceJoinBehavior = DevicePairingBehavior.Balanced
         };
 
-        var mockTopology = new Mock<IDeviceTopology>();
-        mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>())).Returns(true);
-        mockTopology.SetupGet(m => m.Name).Returns(DeviceTopologyName.Keyboard);
-
-        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(new InputSystemConfiguration([mockTopology.Object], new[] { config }, new[] { definition }, joinPolicy));
+        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy));
 
         _mockSchemeService.Setup(s => s.SetActiveSchemeForDevice(It.IsAny<int>(), It.IsAny<DeviceIdentity>()))
             .Returns(Out.Updated(scheme));
@@ -449,13 +546,7 @@ public class InputServiceTests
         var mockUser = new InputUser(1);
         _mockUserManager.Setup(m => m.GetUserForDevice(It.IsAny<int>())).Returns(mockUser);
 
-        var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-
-        var mockInput = new Mock<IInput>();
-        mockInput.SetupGet(m => m.Id).Returns(1);
-        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Symbol = "A" });
-
-        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object, TimeSpan.Zero);
+        var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object.Id, TimeSpan.Zero);
 
         // Act
         _service.ProcessNotificationForTest(notification);
@@ -546,8 +637,8 @@ public class InputServiceTests
 
         // Assert
         var userContext = _service.UserContexts.First(context => context.UserId == userId);
-        Assert.NotNull(userContext.EditorDelay);
-        Assert.Equal(timeout, userContext.EditorDelay.Value.Delay);
+        Assert.NotNull(userContext.EditorInputCaptureTimeout);
+        Assert.Equal(timeout, userContext.EditorInputCaptureTimeout.Value.Delay);
     }
 
     [Fact]
@@ -562,7 +653,7 @@ public class InputServiceTests
         _service.ProcessNotificationForTest(captureInitiatedNotification);
 
         var userContext = _service.UserContexts.First(context => context.UserId == userId);
-        Assert.NotNull(userContext.EditorDelay);
+        Assert.NotNull(userContext.EditorInputCaptureTimeout);
 
         var notification = new SchemeEditorInputCaptureTimeoutNotification(userId);
 
@@ -570,7 +661,7 @@ public class InputServiceTests
         _service.ProcessNotificationForTest(notification);
 
         // Assert
-        Assert.Null(userContext.EditorDelay);
+        Assert.Null(userContext.EditorInputCaptureTimeout);
     }
 
     #endregion

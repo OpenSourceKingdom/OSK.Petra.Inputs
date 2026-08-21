@@ -9,20 +9,28 @@ namespace OSK.Petra.Inputs.Abstractions.Configuration;
 /// The very necessary configuration utilized with the input system. This is the 'source of truth' for all interactions 
 /// and decisions made by the input system
 /// </summary>
-/// <param name="deviceTopologies">The device topologies the input system is able to support</param>
-/// <param name="supportedConfigurations">The configurations of topologies that is supported</param>
-/// <param name="definitions">The input definitions the input system will use to map inputs and actions</param>
-/// <param name="joinPolicy">The policy the input system uses for new users, devices, and the like</param>
-public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopologies, IEnumerable<InputConfiguration> supportedConfigurations, IEnumerable<ActionDefinition> definitions, InputSystemJoinPolicy joinPolicy)
+public class InputSystemConfiguration
 {
     #region Variables
 
-    private readonly Dictionary<DeviceTopologyName, IDeviceTopology> _topologyLookup
-        = deviceTopologies?.Where(topology => topology is not null).ToDictionary(topology => topology.Name) ?? [];
-    private readonly Dictionary<string, InputConfiguration> _inputConfigurationLookup 
-        = supportedConfigurations?.Where(configuration => configuration is not null).ToDictionary(configuration => configuration.Id) ?? [];
-    private readonly Dictionary<string, ActionDefinition> _inputDefinitionLookup 
-        = definitions?.Where(definition => definition?.Name is not null).ToDictionary(definition => definition.Name, StringComparer.OrdinalIgnoreCase) ?? [];
+    private readonly HashSet<DeviceTopologyName> _topologyLookup;
+    private readonly Dictionary<string, InputConfiguration> _inputConfigurationLookup;
+    private readonly Dictionary<string, ActionDefinition> _inputDefinitionLookup;
+
+    #endregion
+
+    #region Constructors
+
+    /// <param name="inputConfigurations">The configurations of topologies that is supported</param>
+    /// <param name="definitions">The input definitions the input system will use to map inputs and actions</param>
+    /// <param name="joinPolicy">The policy the input system uses for new users, devices, and the like</param>
+    public InputSystemConfiguration(IEnumerable<InputConfiguration> inputConfigurations, IEnumerable<ActionDefinition> definitions, InputSystemJoinPolicy joinPolicy)
+    {
+        _inputConfigurationLookup = inputConfigurations?.Where(configuration => configuration is not null).ToDictionary(configuration => configuration.Id) ?? [];
+        _inputDefinitionLookup = definitions?.Where(definition => definition?.Name is not null).ToDictionary(definition => definition.Name, StringComparer.OrdinalIgnoreCase) ?? [];
+        _topologyLookup = inputConfigurations is null ? [] : [.. inputConfigurations.SelectMany(config => config.TopologyNames)];
+        JoinPolicy = joinPolicy ?? throw new ArgumentNullException(nameof(joinPolicy));
+    }
 
     #endregion
 
@@ -31,9 +39,9 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
     /// <summary>
     /// The policy that determines new user, device, etc. behaviors when interacting with the input system
     /// </summary>
-    public InputSystemJoinPolicy JoinPolicy => joinPolicy;
+    public InputSystemJoinPolicy JoinPolicy { get; }
 
-    public IReadOnlyList<IDeviceTopology> SupportedDeviceTopologies => [.. _topologyLookup.Values];
+    public IReadOnlyCollection<DeviceTopologyName> DeviceTopologies => [.. _topologyLookup];
 
     /// <summary>
     /// The collection of supported input device configurations for built in and custom schemes to use.
@@ -52,10 +60,8 @@ public class InputSystemConfiguration(IEnumerable<IDeviceTopology> deviceTopolog
             ? configuration
             : null;
 
-    public IDeviceTopology? GetTopology(DeviceTopologyName topologyName)
-        => _topologyLookup.TryGetValue(topologyName, out var topology)
-            ? topology
-            : null;
+    public bool IsTopologySupported(DeviceTopologyName topologyName)
+        => _topologyLookup.TryGetValue(topologyName, out _);
 
     /// <summary>
     /// Attempts to get the definition from a name

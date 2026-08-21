@@ -1,10 +1,12 @@
-﻿using OSK.Petra.Inputs.Abstractions.Configuration;
+﻿using OSK.Petra.Inputs.Abstractions.Inputs;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.Ports;
 
 public interface IInputSchemeBuilder
 {
+    string Name { get; }
+
     IInputSchemeBuilder MakeDefault();
 
-    IInputSchemeBuilder WithDevice(DeviceInputMap map);
+    IInputSchemeBuilder WithMap(DeviceIdentity deviceIdentity, IInput input, string actionName);
 }

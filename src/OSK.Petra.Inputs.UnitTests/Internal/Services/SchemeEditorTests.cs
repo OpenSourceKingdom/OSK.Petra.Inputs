@@ -46,14 +46,8 @@ public class SchemeEditorTests
         _mockUserManager = new Mock<IUserManager>();
         _mockSystemNotifier = new Mock<IInputSystemNotifier>();
 
-        var catalogPart = new DeviceCatalogPart() 
-        {
-            TopologyName = DeviceTopologyName.Keyboard,
-            KnownDevices = [],
-            GenericDevice = null
-        };
-
-        _catalog = new([catalogPart]);
+        var page = new DevicePage(DeviceTopologyName.Keyboard, []);
+        _catalog = new([page]);
 
         _schemeEditor = new SchemeEditor(_mockUser.Object, _catalog, _mockSchemeService.Object, _mockConfigProvider.Object,
             _mockUserManager.Object, _mockSystemNotifier.Object);
@@ -278,14 +272,7 @@ public class SchemeEditorTests
     [Fact]
     public void SetSchemeDevice_NonExistentDevice_ReturnsInvalidRequest()
     {
-        // Arrange
-        var mockPart = new DeviceCatalogPart()
-        {
-            KnownDevices = [],
-            GenericDevice = null,
-        };
-
-        // Act
+        // Arrange/Act
         var result = _schemeEditor.SetSchemeDevice(DeviceTopologyName.Keyboard, "NonExistent");
 
         // Assert
@@ -300,7 +287,7 @@ public class SchemeEditorTests
         mockDescriptor.SetupGet(m => m.Identity)
             .Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.PlayStation, "TestDevice"));
 
-        _catalog.Parts[0].KnownDevices = [mockDescriptor.Object];
+        _catalog.Pages[0].Devices = [mockDescriptor.Object];
 
         // Act
         var result = _schemeEditor.SetSchemeDevice(DeviceTopologyName.Keyboard, "TestDevice");
@@ -397,13 +384,13 @@ public class SchemeEditorTests
 
     #endregion
 
-    #region GetDeviceCatalog
+    #region GetDevicePage
 
     [Fact]
-    public void GetDeviceCatalog_ExistingTopology_ReturnsPart()
+    public void GetDevicePage_ExistingTopology_ReturnsPart()
     {
         // Arrange/Act
-        var result = _schemeEditor.GetDeviceCatalog(DeviceTopologyName.Keyboard);
+        var result = _schemeEditor.GetDevicePage(DeviceTopologyName.Keyboard);
 
         // Assert
         Assert.NotNull(result);
@@ -411,10 +398,10 @@ public class SchemeEditorTests
     }
 
     [Fact]
-    public void GetDeviceCatalog_NonExistentTopology_ReturnsNull()
+    public void GetDevicePage_NonExistentTopology_ReturnsNull()
     {
         // Arrange/Act
-        var result = _schemeEditor.GetDeviceCatalog(DeviceTopologyName.Gamepad);
+        var result = _schemeEditor.GetDevicePage(DeviceTopologyName.Gamepad);
 
         // Assert
         Assert.Null(result);

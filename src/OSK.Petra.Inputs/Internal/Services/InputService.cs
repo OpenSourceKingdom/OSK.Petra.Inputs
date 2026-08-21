@@ -1,16 +1,21 @@
 ﻿using Microsoft.Extensions.Logging;
+using OSK.Operations.Outputs;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal.Models;
+using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Notifications;
 using OSK.Petra.Inputs.Options;
 using OSK.Petra.Inputs.Ports;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
@@ -24,6 +29,7 @@ internal partial class InputService : IInputService
     private readonly IInputSystemConfigurationProvider _configurationProvider;
     private readonly ISchemeService _schemeService;
     private readonly IUserManager _userManager;
+    private readonly IDeviceCatalogProvider _deviceCatalogProvider;
     private readonly IInputSystemNotifier _systemNotifier;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<InputService> _logger;
@@ -31,16 +37,19 @@ internal partial class InputService : IInputService
     private bool _globalActionSupression;
     private readonly Dictionary<int, UserInputContext> _userContexts = [];
 
+    private DeviceCatalog? _topologyCatalog;
+
     #endregion
 
     #region Constructors
 
     public InputService(IEnumerable<IInputCapability> capabilities, IInputSystemConfigurationProvider configurationProvider, IUserManager userManager, ISchemeService schemeService, 
-        IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
+        IDeviceCatalogProvider deviceCatalogProvider, IInputSystemNotifier systemNotifier, IServiceProvider serviceProvider, ILogger<InputService> logger)
     {
         _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
         _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
         _schemeService = schemeService ?? throw new ArgumentNullException(nameof(schemeService));
+        _deviceCatalogProvider = deviceCatalogProvider ?? throw new ArgumentNullException(nameof(deviceCatalogProvider));
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _systemNotifier = systemNotifier ?? throw new ArgumentNullException(nameof(systemNotifier));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
@@ -82,9 +91,48 @@ internal partial class InputService : IInputService
         }
     }
 
+    public async Task<Output> InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        var getCatalogOutput = await _deviceCatalogProvider.GetCatalogAsync(cancellationToken);
+        if (!getCatalogOutput.IsSuccessful)
+        {
+            return getCatalogOutput;
+        }
+
+        _topologyCatalog = getCatalogOutput.Data;
+        return Out.Success();
+    }
+
     #endregion
 
     #region Helpers
+
+    private IDeviceDescriptor? GetDeviceOrGeneric(DeviceIdentity deviceIdentity)
+    {
+        Debug.Assert(_topologyCatalog is not null);
+        var topologyPage = _topologyCatalog.GetPage(deviceIdentity.TopologyName);
+        if (topologyPage is null)
+        {
+            return null;
+        }
+
+        // Attempt exact device match first
+        var matchedDevice = topologyPage.Devices.FirstOrDefault(device => device.Identity == deviceIdentity);
+        if (matchedDevice is not null)
+        {
+            return matchedDevice;
+        }
+
+        // Attempt family match
+        matchedDevice = topologyPage.Devices.FirstOrDefault(device => device.Identity.DeviceFamily == deviceIdentity.DeviceFamily && device.IsGeneric());
+        if (matchedDevice is not null)
+        {
+            return matchedDevice;
+        }
+
+        // Generic topology match
+        return topologyPage.Devices.FirstOrDefault(device => device.IsGeneric());
+    }
 
     internal bool IsGlobalInputSuppressed => _globalActionSupression;
 
@@ -143,7 +191,7 @@ internal partial class InputService : IInputService
             case SchemeEditorInputCaptureInitiatedNotification inputCaptureInitiatedNotification:
                 if (_userContexts.TryGetValue(inputCaptureInitiatedNotification.UserId, out var initiatedUserContext))
                 {
-                    initiatedUserContext.EditorDelay = new SchemeEditorDelay()
+                    initiatedUserContext.EditorInputCaptureTimeout = new SchemeEditorDelay()
                     {
                         Delay = inputCaptureInitiatedNotification.CaptureTimeout
                     };
@@ -152,7 +200,7 @@ internal partial class InputService : IInputService
             case SchemeEditorInputCaptureTimeoutNotification inputCaptureTimeoutNotification:
                 if (_userContexts.TryGetValue(inputCaptureTimeoutNotification.UserId, out var timeoutUserContext))
                 {
-                    timeoutUserContext.EditorDelay = null;
+                    timeoutUserContext.EditorInputCaptureTimeout = null;
                 }
                 break;
         }
@@ -173,25 +221,22 @@ internal partial class InputService : IInputService
 
     private void ProcessDeviceNotification(DeviceNotification deviceNotification)
     {
+        if (_topologyCatalog is null)
+        {
+            LogInputSystemNotInitializedWarning(_logger);
+            return;
+        }
+
         if (deviceNotification is not DeviceInputNotification inputNotification)
         {
             return;
         }
 
         var configuration = _configurationProvider.Configuration;
-
-        var topologyDescriptor = configuration.GetTopology(inputNotification.DeviceIdentifier.DeviceIdentity.TopologyName);
-        if (topologyDescriptor is null)
+        if (!configuration.IsTopologySupported(inputNotification.DeviceIdentifier.DeviceIdentity.TopologyName))
         {
             LogUnsupportedInputDeviceInformation(_logger, inputNotification.DeviceIdentifier);
             _systemNotifier.Notify(new UnrecognizedDeviceNotification(inputNotification.DeviceIdentifier));
-            return;
-        }
-
-        if (!topologyDescriptor.IsCompatibleInput(inputNotification.Input))
-        {
-            LogUnsupportedInputInformation(_logger, inputNotification.DeviceIdentifier, inputNotification.Input.GetGlyph().Symbol);
-            _systemNotifier.Notify(new UnrecognizedDeviceInputNotification(inputNotification.DeviceIdentifier, inputNotification.Input));
             return;
         }
 
@@ -199,7 +244,7 @@ internal partial class InputService : IInputService
         if (user is null)
         {
             LogNoInputUserForDeviceWarning(_logger, deviceNotification.DeviceIdentifier);
-            _systemNotifier.Notify(new UnpairedDeviceInputNotification(inputNotification.DeviceIdentifier, inputNotification.Input));
+            _systemNotifier.Notify(new UnpairedDeviceInputNotification(inputNotification.DeviceIdentifier, inputNotification.InputId));
             return;
         }
 
@@ -213,36 +258,49 @@ internal partial class InputService : IInputService
         {
             userContext = AddInputContext(user, setSchemeOutput.Data);
         }
-         
-        if (userContext.EditorDelay is not null)
+
+        if (setSchemeOutput.StatusCode.Status == OutputStatus.Updated)
         {
-            _systemNotifier.Notify(new SchemeEditorInputCapturedNotification(userContext.UserId, inputNotification.DeviceIdentifier.DeviceIdentity, inputNotification.Input));
+            userContext.Scheme = setSchemeOutput.Data;
+        }
+
+        var deviceContext = userContext.GetOrAddDevice(deviceNotification.DeviceIdentifier, 
+            identifier => GetDeviceOrGeneric(identifier.DeviceIdentity) ?? throw new InvalidOperationException($"Unexpected issue getting a specific or generic device for {identifier.DeviceIdentity}"));
+        var input = deviceContext.DeviceDescriptor.GetInput(inputNotification.InputId);
+        if (input is null)
+        {
+            LogUnsupportedInputInformation(_logger, inputNotification.DeviceIdentifier, input?.GetGlyph().Symbol ?? "<>");
+            _systemNotifier.Notify(new UnrecognizedDeviceInputNotification(inputNotification.DeviceIdentifier, input?.Id));
+            return;
+        }
+
+        if (userContext.EditorInputCaptureTimeout is not null)
+        {
+            _systemNotifier.Notify(new SchemeEditorInputCapturedNotification(userContext.UserId, inputNotification.DeviceIdentifier.DeviceIdentity, input));
             return;
         }
         if (PauseInput)
         {
             return;
         }
-        
-        if (setSchemeOutput.StatusCode.Status == OutputStatus.Updated)
-        {
-            userContext.Scheme = setSchemeOutput.Data;
-        }
 
-        var deviceContext = userContext.GetOrAddDevice(deviceNotification.DeviceIdentifier);
-        var inputState = deviceContext.GetOrCreateState(inputNotification.Input);
+        var inputState = deviceContext.GetOrCreateState(input);
+        inputState.LastReceivedEvents = inputNotification.InputEvents;
 
         ProcessInput(userContext, deviceContext, inputState, inputNotification.DeltaTime);
     }
 
     private void ProcessInput(UserInputContext userContext, DeviceInputContext deviceContext, InputState inputState, TimeSpan deltaTime)
     {
-        foreach (var capability in _capabilities.Where(capability => capability.CanProces(inputState.Input)))
+        foreach (var inputEvent in inputState.LastReceivedEvents)
         {
-            capability.Process(deviceContext, inputState, deltaTime);
-            if (inputState.IsDisposed)
+            foreach (var capability in _capabilities.Where(capability => capability.CanProcess(inputEvent)))
             {
-                return;
+                capability.Process(deviceContext, inputState, inputEvent, deltaTime);
+                if (inputState.IsDisposed)
+                {
+                    return;
+                }
             }
         }
 
@@ -269,7 +327,7 @@ internal partial class InputService : IInputService
         {
             action.ActionExecutor(new InputEventContext(userContext.UserId, deviceContext.DeviceIdentifier, deviceContext, inputState, deltaTime, _serviceProvider));
             LogInputActionTriggeredDebug(_logger, userContext.UserId, deviceContext.DeviceIdentifier, inputState.Input.GetGlyph().Symbol, action.Name);
-            _systemNotifier.Notify(new ActionExecutedNotification(userContext.UserId, userContext.Scheme.DefinitionName, action.Name));
+            _systemNotifier.Notify(new ActionExecutedNotification(userContext.UserId, userContext.Scheme!.DefinitionName, action.Name));
         }
     }
 

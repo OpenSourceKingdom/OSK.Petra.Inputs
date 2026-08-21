@@ -65,7 +65,13 @@ public static class InputSystemBuilderExtensions
                     inputActionAttribute?.Description, inputActionAttribute?.InternalActionGroup));
             }
 
-            builder.WithActionDefinition(definitionBuilder.Build());
+            var output = definitionBuilder.Build();
+            builder.WithActionDefinition(output.Definition);
+
+            foreach (var scheme in output.Schemes)
+            {
+                builder.WithInputScheme(scheme);
+            }
 
             return builder;
         }

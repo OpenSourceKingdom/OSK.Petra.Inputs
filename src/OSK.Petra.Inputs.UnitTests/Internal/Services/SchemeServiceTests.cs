@@ -12,7 +12,6 @@ using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Notifications;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.UnitTests._Helpers;
-using System.Runtime.CompilerServices;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Services;
 

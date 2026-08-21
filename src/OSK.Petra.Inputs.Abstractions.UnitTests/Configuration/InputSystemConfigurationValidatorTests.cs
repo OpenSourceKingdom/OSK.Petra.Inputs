@@ -49,7 +49,7 @@ public class InputSystemConfigurationValidatorTests
         config.AddScheme(scheme);
 
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
-        var configuration = new InputSystemConfiguration([], new[] { config }, [], joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, [], joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -73,7 +73,7 @@ public class InputSystemConfigurationValidatorTests
         var config2 = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme2 = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config2.AddScheme(scheme2);
-        configuration = new InputSystemConfiguration([], new[] { config2 }, new[] { definition }, joinPolicy);
+        configuration = new InputSystemConfiguration(new[] { config2 }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -95,7 +95,7 @@ public class InputSystemConfigurationValidatorTests
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -118,7 +118,7 @@ public class InputSystemConfigurationValidatorTests
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -142,7 +142,7 @@ public class InputSystemConfigurationValidatorTests
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition1, definition2 }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition1, definition2 }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -168,7 +168,7 @@ public class InputSystemConfigurationValidatorTests
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -194,7 +194,7 @@ public class InputSystemConfigurationValidatorTests
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -220,7 +220,7 @@ public class InputSystemConfigurationValidatorTests
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -239,7 +239,7 @@ public class InputSystemConfigurationValidatorTests
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
-        var configuration = new InputSystemConfiguration([], [], new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration([], new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -260,7 +260,7 @@ public class InputSystemConfigurationValidatorTests
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -278,12 +278,6 @@ public class InputSystemConfigurationValidatorTests
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var mockTopology = new Mock<IDeviceTopology>();
-        mockTopology.SetupGet(m => m.Name)
-            .Returns(DeviceTopologyName.Keyboard);
-        mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
-            .Returns(true);
-
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("OtherDef", "MyScheme", 
@@ -293,7 +287,7 @@ public class InputSystemConfigurationValidatorTests
             isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration([mockTopology.Object], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -316,7 +310,7 @@ public class InputSystemConfigurationValidatorTests
         var scheme = new InputScheme("Default", "MyScheme", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -339,7 +333,7 @@ public class InputSystemConfigurationValidatorTests
         var scheme = new InputScheme("Default", "MyScheme", [new() { DeviceIdentity = new DeviceIdentity(), InputMaps = [] }], isDefault: false, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -364,7 +358,7 @@ public class InputSystemConfigurationValidatorTests
         config.AddScheme(scheme1);
         config.AddScheme(scheme2);
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -568,7 +562,7 @@ public class InputSystemConfigurationValidatorTests
         var definition = new ActionDefinition("Default", actions, isDefault: true);
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
 
-        var configuration = new InputSystemConfiguration([], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         var customScheme = new CustomInputScheme
         {
@@ -604,17 +598,11 @@ public class InputSystemConfigurationValidatorTests
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         config.AddScheme(existingScheme);
 
-        var mockTopology = new Mock<IDeviceTopology>();
-        mockTopology.SetupGet(m => m.Name)
-            .Returns(DeviceTopologyName.Keyboard);
-        mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
-            .Returns(true);
-
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
 
-        var configuration = new InputSystemConfiguration([mockTopology.Object], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         var customScheme = new CustomInputScheme
         {
@@ -648,17 +636,11 @@ public class InputSystemConfigurationValidatorTests
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         config.AddScheme(existingScheme);
 
-        var mockTopology = new Mock<IDeviceTopology>();
-        mockTopology.SetupGet(m => m.Name)
-            .Returns(DeviceTopologyName.Keyboard);
-        mockTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
-            .Returns(true);
-
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
         var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
 
-        var configuration = new InputSystemConfiguration([mockTopology.Object], new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
 
         var customScheme = new CustomInputScheme
         {
@@ -710,18 +692,6 @@ public class InputSystemConfigurationValidatorTests
             }
         };
 
-        var mockKetyboardTopology = new Mock<IDeviceTopology>();
-        mockKetyboardTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
-            .Returns(true);
-        mockKetyboardTopology.SetupGet(m => m.Name)
-            .Returns(DeviceTopologyName.Keyboard);
-
-        var mockMouseTopology = new Mock<IDeviceTopology>();
-        mockMouseTopology.Setup(m => m.IsCompatibleInput(It.IsAny<IInput>()))
-            .Returns(true);
-        mockMouseTopology.SetupGet(m => m.Name)
-            .Returns(DeviceTopologyName.Mouse);
-
         var scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: false);
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard, DeviceTopologyName.Mouse });
         config.AddScheme(scheme);
@@ -733,7 +703,7 @@ public class InputSystemConfigurationValidatorTests
             DeviceJoinBehavior = DevicePairingBehavior.Balanced
         };
 
-        return new InputSystemConfiguration([mockKetyboardTopology.Object, mockMouseTopology.Object], new[] { config }, new[] { definition }, joinPolicy);
+        return new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
     }
 
     #endregion

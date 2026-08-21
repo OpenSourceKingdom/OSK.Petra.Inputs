@@ -7,6 +7,7 @@ using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Services;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.UnitTests._Helpers;
+using OSK.Petra.Inputs.Abstractions.Inputs;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Services;
 
@@ -53,7 +54,13 @@ public class InputSystemConfiguratorTests
     public void UseConfiguration_InvalidConfiguration_ThrowsInputSystemValidationException()
     {
         // Arrange
-        var invalidConfig = CreateInvalidConfiguration();
+        var joinPolicy = new InputSystemJoinPolicy
+        {
+            MaxUsers = 0,
+            UserJoinBehavior = UserJoinBehavior.DeviceActivation,
+            DeviceJoinBehavior = DevicePairingBehavior.Balanced
+        };
+        var invalidConfig = new InputSystemConfiguration([], [], joinPolicy);
 
         // Act & Assert
         Assert.Throws<InputSystemValidationException>(() => _configurator.UseConfiguration(invalidConfig));
@@ -198,21 +205,6 @@ public class InputSystemConfiguratorTests
         var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IDeviceProvider));
         Assert.NotNull(descriptor);
         Assert.Equal(ServiceLifetime.Transient, descriptor.Lifetime);
-    }
-
-    #endregion
-
-    #region Helpers
-
-    private InputSystemConfiguration CreateInvalidConfiguration()
-    {
-        var joinPolicy = new InputSystemJoinPolicy
-        {
-            MaxUsers = 0,
-            UserJoinBehavior = UserJoinBehavior.DeviceActivation,
-            DeviceJoinBehavior = DevicePairingBehavior.Balanced
-        };
-        return new InputSystemConfiguration([], [], [], joinPolicy);
     }
 
     #endregion

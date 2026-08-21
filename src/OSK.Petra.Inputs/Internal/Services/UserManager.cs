@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using OSK.Operations.Outputs.Models;
 using OSK.Operations.Outputs;
 using OSK.Petra.Inputs.Abstractions;

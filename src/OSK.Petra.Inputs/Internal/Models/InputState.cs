@@ -9,6 +9,8 @@ internal class InputState(IInput input, DeviceInputContext deviceContext) : IInp
 {
     #region Variables
 
+    internal IInputEvent[] LastReceivedEvents { get; set; } = [];
+
     internal bool IsDisposed { get; private set; }
 
     private readonly Dictionary<Type, ICapabilityDetails> _detailLookup = [];

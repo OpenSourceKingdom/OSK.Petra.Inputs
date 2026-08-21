@@ -1,5 +1,7 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Configuration;
+using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
+using System;
 using System.Collections.Generic;
 
 namespace OSK.Petra.Inputs.Internal.Models;
@@ -33,7 +35,7 @@ internal class UserInputContext(int userId)
         }
     }
 
-    public SchemeEditorDelay? EditorDelay { get; set; }
+    public SchemeEditorDelay? EditorInputCaptureTimeout { get; set; }
 
     public void Suppress(int[]? actionGroups, bool isSuppressed)
     {
@@ -54,14 +56,18 @@ internal class UserInputContext(int userId)
     public bool IsSuppressed(int actionGroup)
         => (_suppressedActions.TryGetValue(actionGroup, out var isSuppressed) && isSuppressed) || _globalActionSuppression;
 
-    public DeviceInputContext GetOrAddDevice(RuntimeDeviceIdentifier deviceIdentifier)
+    public DeviceInputContext GetOrAddDevice(RuntimeDeviceIdentifier deviceIdentifier, Func<RuntimeDeviceIdentifier, IDeviceDescriptor> deviceFactory)
     {
+        if (deviceFactory is null)
+        {
+            throw new ArgumentNullException(nameof(deviceFactory));
+        }
         if (_deviceContexts.TryGetValue(deviceIdentifier, out var deviceInputContext))
         {
             return deviceInputContext;
         }
 
-        deviceInputContext = new(userId, deviceIdentifier);
+        deviceInputContext = new(userId, deviceIdentifier, deviceFactory(deviceIdentifier));
         _deviceContexts[deviceIdentifier] = deviceInputContext;
 
         return deviceInputContext;

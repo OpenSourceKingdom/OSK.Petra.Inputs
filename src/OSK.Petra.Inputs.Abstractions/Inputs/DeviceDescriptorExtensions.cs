@@ -4,6 +4,9 @@ namespace OSK.Petra.Inputs.Abstractions.Inputs;
 
 public static class DeviceDescriptorExtensions
 {
-    public static bool IsGeneric(this IDeviceDescriptor descriptor)
-        => descriptor.Identity.Name.Equals("Generic", StringComparison.OrdinalIgnoreCase);
+    extension(IDeviceDescriptor descriptor)
+    {
+        public bool IsGeneric() 
+            => descriptor.Identity.Name.Equals(DeviceNames.Generic, StringComparison.OrdinalIgnoreCase);
+    }
 }

@@ -1,22 +1,21 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Abstractions.Runtime;
+﻿using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
 
 namespace OSK.Petra.Inputs.Abstractions;
 
-public abstract class InputCapability<TInput> : IInputCapability
-    where TInput : IInput
+public abstract class InputCapability<TInputEvent> : IInputCapability
+    where TInputEvent : IInputEvent
 {
     #region IInputCapability
 
-    public bool CanProces(IInput input)
-        => input is TInput;
+    public bool CanProcess(IInputEvent inputEvent)
+        => inputEvent is TInputEvent;
 
-    public void Process(IDeviceInputContext context, IInputState state, TimeSpan deltaTime)
+    public void Process(IDeviceInputContext context, IInputState state, IInputEvent inputEvent, TimeSpan deltaTime)
     {
-        if (context is not null && state is not null && state.Input is TInput typedInput)
+        if (context is not null && state is not null && inputEvent is TInputEvent typeedEvent)
         {
-            Process(context, state, typedInput, deltaTime);
+            Process(context, state, typeedEvent, deltaTime);
         }
     }
 
@@ -24,7 +23,7 @@ public abstract class InputCapability<TInput> : IInputCapability
 
     #region Helpers
 
-    protected abstract void Process(IDeviceInputContext context, IInputState state, TInput input, TimeSpan deltaTime);
+    protected abstract void Process(IDeviceInputContext context, IInputState state, TInputEvent inputEvent, TimeSpan deltaTime);
 
     #endregion
 }

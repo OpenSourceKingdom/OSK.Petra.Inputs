@@ -47,7 +47,7 @@ public interface ISchemeEditor
     /// Gets a registry of known devices that the system supports
     /// </summary>
     /// <returns>Theregistry for the device topology</returns>
-    DeviceCatalogPart? GetDeviceCatalog(DeviceTopologyName topologyName);
+    DevicePage? GetDevicePage(DeviceTopologyName topologyName);
 
     /// <summary>
     /// Sets the editor's device for the given topology that is used to edit the <see cref="SelectedScheme"/>

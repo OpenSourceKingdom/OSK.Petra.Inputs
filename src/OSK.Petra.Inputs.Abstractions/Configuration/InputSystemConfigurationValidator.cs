@@ -360,19 +360,10 @@ public static class InputSystemConfigurationValidator
 
     private static InputConfigurationValidationResult ValidateDeviceMap(InputSystemConfiguration configuration, ActionDefinition definition, InputScheme scheme, DeviceInputMap deviceMap)
     {
-        var topologyDescriptor = configuration.GetTopology(deviceMap.DeviceIdentity.TopologyName);
-        if (topologyDescriptor is null)
+        if (!configuration.IsTopologySupported(deviceMap.DeviceIdentity.TopologyName))
         {
             return InputConfigurationValidationResult.ForDeviceMap(map => map.DeviceIdentity, InputConfigurationValidation.InvalidData,
                 $"The input scheme {scheme.Name} on input defintion {definition.Name} uses a device identity that is not configured for the input system, the device is: {deviceMap.DeviceIdentity}.");
-        }
-
-        var invalidInputIds = deviceMap.InputMaps.Where(map => !topologyDescriptor.IsCompatibleInput(map.Input))
-            .Select(map => map.Input.Id);
-        if (invalidInputIds.Any())
-        {
-            return InputConfigurationValidationResult.ForDeviceMap(map => map.InputMaps, InputConfigurationValidation.InvalidData,
-                $"There are {invalidInputIds.Count()} input maps that use input ids that don't exist for the device map {deviceMap.DeviceIdentity} with scheme {scheme.Name} on input definition {definition.Name}, the invalid ids are: {string.Join(",", invalidInputIds.Distinct())}.");
         }
 
         var duplicateInputIds = deviceMap.InputMaps.GroupBy(map => map.Input.Id)

@@ -1,6 +1,5 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
-using Moq;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
@@ -18,42 +17,42 @@ public class InputSystemConfigurationTests
         config.AddScheme(scheme);
 
         // Act
-        var configuration = new InputSystemConfiguration([CreateMockTopology(DeviceTopologyName.Keyboard)], new[] { config }, [], joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, [], joinPolicy);
 
         // Assert
-        Assert.Single(configuration.SupportedDeviceTopologies);
+        Assert.Single(configuration.DeviceTopologies);
         Assert.Single(configuration.InputConfigurations);
         Assert.Same(joinPolicy, configuration.JoinPolicy);
     }
 
     #endregion
 
-    #region SupportedDeviceTopologies
+    #region DeviceTopologies
 
     [Fact]
-    public void SupportedDeviceTopologies_ReturnsAllTopologies()
+    public void DeviceTopologies_ReturnsAllTopologies()
     {
         // Arrange
-        var topo1 = CreateMockTopology(DeviceTopologyName.Keyboard);
-        var topo2 = CreateMockTopology(DeviceTopologyName.Mouse);
+        var config1 = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
+        var config2 = new InputConfiguration(new[] { DeviceTopologyName.Mouse });
 
         // Act
-        var configuration = new InputSystemConfiguration([topo1, topo2], [], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([config1, config2], [], new InputSystemJoinPolicy());
 
         // Assert
-        Assert.Equal(2, configuration.SupportedDeviceTopologies.Count);
-        Assert.Contains(DeviceTopologyName.Keyboard, configuration.SupportedDeviceTopologies.Select(d => d.Name));
-        Assert.Contains(DeviceTopologyName.Mouse, configuration.SupportedDeviceTopologies.Select(d => d.Name));
+        Assert.Equal(2, configuration.DeviceTopologies.Count);
+        Assert.Contains(DeviceTopologyName.Keyboard, configuration.DeviceTopologies);
+        Assert.Contains(DeviceTopologyName.Mouse, configuration.DeviceTopologies);
     }
 
     [Fact]
-    public void SupportedDeviceTopologies_NullInput_ReturnsEmpty()
+    public void DeviceTopologies_NullInput_ReturnsEmpty()
     {
         // Arrange & Act
-        var configuration = new InputSystemConfiguration(null!, [], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [], new InputSystemJoinPolicy());
 
         // Assert
-        Assert.Empty(configuration.SupportedDeviceTopologies);
+        Assert.Empty(configuration.DeviceTopologies);
     }
 
     #endregion
@@ -73,7 +72,7 @@ public class InputSystemConfigurationTests
         config2.AddScheme(scheme2);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [config1, config2], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([config1, config2], [], new InputSystemJoinPolicy());
 
         // Assert
         Assert.Equal(2, configuration.InputConfigurations.Count);
@@ -83,7 +82,7 @@ public class InputSystemConfigurationTests
     public void InputConfigurations_Null_ReturnsEmptyConfigurations()
     {
         // Arrange/Act
-        var configuration = new InputSystemConfiguration([], null!, [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration(null!, [], new InputSystemJoinPolicy());
 
         // Assert
         Assert.Empty(configuration.InputConfigurations);
@@ -102,7 +101,7 @@ public class InputSystemConfigurationTests
         var def2 = new ActionDefinition("Secondary", actions, isDefault: false);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [], [def1, def2], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def1, def2], new InputSystemJoinPolicy());
 
         // Assert
         Assert.Equal(2, configuration.Definitions.Count);
@@ -112,7 +111,7 @@ public class InputSystemConfigurationTests
     public void Definitions_NullInput_ReturnsEmpty()
     {
         // Arrange & Act
-        var configuration = new InputSystemConfiguration([], [], null!, new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], null!, new InputSystemJoinPolicy());
 
         // Assert
         Assert.Empty(configuration.Definitions);
@@ -131,7 +130,7 @@ public class InputSystemConfigurationTests
         config.AddScheme(scheme);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [config], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([config], [], new InputSystemJoinPolicy());
         var result = configuration.GetInputConfiguration(config.Id);
 
         // Assert
@@ -147,7 +146,7 @@ public class InputSystemConfigurationTests
         config.AddScheme(scheme);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [config], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([config], [], new InputSystemJoinPolicy());
         var result = configuration.GetInputConfiguration("nonexistent");
 
         // Assert
@@ -156,34 +155,33 @@ public class InputSystemConfigurationTests
 
     #endregion
 
-    #region GetTopology
+    #region IsTopologySupported
 
     [Fact]
-    public void GetTopology_ExistingTopology_ReturnsTopology()
+    public void IsTopologySupported_ExistingTopology_ReturnsTrue()
     {
         // Arrange
-        var topo = CreateMockTopology(DeviceTopologyName.Keyboard);
-        var configuration = new InputSystemConfiguration([topo], [], [], new InputSystemJoinPolicy());
+        var config = new InputConfiguration([DeviceTopologyName.Keyboard]);
+        var configuration = new InputSystemConfiguration([config], [], new InputSystemJoinPolicy());
 
         // Act
-        var result = configuration.GetTopology(DeviceTopologyName.Keyboard);
+        var result = configuration.IsTopologySupported(DeviceTopologyName.Keyboard);
 
         // Assert
-        Assert.NotNull(result);
+        Assert.True(result);
     }
 
     [Fact]
-    public void GetTopology_NonExistentTopology_ReturnsNull()
+    public void IsTopologySupported_NonExistentTopology_ReturnsFalse()
     {
         // Arrange
-        var topo = CreateMockTopology(DeviceTopologyName.Keyboard);
-        var configuration = new InputSystemConfiguration([topo], [], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [], new InputSystemJoinPolicy());
 
         // Act
-        var result = configuration.GetTopology(DeviceTopologyName.Gamepad);
+        var result = configuration.IsTopologySupported(DeviceTopologyName.Gamepad);
 
         // Assert
-        Assert.Null(result);
+        Assert.False(result);
     }
 
     #endregion
@@ -198,7 +196,7 @@ public class InputSystemConfigurationTests
         var def = new ActionDefinition("Default", actions, isDefault: true);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [], [def], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy());
         var result = configuration.GetDefinition("Default");
 
         // Assert
@@ -213,7 +211,7 @@ public class InputSystemConfigurationTests
         var def = new ActionDefinition("Default", actions, isDefault: true);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [], [def], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy());
         var result = configuration.GetDefinition("Other");
 
         // Assert
@@ -228,7 +226,7 @@ public class InputSystemConfigurationTests
         var def = new ActionDefinition("Default", actions, isDefault: true);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [], [def], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy());
         var result = configuration.GetDefinition("default");
 
         // Assert
@@ -243,22 +241,11 @@ public class InputSystemConfigurationTests
         var def = new ActionDefinition("Default", actions, isDefault: true);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [], [def], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy());
         var result = configuration.GetDefinition("");
 
         // Assert
         Assert.Null(result);
-    }
-
-    #endregion
-
-    #region Helpers
-
-    private static IDeviceTopology CreateMockTopology(DeviceTopologyName name)
-    {
-        var mock = new Mock<IDeviceTopology>();
-        mock.Setup(t => t.Name).Returns(name);
-        return mock.Object;
     }
 
     #endregion

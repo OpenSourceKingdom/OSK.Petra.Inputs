@@ -198,6 +198,9 @@ public class InputSystemTests
         _mockSchemeService.Setup(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(Out.Success()));
 
+        _mockInputService.Setup(s => s.InitializeAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(Out.Success()));
+
         // Act
         var result = await _inputSystem.InitializeAsync(TestContext.Current.CancellationToken);
 
@@ -205,6 +208,40 @@ public class InputSystemTests
         Assert.True(result.IsSuccessful);
 
         _mockSchemeService.Verify(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockInputService.Verify(s => s.InitializeAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_SchemeServiceReturnsError_ReturnsError()
+    {
+        // Arrange
+        _mockSchemeService.Setup(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(Out.InvalidRequest()));
+
+        // Act
+        var result = await _inputSystem.InitializeAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(result.IsSuccessful);
+
+        _mockSchemeService.Verify(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_InputServiceReturnsError_ReturnsError()
+    {
+        // Arrange
+        _mockSchemeService.Setup(s => s.LoadSchemeConfigurationAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(Out.Success()));
+
+        _mockInputService.Setup(s => s.InitializeAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(Out.InvalidRequest()));
+
+        // Act
+        var result = await _inputSystem.InitializeAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(result.IsSuccessful);
     }
 
     [Fact]
@@ -217,7 +254,7 @@ public class InputSystemTests
             UserJoinBehavior = UserJoinBehavior.DeviceActivation,
             DeviceJoinBehavior = DevicePairingBehavior.Balanced
         };
-        var invalidConfig = new InputSystemConfiguration([], [], [], joinPolicy);
+        var invalidConfig = new InputSystemConfiguration([], [], joinPolicy);
         _mockConfigProvider.SetupGet(m => m.Configuration).Returns(invalidConfig);
 
         // Act & Assert

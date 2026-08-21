@@ -3,20 +3,21 @@ using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 
-internal class InputSchemeBuilder(string definitionName, string name): IInputSchemeBuilder
+internal class InputSchemeBuilder(string name): IInputSchemeBuilder
 {
     #region Variables
 
     private bool _default;
-    private readonly Dictionary<DeviceIdentity, DeviceInputMap> _mapLookup = [];
+    private readonly Dictionary<DeviceIdentity, DeviceMapBuilder> _deviceBuilderLookup = [];
 
     #endregion
 
     #region IInputSchemeBuilder
+
+    public string Name => name;
 
     public IInputSchemeBuilder MakeDefault()
     {
@@ -25,32 +26,44 @@ internal class InputSchemeBuilder(string definitionName, string name): IInputSch
         return this;
     }
 
-    public IInputSchemeBuilder WithDevice(DeviceInputMap map)
+    public IInputSchemeBuilder WithMap(DeviceIdentity deviceIdentity, IInput input, string actionName)
     {
-        if (map is null)
+        if (input is null)
         {
-            throw new ArgumentNullException(nameof(map), $"A null device was configured for the input scheme '{name}' with the device toplogies '{GetDeviceNames()}' and is not usable.");
+            throw new ArgumentNullException(nameof(input));
+        }
+        if (string.IsNullOrWhiteSpace(actionName))
+        {
+            throw new ArgumentNullException(nameof(actionName));
         }
 
-        if (_mapLookup.TryGetValue(map.DeviceIdentity, out _))
+        if (!_deviceBuilderLookup.TryGetValue(deviceIdentity, out var deviceBuilder))
         {
-            throw new InvalidOperationException($"The device mapp '{map.DeviceIdentity}' already exists on the scheme '{name}' with the device topologies '{GetDeviceNames()}'.");
+            deviceBuilder = new DeviceMapBuilder(deviceIdentity);
+            _deviceBuilderLookup[deviceIdentity] = deviceBuilder;
         }
 
-        _mapLookup[map.DeviceIdentity] = map;
-
+        deviceBuilder.AddMap(input, actionName);
         return this;
+    }
+
+    public InputScheme Build(ActionDefinition definition)
+    {
+        var deviceMaps = new List<DeviceInputMap>();
+        foreach (var builder in _deviceBuilderLookup.Values)
+        {
+            deviceMaps.Add(builder.Build(definition));
+        }
+
+        return new(definition.Name, name, deviceMaps, _default, false);
     }
 
     #endregion
 
-    #region Helpers
+    #region Api
 
-    private string GetDeviceNames()
-        => string.Join(",", _mapLookup.Values.Select(identity => identity.DeviceIdentity.TopologyName));
-
-    internal InputScheme Build()
-        => new InputScheme(definitionName, name, _mapLookup.Values, _default, false);
+    public IEnumerable<DeviceIdentity> GetDeviceIdentities()
+        => _deviceBuilderLookup.Keys;
 
     #endregion
 }

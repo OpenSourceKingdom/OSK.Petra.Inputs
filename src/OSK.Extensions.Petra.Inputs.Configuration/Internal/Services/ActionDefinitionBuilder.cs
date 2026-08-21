@@ -19,7 +19,7 @@ internal class ActionDefinitionBuilder(string definitionName) : IActionDefinitio
     ///  - InputConfigurationId
     ///  - Scheme Name
     /// </summary>
-    private readonly Dictionary<string, Dictionary<string, InputScheme>> _schemeLookup = [];
+    private readonly Dictionary<string, Dictionary<string, InputSchemeBuilder>> _schemeBuilders = [];
 
     #endregion
 
@@ -76,23 +76,22 @@ internal class ActionDefinitionBuilder(string definitionName) : IActionDefinitio
             throw new ArgumentNullException(nameof(configurator));
         }
 
-        var schemeBuilder = new InputSchemeBuilder(definitionName, name);
+        var schemeBuilder = new InputSchemeBuilder(name);
         configurator(schemeBuilder);
 
-        var newScheme = schemeBuilder.Build();
-        var configurationId = InputConfiguration.GetConfigurationId(newScheme.GetDeviceIdentities());
-        if (!_schemeLookup.TryGetValue(configurationId, out var configurationSchemeLookup))
+        var configurationId = InputConfiguration.GetConfigurationId(schemeBuilder.GetDeviceIdentities());
+        if (!_schemeBuilders.TryGetValue(configurationId, out var schemeBuilderLookup))
         {
-            configurationSchemeLookup = new(StringComparer.OrdinalIgnoreCase);
-            _schemeLookup[configurationId] = configurationSchemeLookup;
+            schemeBuilderLookup = new(StringComparer.OrdinalIgnoreCase);
+            _schemeBuilders[configurationId] = schemeBuilderLookup;
         }
 
-        if (configurationSchemeLookup.TryGetValue(name, out _))
+        if (schemeBuilderLookup.TryGetValue(name, out _))
         {
-            throw new InvalidOperationException($"Unable to create the scheme '{name}' for input configuration '{string.Join(",", newScheme.GetDeviceIdentities())}' because a scheme with that name already exists for the configuration.");
+            throw new InvalidOperationException($"Unable to create the scheme '{name}' for input configuration '{string.Join(",", schemeBuilder.GetDeviceIdentities())}' because a scheme with that name already exists for the configuration.");
         }
 
-        configurationSchemeLookup[name] = newScheme;
+        schemeBuilderLookup[name] = schemeBuilder;
         return this;
     }
 
@@ -100,11 +99,18 @@ internal class ActionDefinitionBuilder(string definitionName) : IActionDefinitio
 
     #region Helpers
 
-    internal IEnumerable<InputScheme> GetInputSchemes()
-        => _schemeLookup.Values.SelectMany(v => v.Values);
+    internal (ActionDefinition Definition, IEnumerable<InputScheme> Schemes) Build()
+    {
+        var definition = new ActionDefinition(definitionName, _actionLookup.Values, _isDefault);
 
-    internal ActionDefinition Build()
-        => new ActionDefinition(definitionName, _actionLookup.Values, _isDefault);
+        var schemes = new List<InputScheme>();
+        foreach (var builder in _schemeBuilders.Values.SelectMany(builderLookup => builderLookup.Values))
+        {
+            schemes.Add(builder.Build(definition));
+        }
+
+        return (definition, schemes);
+    }
 
     #endregion
 }

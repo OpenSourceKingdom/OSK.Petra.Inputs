@@ -1,3 +1,4 @@
+using Moq;
 using OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Inputs;
@@ -16,7 +17,7 @@ public class InputSchemeBuilderTests
 
     public InputSchemeBuilderTests()
     {
-        _builder = new InputSchemeBuilder("TestDefinition", "TestScheme");
+        _builder = new InputSchemeBuilder("TestScheme");
     }
 
     #endregion
@@ -30,7 +31,7 @@ public class InputSchemeBuilderTests
         _builder.MakeDefault();
 
         // Assert
-        var scheme = _builder.Build();
+        var scheme = _builder.Build(new ActionDefinition("Abc", [], false));
         Assert.True(scheme.IsDefault);
     }
 
@@ -44,79 +45,51 @@ public class InputSchemeBuilderTests
 
     #endregion
 
-    #region WithDevice
+    #region WithMap
 
     [Fact]
-    public void WithDevice_NullMap_ThrowsArgumentNullException()
+    public void WithMap_NullInput_ThrowsArgumentNullException()
     {
-        // Arrange
-        DeviceInputMap? map = null;
+        // Arrange/Act/Assert
+        Assert.Throws<ArgumentNullException>(() => _builder.WithMap(new DeviceIdentity(), null!, "Abc"));
+    }
 
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _builder.WithDevice(map!));
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void WithMap_EmptyActionName_ThrowsArgumentNullException(string? name)
+    {
+        // Arrange/Act/Assert
+        Assert.Throws<ArgumentNullException>(() => _builder.WithMap(new DeviceIdentity(), Mock.Of<IInput>(), name!));
     }
 
     [Fact]
-    public void WithDevice_DuplicateDeviceIdentity_ThrowsInvalidOperationException()
+    public void WithMap_ValidMap_AddsToLookup()
     {
         // Arrange
         var identity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test");
-        var map1 = new DeviceInputMap
-        {
-            DeviceIdentity = identity,
-            InputMaps = Array.Empty<InputActionMap>()
-        };
-
-        _builder.WithDevice(map1);
-
-        // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => _builder.WithDevice(new DeviceInputMap
-        {
-            DeviceIdentity = identity,
-            InputMaps = Array.Empty<InputActionMap>()
-        }));
-    }
-
-    [Fact]
-    public void WithDevice_ValidMap_AddsToLookup()
-    {
-        // Arrange
-        var identity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test");
-        var map = new DeviceInputMap
-        {
-            DeviceIdentity = identity,
-            InputMaps = Array.Empty<InputActionMap>()
-        };
 
         // Act
-        _builder.WithDevice(map);
+        _builder.WithMap(identity, Mock.Of<IInput>(), "Abc");
 
         // Assert
-        var scheme = _builder.Build();
+        var scheme = _builder.Build(new ActionDefinition("Abc", [new InputAction("Abc", new HashSet<InputPhase>(), _ => { })], false));
         Assert.Single(scheme.DeviceMaps);
     }
 
     [Fact]
-    public void WithDevice_MultipleDevices_AddsAll()
+    public void WithMap_MultipleDevices_AddsAll()
     {
-        // Arrange
-        var map1 = new DeviceInputMap
-        {
-            DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test"),
-            InputMaps = Array.Empty<InputActionMap>()
-        };
-        var map2 = new DeviceInputMap
-        {
-            DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Mouse, DeviceFamily.Generic, "TestMouse"),
-            InputMaps = Array.Empty<InputActionMap>()
-        };
-
-        // Act
-        _builder.WithDevice(map1);
-        _builder.WithDevice(map2);
+        // Arrange/Act
+        _builder.WithMap(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test"), Mock.Of<IInput>(), "Abc");
+        _builder.WithMap(new DeviceIdentity(DeviceTopologyName.Mouse, DeviceFamily.Generic, "Test"), Mock.Of<IInput>(), "Def");
 
         // Assert
-        var scheme = _builder.Build();
+        var scheme = _builder.Build(new ActionDefinition("Abc", [
+            new InputAction("Abc", new HashSet<InputPhase>(), _ => { }),
+            new InputAction("Def", new HashSet<InputPhase>(), _ => { })
+        ], false));
         Assert.Equal(2, scheme.DeviceMaps.Count);
     }
 
@@ -128,7 +101,7 @@ public class InputSchemeBuilderTests
     public void Build_Defaults_ReturnsExpectedValues()
     {
         // Act
-        var scheme = _builder.Build();
+        var scheme = _builder.Build(new ActionDefinition("TestDefinition", [], false));
 
         // Assert
         Assert.Equal("TestScheme", scheme.Name);
@@ -144,7 +117,7 @@ public class InputSchemeBuilderTests
         _builder.MakeDefault();
 
         // Act
-        var scheme = _builder.Build();
+        var scheme = _builder.Build(new ActionDefinition("Abc", [], false));
 
         // Assert
         Assert.True(scheme.IsDefault);

@@ -1,6 +1,5 @@
 ﻿using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using System;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.Ports;
@@ -15,8 +14,6 @@ public interface IInputSystemBuilder
     IInputSystemBuilder WithJoinPolicy(Action<InputSystemJoinPolicy> policyConfigurator);
 
     IInputSystemBuilder WithActionDefinition(ActionDefinition definition);
-
-    IInputSystemBuilder WithDeviceTopology(IDeviceTopology topology);
 
     IInputSystemBuilder WithInputScheme(InputScheme scheme);
 

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
-internal class DeviceInputContext(int userId, RuntimeDeviceIdentifier deviceIdentifier) : IDeviceInputContext
+internal class DeviceInputContext(int userId, RuntimeDeviceIdentifier deviceIdentifier, IDeviceDescriptor deviceDescriptor) : IDeviceInputContext
 {
     #region Variables
 
@@ -40,6 +40,8 @@ internal class DeviceInputContext(int userId, RuntimeDeviceIdentifier deviceIden
     #endregion
 
     #region Helpers
+
+    internal IDeviceDescriptor DeviceDescriptor => deviceDescriptor;
 
     internal InputState GetOrCreateState(IInput input)
     {
