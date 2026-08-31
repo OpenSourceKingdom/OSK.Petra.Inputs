@@ -3,7 +3,6 @@ using Moq;
 using OSK.Operations.Outputs;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Models;
@@ -12,6 +11,7 @@ using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Notifications;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.UnitTests._Helpers;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Services;
 
@@ -354,8 +354,8 @@ public class SchemeServiceTests
                 { 
                     DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Generic"),
                     InputMaps = [
-                         new InputActionMap(new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }, "Moves the cursor"), Mock.Of<IInput>()),
-                         new InputActionMap(new InputAction("Click", new HashSet<InputPhase> { InputPhase.Start, InputPhase.End }, ctx => { }, "Clicks"), Mock.Of<IInput>())
+                         new InputActionMap(new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }, "Moves the cursor"), 0),
+                         new InputActionMap(new InputAction("Click", new HashSet<InputPhase> { InputPhase.Start, InputPhase.End }, ctx => { }, "Clicks"), 0)
                     ]
                 },
                 new DeviceInputMap()

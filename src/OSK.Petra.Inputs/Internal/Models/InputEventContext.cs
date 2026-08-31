@@ -1,6 +1,6 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Abstractions.Runtime;
+﻿using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 

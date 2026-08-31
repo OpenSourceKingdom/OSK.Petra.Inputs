@@ -4,8 +4,8 @@ using System.Linq;
 using OSK.Operations.Outputs;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Models;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
@@ -17,7 +17,7 @@ internal class SelectedScheme: ISelectedScheme
     private readonly Dictionary<string, Tuple<DeviceIdentity, InputActionMap>> _configuredMaps;
 
     private readonly Dictionary<string, InputAction> _availableActionLookup;
-    private readonly Dictionary<DeviceIdentity, Dictionary<int, IInput>> _availableInputLookup;
+    private readonly Dictionary<DeviceIdentity, Dictionary<long, IInput>> _availableInputLookup;
 
     internal bool InitiallyPreferred { get; }
 
@@ -65,7 +65,7 @@ internal class SelectedScheme: ISelectedScheme
     public IReadOnlyList<DeviceMapPairing<IInput>> UnpairedInputs 
         => [.. _availableInputLookup.Select(deviceInputKvp => 
         {
-            var mappedDeviceInputs = _configuredMaps.Values.Where(map => map.Item1 == deviceInputKvp.Key).Select(deviceActionMapTuple => deviceActionMapTuple.Item2.Input.Id);
+            var mappedDeviceInputs = _configuredMaps.Values.Where(map => map.Item1 == deviceInputKvp.Key).Select(deviceActionMapTuple => deviceActionMapTuple.Item2.InputId);
             var availableDeviceInputs = mappedDeviceInputs.Any()
                 ? deviceInputKvp.Value.Values.Where(input => !mappedDeviceInputs.Contains(input.Id))
                 : deviceInputKvp.Value.Values;
@@ -129,14 +129,14 @@ internal class SelectedScheme: ISelectedScheme
             _configuredMaps.Remove(action.Name);
         }
 
-        var currentInputKvp = _configuredMaps.Where(kvp => kvp.Value.Item2.Input.Id == input.Id);
+        var currentInputKvp = _configuredMaps.Where(kvp => kvp.Value.Item2.InputId == input.Id);
         if (currentInputKvp.Any())
         {
             var foundInput = currentInputKvp.First();
             _configuredMaps.Remove(foundInput.Value.Item2.Action.Name);
         }
 
-        _configuredMaps[action.Name] = new(deviceIdentity, new InputActionMap(action, input));
+        _configuredMaps[action.Name] = new(deviceIdentity, new InputActionMap(action, input.Id));
 
         return Out.Success();
     }

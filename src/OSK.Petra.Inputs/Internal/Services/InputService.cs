@@ -3,7 +3,6 @@ using OSK.Operations.Outputs;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.Models;
@@ -16,6 +15,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
@@ -23,7 +23,7 @@ internal partial class InputService : IInputService
 {
     #region Variables
 
-    private bool _paused;
+    private bool _inputPaused;
 
     private readonly IEnumerable<IInputCapability> _capabilities;
     private readonly IInputSystemConfigurationProvider _configurationProvider;
@@ -71,13 +71,24 @@ internal partial class InputService : IInputService
 
     public bool PauseInput 
     {
-        get => _paused;
+        get => _inputPaused;
         set
         {
-            _paused = value;
-            LogTogglePauseDebug(_logger, _paused);
+            if (_inputPaused == value)
+            {
+                return;
+            }
+
+            _inputPaused = value;
+            _systemNotifier.Notify(new InputMonitorStatusChangedNotification(!value));
+            LogTogglePauseDebug(_logger, _inputPaused);
         }
     }
+
+    public bool IsUserActionsSurpressed(int userId, int actionGroupId)
+        => _globalActionSupression
+            ? true
+            : _userContexts.TryGetValue(userId, out var userContext) && userContext.IsSuppressed(actionGroupId);
 
     public void Update(TimeSpan delta)
     {
@@ -203,6 +214,9 @@ internal partial class InputService : IInputService
                     timeoutUserContext.EditorInputCaptureTimeout = null;
                 }
                 break;
+            case InputSystemFocusNotification focusNotification:
+                PauseInput = !focusNotification.HasFocus;
+                break;
         }
     }
 
@@ -269,7 +283,7 @@ internal partial class InputService : IInputService
         var input = deviceContext.DeviceDescriptor.GetInput(inputNotification.InputId);
         if (input is null)
         {
-            LogUnsupportedInputInformation(_logger, inputNotification.DeviceIdentifier, input?.GetGlyph().Symbol ?? "<>");
+            LogUnsupportedInputInformation(_logger, inputNotification.DeviceIdentifier, input?.GetGlyph().Text ?? "<>");
             _systemNotifier.Notify(new UnrecognizedDeviceInputNotification(inputNotification.DeviceIdentifier, input?.Id));
             return;
         }
@@ -304,31 +318,15 @@ internal partial class InputService : IInputService
             }
         }
 
-        if (!inputState.IsNewActivation && inputState.Phase is InputPhase.End)
+        var action = userContext.Scheme?.GetInputMap(deviceContext.DeviceIdentifier.DeviceIdentity, inputState.Input.Id)?.Action;
+        if (action is not null && !userContext.IsSuppressed(action.ActionGroup) && action.TriggerPhases.Contains(inputState.Phase))
         {
-            return;
+            action.ActionExecutor(new InputEventContext(userContext.UserId, deviceContext.DeviceIdentifier, deviceContext, inputState, deltaTime, _serviceProvider));
+            LogInputActionTriggeredDebug(_logger, userContext.UserId, deviceContext.DeviceIdentifier, inputState.Input.GetGlyph().Text, action.Name);
+            _systemNotifier.Notify(new ActionExecutedNotification(userContext.UserId, userContext.Scheme!.DefinitionName, action.Name));
         }
 
         inputState.Reset();
-
-        var inputMap = userContext.Scheme?.GetInputMap(deviceContext.DeviceIdentifier.DeviceIdentity, inputState.Input.Id);
-        if (inputMap is null)
-        {
-            return;
-        }
-
-        var action = inputMap.Value.Action;
-        if (action is null || (action.ActionGroup.HasValue && !userContext.IsSuppressed(action.ActionGroup.Value)))
-        {
-            return;
-        }
-
-        if (action.TriggerPhases.Contains(inputState.Phase))
-        {
-            action.ActionExecutor(new InputEventContext(userContext.UserId, deviceContext.DeviceIdentifier, deviceContext, inputState, deltaTime, _serviceProvider));
-            LogInputActionTriggeredDebug(_logger, userContext.UserId, deviceContext.DeviceIdentifier, inputState.Input.GetGlyph().Symbol, action.Name);
-            _systemNotifier.Notify(new ActionExecutedNotification(userContext.UserId, userContext.Scheme!.DefinitionName, action.Name));
-        }
     }
 
     private IInputUser? TryGetOrPairUserForDevice(InputSystemConfiguration configuration, RuntimeDeviceIdentifier deviceIdentifier)
@@ -338,7 +336,7 @@ internal partial class InputService : IInputService
         {
             return user;
         }
-        if (configuration.JoinPolicy.DeviceJoinBehavior is DevicePairingBehavior.Manual)
+        if (configuration.JoinPolicy.DevicePairingBehavior is DevicePairingBehavior.Manual)
         {
             LogUnpairdDeviceDueToPolicyInformation(_logger, deviceIdentifier);
             return null;
@@ -377,7 +375,7 @@ internal partial class InputService : IInputService
                 : null;
         }
 
-        switch (configuration.JoinPolicy.DeviceJoinBehavior)
+        switch (configuration.JoinPolicy.DevicePairingBehavior)
         {
             case DevicePairingBehavior.Balanced:
                 var pairingUser = userDevicePairingData.OrderByDescending(pairingData => pairingData.MissingDevice)

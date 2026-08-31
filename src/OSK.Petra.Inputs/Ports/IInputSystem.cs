@@ -1,4 +1,4 @@
-﻿    using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using OSK.Hexagonal.MetaData;
@@ -46,9 +46,10 @@ public interface IInputSystem
     /// <summary>
     /// Initializes the input system
     /// </summary>
+    /// <param name="configuration">The configuration the input system will use. It must be valid or an exception could be thrown</param>
     /// <param name="cancellationToken">A token to cancel the operation</param>
     /// <returns>An output that describes whether the configuration was fully initialized with the input system</returns>
-    Task<Output> InitializeAsync(CancellationToken cancellationToken = default);
+    Task<Output> InitializeAsync(InputSystemConfiguration configuration, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates the input system using the specified delta time

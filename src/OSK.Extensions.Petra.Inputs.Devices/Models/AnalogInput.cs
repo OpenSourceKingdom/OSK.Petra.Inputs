@@ -1,5 +1,5 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Capabilities.Power;
+﻿using OSK.Petra.Inputs.Capabilities.Power;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Models;
 
@@ -7,17 +7,17 @@ public abstract class AnalogInput : Input, IInput<PowerSettings>
 {
     #region Constructors
 
-    public AnalogInput(int id)
-        : this(id, .1f, false)
+    public AnalogInput(long id, PowerAxis axis)
+        : this(id, axis, .1f, false)
     {
     }
 
-    public AnalogInput(int id, float powerSensitivtyThreshold)
-        : this(id, powerSensitivtyThreshold, false)
+    public AnalogInput(long id, PowerAxis axis, float powerSensitivtyThreshold)
+        : this(id, axis, powerSensitivtyThreshold, false)
     {
     }
 
-    public AnalogInput(int id, float powerSensitivtyThreshold, bool allowReactivation)
+    public AnalogInput(long id, PowerAxis axis, float powerSensitivtyThreshold, bool allowReactivation)
         : base(id)
     {
         Settings = new()
@@ -36,6 +36,8 @@ public abstract class AnalogInput : Input, IInput<PowerSettings>
     #endregion
 
     #region Api
+
+    public PowerAxis Axis { get; }
 
     public void SetSensitivityThreshold(float sensitivity)
         => Settings = new()

@@ -2,7 +2,7 @@
 using OSK.Extensions.Petra.Inputs.Devices.Gamepads;
 using OSK.Extensions.Petra.Inputs.Devices.Keyboards;
 using OSK.Extensions.Petra.Inputs.Devices.Mice;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices;
 
@@ -10,24 +10,24 @@ public static class InputSchemeBuilderExtensions
 {
     extension(IInputSchemeBuilder builder)
     {
-        public IInputSchemeBuilder WithKeyboard(IKeyboardInput keyboardInput, string actionName, DeviceFamily? family = null, string deviceName = DeviceNames.Generic)
+        public IInputSchemeBuilder WithKeyboard(IKeyboardInput keyboardInput, string actionName, DeviceFamily? family = null, string deviceName = DeviceIdentities.GenericDeviceName)
             => builder.WithMap(
-                new DeviceIdentity(DeviceTopologyName.Keyboard, family ?? DeviceFamily.Generic, string.IsNullOrWhiteSpace(deviceName) ? DeviceNames.Generic : deviceName),
-                keyboardInput,
+                DeviceIdentities.Keyboard(string.IsNullOrWhiteSpace(deviceName) ? DeviceIdentities.GenericDeviceName : deviceName, family),
+                keyboardInput.Id,
                 actionName
             );
 
-        public IInputSchemeBuilder WithGamepad(IGamepadInput gamepadInput, string actionName, DeviceFamily? family = null, string deviceName = DeviceNames.Generic)
+        public IInputSchemeBuilder WithGamepad(IGamepadInput gamepadInput, string actionName, DeviceFamily? family = null, string deviceName = DeviceIdentities.GenericDeviceName)
             => builder.WithMap(
-                new DeviceIdentity(DeviceTopologyName.Gamepad, family ?? DeviceFamily.Generic, string.IsNullOrWhiteSpace(deviceName) ? DeviceNames.Generic : deviceName),
-                gamepadInput,
+                DeviceIdentities.Gamepad(string.IsNullOrWhiteSpace(deviceName) ? DeviceIdentities.GenericDeviceName : deviceName, family),
+                gamepadInput.Id,
                 actionName
             );
 
-        public IInputSchemeBuilder WithMouse<TTopology>(IMouseInput mouseInput, string actionName, DeviceFamily? family = null, string deviceName = DeviceNames.Generic)
+        public IInputSchemeBuilder WithMouse<TTopology>(IMouseInput mouseInput, string actionName, DeviceFamily? family = null, string deviceName = DeviceIdentities.GenericDeviceName)
             => builder.WithMap(
-                new DeviceIdentity(DeviceTopologyName.Mouse, family ?? DeviceFamily.Generic, string.IsNullOrWhiteSpace(deviceName) ? DeviceNames.Generic : deviceName),
-                mouseInput,
+                DeviceIdentities.Mouse(string.IsNullOrWhiteSpace(deviceName) ? DeviceIdentities.GenericDeviceName : deviceName, family),
+                mouseInput.Id,
                 actionName
             );
     }

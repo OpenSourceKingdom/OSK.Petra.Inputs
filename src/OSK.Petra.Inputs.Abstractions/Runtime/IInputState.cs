@@ -1,5 +1,5 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using System;
+﻿using System;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.Runtime;
 

@@ -1,6 +1,6 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
@@ -286,7 +286,7 @@ public class InputConfigurationTests
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Keyboard"),
                 InputMaps = [new InputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
-                    new MockInput(1))]
+                    1)]
             }
         };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
@@ -312,7 +312,7 @@ public class InputConfigurationTests
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.PlayStation, "Xbox Keyboard"),
                 InputMaps = [new InputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
-                    new MockInput(1))]
+                    1)]
             }
         };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
@@ -338,7 +338,7 @@ public class InputConfigurationTests
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Generic Keyboard"),
                 InputMaps = [new InputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
-                    new MockInput(1))]
+                    1)]
             }
         };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
@@ -364,7 +364,7 @@ public class InputConfigurationTests
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Xbox Keyboard"),
                 InputMaps = [new InputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
-                    new MockInput(1))]
+                    1)]
             }
         };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });

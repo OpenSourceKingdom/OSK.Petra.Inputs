@@ -1,5 +1,5 @@
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using System;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.Configuration;
 
@@ -19,16 +19,16 @@ public readonly struct InputActionMap
     /// <summary>
     /// The input this maps to
     /// </summary>
-    public IInput Input { get; init; }
+    public long InputId { get; init; }
 
     #endregion
 
     #region Constructors
 
-    public InputActionMap(InputAction action, IInput input)
+    public InputActionMap(InputAction action, long inputId)
     {
         Action = action ?? throw new ArgumentNullException(nameof(action));
-        Input = input ?? throw new ArgumentNullException(nameof(input));
+        InputId = inputId;
     }
 
     #endregion

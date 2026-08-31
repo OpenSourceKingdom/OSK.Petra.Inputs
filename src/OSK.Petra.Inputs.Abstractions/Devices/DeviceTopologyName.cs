@@ -1,4 +1,4 @@
-﻿namespace OSK.Petra.Inputs.Abstractions.Inputs;
+﻿namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 /// <summary>
 /// The type of device an input device is

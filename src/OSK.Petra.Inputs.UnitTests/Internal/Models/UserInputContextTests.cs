@@ -1,9 +1,9 @@
 using Moq;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.UnitTests._Helpers;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Models;
 

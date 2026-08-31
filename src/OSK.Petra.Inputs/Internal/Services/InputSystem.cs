@@ -4,19 +4,12 @@ using System.Threading.Tasks;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Notifications;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
 internal class InputSystem(IInputSystemConfigurationProvider configurationProvider, IUserManager userManager,
     IInputService inputService, IInputSystemNotifier systemNotifier, IInternalSchemeService schemeService) : IInputSystem
 {
-    #region Variables
-
-    private bool _isPaused;
-
-    #endregion
-
     #region IInputSystem
 
     public InputSystemConfiguration Configuration => configurationProvider.Configuration;
@@ -31,27 +24,13 @@ internal class InputSystem(IInputSystemConfigurationProvider configurationProvid
 
     public bool PauseInput 
     {
-        get => _isPaused;
-        set
-        {
-            if (_isPaused == value)
-            {
-                return;
-            }
-
-            _isPaused = value;
-            inputService.PauseInput = value;
-            systemNotifier.Notify(new InputMonitorStatusChangedNotification(!value));
-        }
+        get => inputService.PauseInput;
+        set => inputService.PauseInput = value;
     }
 
-    public async Task<Output> InitializeAsync(CancellationToken cancellationToken = default)
+    public async Task<Output> InitializeAsync(InputSystemConfiguration configuration, CancellationToken cancellationToken = default)
     {
-        var validationResult = InputSystemConfigurationValidator.ValidateConfiguration(configurationProvider.Configuration);
-        if (!validationResult.IsValid)
-        {
-            throw new InvalidOperationException($"The provided input configuration was invalid. Message: {validationResult}");
-        }
+        configurationProvider.Configuration = configuration;
 
         var schemeInitializationOutput = await schemeService.LoadSchemeConfigurationAsync(cancellationToken);
         if (!schemeInitializationOutput.IsSuccessful)

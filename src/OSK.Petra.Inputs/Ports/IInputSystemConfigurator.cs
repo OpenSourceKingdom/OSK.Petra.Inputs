@@ -1,7 +1,6 @@
 ﻿using OSK.Hexagonal.MetaData;
-using OSK.Petra.Inputs.Abstractions.Configuration;
 using System;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Ports;
 
@@ -11,13 +10,6 @@ namespace OSK.Petra.Inputs.Ports;
 [HexagonalIntegration(HexagonalIntegrationType.LibraryProvided)]
 public interface IInputSystemConfigurator
 {
-    /// <summary>
-    /// Sets the configuration that will be used with the input system
-    /// </summary>
-    /// <param name="configuration">The configuration that will be used</param>
-    /// <returns>The builder for chaining</returns>
-    IInputSystemConfigurator UseConfiguration(InputSystemConfiguration configuration);
-
     IInputSystemConfigurator WithDeviceProvider<TDeviceProvider>()
         where TDeviceProvider : IDeviceProvider;
 

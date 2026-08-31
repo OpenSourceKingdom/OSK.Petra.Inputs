@@ -6,12 +6,12 @@ public abstract class DigitalInput : Input, IPowerInput
 {
     #region Constructors
 
-    protected DigitalInput(int id)
+    protected DigitalInput(long id)
         : this(id, false) 
     {
     }
 
-    protected DigitalInput(int id, bool allowReactivation)
+    protected DigitalInput(long id, bool allowReactivation)
         : base(id)
     {
         Settings = new PowerSettings()

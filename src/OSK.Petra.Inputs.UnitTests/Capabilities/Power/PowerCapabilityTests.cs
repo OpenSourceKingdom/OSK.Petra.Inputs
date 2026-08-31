@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Options;
 using Moq;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Capabilities.Pointer;
 using OSK.Petra.Inputs.Capabilities.Power;
+using OSK.Petra.Inputs.Abstractions.Devices;
+using OSK.Petra.Inputs.UnitTests._Helpers;
 
 namespace OSK.Petra.Inputs.UnitTests.Capabilities.Power;
 
@@ -31,8 +31,7 @@ public class PowerCapabilityTests
         _mockState.SetupGet(m => m.Duration).Returns(TimeSpan.FromSeconds(1));
         _mockState.SetupGet(m => m.IsNewActivation).Returns(false);
 
-        var options = new OptionsWrapper<PowerCapabilityOptions>(new());
-        _capability = new PowerCapability(options);
+        _capability = new PowerCapability(TestConfigurationHelper.CreateOptions<PowerCapabilityOptions>());
     }
 
     #endregion
@@ -98,7 +97,7 @@ public class PowerCapabilityTests
         _mockInput.SetupGet(m => m.Settings).Returns(new PowerSettings { AllowReactivation = true });
 
         var options = new PowerCapabilityOptions { ReactivationTime = TimeSpan.FromSeconds(1) };
-        var capability = new PowerCapability(new OptionsWrapper<PowerCapabilityOptions>(options));
+        var capability = new PowerCapability(TestConfigurationHelper.CreateOptions(options));
 
         var existingDetails = new PowerDetails()
         {
@@ -125,7 +124,7 @@ public class PowerCapabilityTests
         // Arrange
         _mockInput.SetupGet(m => m.Settings).Returns(new PowerSettings { AllowReactivation = false });
 
-        var capability = new PowerCapability(new OptionsWrapper<PowerCapabilityOptions>(new()));
+        var capability = new PowerCapability(TestConfigurationHelper.CreateOptions<PowerCapabilityOptions>());
 
         _mockState.SetupGet(m => m.Phase).Returns(InputPhase.End);
         _mockState.SetupGet(m => m.Input).Returns(_mockInput.Object);
@@ -141,7 +140,7 @@ public class PowerCapabilityTests
     {
         // Arrange
         var options = new PowerCapabilityOptions { ActiveTimeThreshold = TimeSpan.FromSeconds(10) };
-        var capability = new PowerCapability(new OptionsWrapper<PowerCapabilityOptions>(options));
+        var capability = new PowerCapability(TestConfigurationHelper.CreateOptions(options));
 
         _mockInput.SetupGet(m => m.Settings).Returns(new PowerSettings());
         _mockState.SetupGet(m => m.Phase).Returns(InputPhase.Start);
@@ -159,7 +158,7 @@ public class PowerCapabilityTests
     {
         // Arrange
         var options = new PowerCapabilityOptions { ActiveTimeThreshold = TimeSpan.FromSeconds(0.5) };
-        var capability = new PowerCapability(new OptionsWrapper<PowerCapabilityOptions>(options));
+        var capability = new PowerCapability(TestConfigurationHelper.CreateOptions(options));
 
         _mockInput.SetupGet(m => m.Settings).Returns(new PowerSettings());
         _mockState.SetupGet(m => m.Phase).Returns(InputPhase.Start);
@@ -177,7 +176,7 @@ public class PowerCapabilityTests
     {
         // Arrange
         var options = new PowerCapabilityOptions();
-        var capability = new PowerCapability(new OptionsWrapper<PowerCapabilityOptions>(options));
+        var capability = new PowerCapability(TestConfigurationHelper.CreateOptions(options));
 
         _mockInput.SetupGet(m => m.Settings).Returns(new PowerSettings());
         _mockState.SetupGet(m => m.Phase).Returns(InputPhase.Start);

@@ -1,8 +1,8 @@
 using Moq;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.Models;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Models;
 
@@ -366,7 +366,7 @@ public class SelectedSchemeTests
             new DeviceMapPairing<IInput>(_deviceIdentity, new[] { mockInput.Object })
         };
 
-        var actionMap = new InputActionMap(_testAction, mockInput.Object);
+        var actionMap = new InputActionMap(_testAction, mockInput.Object.Id);
         var deviceMapPairings = new[]
         {
             new DeviceMapPairing<InputActionMap>(_deviceIdentity, new[] { actionMap })

@@ -6,5 +6,5 @@ namespace OSK.Petra.Inputs.Internal;
 [HexagonalIntegration(HexagonalIntegrationType.ConsumerRequired)]
 internal interface IInputSystemConfigurationProvider
 {
-    InputSystemConfiguration Configuration { get; }
+    InputSystemConfiguration Configuration { get; set; }
 }

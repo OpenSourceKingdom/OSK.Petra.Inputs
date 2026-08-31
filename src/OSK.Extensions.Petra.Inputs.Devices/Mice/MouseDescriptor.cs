@@ -1,4 +1,4 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
+﻿using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Mice;
 
@@ -12,7 +12,7 @@ public abstract class MouseDescriptor: DeviceDescriptor<IMouseInput>
     }
 
     public MouseDescriptor(DeviceFamily family)
-        : this(family, DeviceNames.Generic)
+        : this(family, DeviceIdentities.GenericDeviceName)
     {
     }
 

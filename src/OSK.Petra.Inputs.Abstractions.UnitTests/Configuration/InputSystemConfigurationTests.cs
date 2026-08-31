@@ -1,5 +1,5 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
@@ -11,13 +11,13 @@ public class InputSystemConfigurationTests
     public void Constructor_SetsExpectedValues()
     {
         // Arrange
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
         // Act
-        var configuration = new InputSystemConfiguration(new[] { config }, [], joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, [], joinPolicy, new([]));
 
         // Assert
         Assert.Single(configuration.DeviceTopologies);
@@ -37,7 +37,7 @@ public class InputSystemConfigurationTests
         var config2 = new InputConfiguration(new[] { DeviceTopologyName.Mouse });
 
         // Act
-        var configuration = new InputSystemConfiguration([config1, config2], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([config1, config2], [], new InputSystemJoinPolicy(), new([]));
 
         // Assert
         Assert.Equal(2, configuration.DeviceTopologies.Count);
@@ -49,7 +49,7 @@ public class InputSystemConfigurationTests
     public void DeviceTopologies_NullInput_ReturnsEmpty()
     {
         // Arrange & Act
-        var configuration = new InputSystemConfiguration([], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [], new InputSystemJoinPolicy(), new([]));
 
         // Assert
         Assert.Empty(configuration.DeviceTopologies);
@@ -72,7 +72,7 @@ public class InputSystemConfigurationTests
         config2.AddScheme(scheme2);
 
         // Act
-        var configuration = new InputSystemConfiguration([config1, config2], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([config1, config2], [], new InputSystemJoinPolicy(), new([]));
 
         // Assert
         Assert.Equal(2, configuration.InputConfigurations.Count);
@@ -82,7 +82,7 @@ public class InputSystemConfigurationTests
     public void InputConfigurations_Null_ReturnsEmptyConfigurations()
     {
         // Arrange/Act
-        var configuration = new InputSystemConfiguration(null!, [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration(null!, [], new InputSystemJoinPolicy(), new([]));
 
         // Assert
         Assert.Empty(configuration.InputConfigurations);
@@ -101,7 +101,7 @@ public class InputSystemConfigurationTests
         var def2 = new ActionDefinition("Secondary", actions, isDefault: false);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [def1, def2], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def1, def2], new InputSystemJoinPolicy(), new([]));
 
         // Assert
         Assert.Equal(2, configuration.Definitions.Count);
@@ -111,7 +111,7 @@ public class InputSystemConfigurationTests
     public void Definitions_NullInput_ReturnsEmpty()
     {
         // Arrange & Act
-        var configuration = new InputSystemConfiguration([], null!, new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], null!, new InputSystemJoinPolicy(), new([]));
 
         // Assert
         Assert.Empty(configuration.Definitions);
@@ -130,7 +130,7 @@ public class InputSystemConfigurationTests
         config.AddScheme(scheme);
 
         // Act
-        var configuration = new InputSystemConfiguration([config], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([config], [], new InputSystemJoinPolicy(), new([]));
         var result = configuration.GetInputConfiguration(config.Id);
 
         // Assert
@@ -146,7 +146,7 @@ public class InputSystemConfigurationTests
         config.AddScheme(scheme);
 
         // Act
-        var configuration = new InputSystemConfiguration([config], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([config], [], new InputSystemJoinPolicy(), new([]));
         var result = configuration.GetInputConfiguration("nonexistent");
 
         // Assert
@@ -162,7 +162,7 @@ public class InputSystemConfigurationTests
     {
         // Arrange
         var config = new InputConfiguration([DeviceTopologyName.Keyboard]);
-        var configuration = new InputSystemConfiguration([config], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([config], [], new InputSystemJoinPolicy(), new([]));
 
         // Act
         var result = configuration.IsTopologySupported(DeviceTopologyName.Keyboard);
@@ -175,7 +175,7 @@ public class InputSystemConfigurationTests
     public void IsTopologySupported_NonExistentTopology_ReturnsFalse()
     {
         // Arrange
-        var configuration = new InputSystemConfiguration([], [], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [], new InputSystemJoinPolicy(), new([]));
 
         // Act
         var result = configuration.IsTopologySupported(DeviceTopologyName.Gamepad);
@@ -196,7 +196,7 @@ public class InputSystemConfigurationTests
         var def = new ActionDefinition("Default", actions, isDefault: true);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy(), new([]));
         var result = configuration.GetDefinition("Default");
 
         // Assert
@@ -211,7 +211,7 @@ public class InputSystemConfigurationTests
         var def = new ActionDefinition("Default", actions, isDefault: true);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy(), new([]));
         var result = configuration.GetDefinition("Other");
 
         // Assert
@@ -226,7 +226,7 @@ public class InputSystemConfigurationTests
         var def = new ActionDefinition("Default", actions, isDefault: true);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy(), new([]));
         var result = configuration.GetDefinition("default");
 
         // Assert
@@ -241,7 +241,7 @@ public class InputSystemConfigurationTests
         var def = new ActionDefinition("Default", actions, isDefault: true);
 
         // Act
-        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy());
+        var configuration = new InputSystemConfiguration([], [def], new InputSystemJoinPolicy(), new([]));
         var result = configuration.GetDefinition("");
 
         // Assert

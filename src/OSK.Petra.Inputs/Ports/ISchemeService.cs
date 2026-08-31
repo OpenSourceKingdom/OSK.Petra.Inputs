@@ -1,12 +1,12 @@
 ﻿using OSK.Hexagonal.MetaData;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Ports;
 

@@ -3,13 +3,13 @@ using System;
 
 namespace OSK.Petra.Inputs.Capabilities.Pointer;
 
-public class DevicePointer(int pointerId, RuntimeDeviceIdentifier deviceIdentifier, int devicePointerId, PointerDetails details)
+public class DevicePointer(long pointerId, RuntimeDeviceIdentifier deviceIdentifier, long devicePointerId, PointerDetails details)
 {
-    public int PointerId => pointerId;
+    public long PointerId => pointerId;
 
     public RuntimeDeviceIdentifier DeviceIdentifier => deviceIdentifier;
 
-    public int DevicePointerId => devicePointerId;
+    public long DevicePointerId => devicePointerId;
 
     public PointerDetails Details => details;
 

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OSK.Petra.Inputs.Abstractions.Inputs;
+namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 public interface IDeviceDescriptor
 {
@@ -8,5 +8,5 @@ public interface IDeviceDescriptor
 
     IReadOnlyCollection<IInput> Inputs { get; }
 
-    IInput? GetInput(int id);
+    IInput? GetInput(long id);
 }

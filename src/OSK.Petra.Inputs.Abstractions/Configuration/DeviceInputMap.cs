@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.Configuration;
 
@@ -10,7 +10,7 @@ public class DeviceInputMap
 {
     #region Variables
 
-    private readonly Dictionary<int, InputActionMap> _inputMapLookup = [];
+    private readonly Dictionary<long, InputActionMap> _inputMapLookup = [];
 
     #endregion
 
@@ -31,7 +31,7 @@ public class DeviceInputMap
         {
             foreach (var inputMap in value)
             {
-                _inputMapLookup[inputMap.Input.Id] = inputMap;
+                _inputMapLookup[inputMap.InputId] = inputMap;
             }
         } 
     }
@@ -41,7 +41,7 @@ public class DeviceInputMap
     /// </summary>
     /// <param name="inputId">The unique id for the input on the device</param>
     /// <returns>The map for the input if is a configured input, otherwise null</returns>
-    public InputActionMap? GetInputMap(int inputId)
+    public InputActionMap? GetInputMap(long inputId)
         => _inputMapLookup.TryGetValue(inputId, out var map)
             ? map
             : null;

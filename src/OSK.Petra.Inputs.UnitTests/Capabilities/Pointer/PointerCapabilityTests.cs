@@ -1,10 +1,10 @@
-using Microsoft.Extensions.Options;
 using Moq;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Capabilities.Pointer;
 using OSK.Petra.Inputs.Capabilities.Power;
 using System.Numerics;
+using OSK.Petra.Inputs.Abstractions.Devices;
+using OSK.Petra.Inputs.UnitTests._Helpers;
 
 namespace OSK.Petra.Inputs.UnitTests.Capabilities.Pointer;
 
@@ -30,8 +30,7 @@ public class PointerCapabilityTests
         _mockState = new Mock<IInputState>();
         _mockState.SetupGet(m => m.IsNewActivation).Returns(true);
 
-        var options = new OptionsWrapper<PointerCapabilityOptions>(new());
-        _capability = new PointerCapability(options);
+        _capability = new PointerCapability(TestConfigurationHelper.CreateOptions<PointerCapabilityOptions>());
     }
 
     #endregion

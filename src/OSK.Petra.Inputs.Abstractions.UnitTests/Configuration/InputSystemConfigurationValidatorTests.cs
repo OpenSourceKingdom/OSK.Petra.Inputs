@@ -1,7 +1,7 @@
 using Moq;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
@@ -48,8 +48,8 @@ public class InputSystemConfigurationValidatorTests
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         config.AddScheme(scheme);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
-        var configuration = new InputSystemConfiguration(new[] { config }, [], joinPolicy);
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
+        var configuration = new InputSystemConfiguration(new[] { config }, [], joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -67,13 +67,13 @@ public class InputSystemConfigurationValidatorTests
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var configuration = CreateValidConfiguration();
         // Replace definitions via reflection isn't available, so we create fresh
         var config2 = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme2 = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config2.AddScheme(scheme2);
-        configuration = new InputSystemConfiguration(new[] { config2 }, new[] { definition }, joinPolicy);
+        configuration = new InputSystemConfiguration(new[] { config2 }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -90,12 +90,12 @@ public class InputSystemConfigurationValidatorTests
         // Arrange
         var definition = new ActionDefinition("Default", [], isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -113,12 +113,12 @@ public class InputSystemConfigurationValidatorTests
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: false);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -137,12 +137,12 @@ public class InputSystemConfigurationValidatorTests
         var definition1 = new ActionDefinition("Default1", actions, isDefault: true);
         var definition2 = new ActionDefinition("Default2", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition1, definition2 }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition1, definition2 }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -163,12 +163,12 @@ public class InputSystemConfigurationValidatorTests
         };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -189,12 +189,12 @@ public class InputSystemConfigurationValidatorTests
         };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -215,12 +215,12 @@ public class InputSystemConfigurationValidatorTests
         };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("Default", "Default", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -238,8 +238,8 @@ public class InputSystemConfigurationValidatorTests
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
-        var configuration = new InputSystemConfiguration([], new[] { definition }, joinPolicy);
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
+        var configuration = new InputSystemConfiguration([], new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -257,10 +257,10 @@ public class InputSystemConfigurationValidatorTests
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -278,16 +278,16 @@ public class InputSystemConfigurationValidatorTests
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("OtherDef", "MyScheme", 
             [
-                new() { DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Abc"), InputMaps = [new(new("Default", new HashSet<InputPhase>(), _ => { }), Mock.Of<IInput>())] }
+                new() { DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Abc"), InputMaps = [new(new("Default", new HashSet<InputPhase>(), _ => { }), 0)] }
             ],
             isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -305,12 +305,12 @@ public class InputSystemConfigurationValidatorTests
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("Default", "MyScheme", [], isDefault: true, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -328,12 +328,12 @@ public class InputSystemConfigurationValidatorTests
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme = new InputScheme("Default", "MyScheme", [new() { DeviceIdentity = new DeviceIdentity(), InputMaps = [] }], isDefault: false, isCustom: false);
         config.AddScheme(scheme);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -351,14 +351,14 @@ public class InputSystemConfigurationValidatorTests
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
 
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
         var config = new InputConfiguration(new[] { DeviceTopologyName.Keyboard });
         var scheme1 = new InputScheme("Default", "Scheme1", [new() { DeviceIdentity = new DeviceIdentity(), InputMaps = [] }], isDefault: true, isCustom: false);
         var scheme2 = new InputScheme("Default", "Scheme2", [new() { DeviceIdentity = new DeviceIdentity(), InputMaps = [] }], isDefault: true, isCustom: false);
         config.AddScheme(scheme1);
         config.AddScheme(scheme2);
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateConfiguration(configuration);
@@ -377,7 +377,7 @@ public class InputSystemConfigurationValidatorTests
     public void ValidateJoinPolicy_JoinPolicyWithZeroMaxUsers_ReturnsInvalidData()
     {
         // Arrange
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 0, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 0, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateJoinPolicy(joinPolicy);
@@ -392,7 +392,7 @@ public class InputSystemConfigurationValidatorTests
     public void ValidateJoinPolicy_JoinPolicyWithNegativeMaxUsers_ReturnsInvalidData()
     {
         // Arrange
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = -1, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = -1, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
 
         // Act
         var result = InputSystemConfigurationValidator.ValidateJoinPolicy(joinPolicy);
@@ -551,7 +551,7 @@ public class InputSystemConfigurationValidatorTests
                 DeviceIdentity = _keyboardIdentity,
                 InputMaps = [new InputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }),
-                    new MockInput(1))]
+                    1)]
             }
         };
         var existingScheme = new InputScheme("Default", "Custom", deviceMaps, isDefault: false, isCustom: true);
@@ -560,9 +560,9 @@ public class InputSystemConfigurationValidatorTests
 
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         var customScheme = new CustomInputScheme
         {
@@ -591,7 +591,7 @@ public class InputSystemConfigurationValidatorTests
                 DeviceIdentity = _keyboardIdentity,
                 InputMaps = [new InputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }),
-                    new MockInput(1))]
+                    1)]
             }
         };
         var existingScheme = new InputScheme("Default", "Custom", deviceMaps, isDefault: false, isCustom: true);
@@ -600,9 +600,9 @@ public class InputSystemConfigurationValidatorTests
 
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         var customScheme = new CustomInputScheme
         {
@@ -629,7 +629,7 @@ public class InputSystemConfigurationValidatorTests
                 DeviceIdentity = _keyboardIdentity,
                 InputMaps = [new InputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }),
-                    new MockInput(1))]
+                    1)]
             }
         };
         var existingScheme = new InputScheme("Default", "Custom", deviceMaps, isDefault: false, isCustom: false);
@@ -638,9 +638,9 @@ public class InputSystemConfigurationValidatorTests
 
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
 
-        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        var configuration = new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
 
         var customScheme = new CustomInputScheme
         {
@@ -679,7 +679,7 @@ public class InputSystemConfigurationValidatorTests
                 DeviceIdentity = _keyboardIdentity,
                 InputMaps = new[]
                 {
-                    new InputActionMap(actions[0], new MockInput(1))
+                    new InputActionMap(actions[0], 1)
                 }
             },
             new DeviceInputMap
@@ -687,7 +687,7 @@ public class InputSystemConfigurationValidatorTests
                 DeviceIdentity = _mouseIdentity,
                 InputMaps = new[]
                 {
-                    new InputActionMap(actions[1], new MockInput(2))
+                    new InputActionMap(actions[1], 2)
                 }
             }
         };
@@ -700,10 +700,10 @@ public class InputSystemConfigurationValidatorTests
         {
             MaxUsers = 4,
             UserJoinBehavior = UserJoinBehavior.DeviceActivation,
-            DeviceJoinBehavior = DevicePairingBehavior.Balanced
+            DevicePairingBehavior = DevicePairingBehavior.Balanced
         };
 
-        return new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy);
+        return new InputSystemConfiguration(new[] { config }, new[] { definition }, joinPolicy, new([]));
     }
 
     #endregion

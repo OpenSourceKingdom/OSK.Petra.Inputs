@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
         /// Thrown if the input system configuration builder configurator is null.
         /// </exception>
         /// <exception cref="InputSystemValidationException">If the provided configuration is not valid</exception>
-        public IServiceCollection AddInputs(Action<IInputSystemConfigurator> configurator)
+        public IServiceCollection AddInputSystem(Action<IInputSystemConfigurator> configurator)
         {
             if (configurator is null)
             {

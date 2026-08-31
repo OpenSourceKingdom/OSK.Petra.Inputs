@@ -1,6 +1,6 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Configuration;
 
-namespace OSK.Petra.Inputs.Abstractions.Inputs;
+namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 /// <summary>
 /// The phase of an input represents a logical state and is utilized when performing operations for <see cref="InputAction"/>

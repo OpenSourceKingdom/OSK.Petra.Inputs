@@ -13,9 +13,9 @@ using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.Internal.Models;
 using System.Diagnostics;
 using OSK.Petra.Inputs.Abstractions.Runtime;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using System.Collections.Generic;
 using OSK.Petra.Inputs.Notifications;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 

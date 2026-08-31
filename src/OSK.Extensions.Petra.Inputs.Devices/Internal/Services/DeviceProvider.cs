@@ -1,8 +1,8 @@
 ﻿using OSK.Operations.Outputs.Models;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Internal.Services;
 

@@ -366,7 +366,7 @@ public static class InputSystemConfigurationValidator
                 $"The input scheme {scheme.Name} on input defintion {definition.Name} uses a device identity that is not configured for the input system, the device is: {deviceMap.DeviceIdentity}.");
         }
 
-        var duplicateInputIds = deviceMap.InputMaps.GroupBy(map => map.Input.Id)
+        var duplicateInputIds = deviceMap.InputMaps.GroupBy(map => map.InputId)
             .Where(mapGroup => mapGroup.Count() > 1)
             .Select(mapGroup => mapGroup.Key);
         if (duplicateInputIds.Any()) 
@@ -376,7 +376,7 @@ public static class InputSystemConfigurationValidator
         }
 
         var inputsMissingActions = deviceMap.InputMaps.Where(map => map.Action is null)
-            .Select(map => map.Input.Id);
+            .Select(map => map.InputId);
         if (inputsMissingActions.Any()) 
         {
             return InputConfigurationValidationResult.ForDeviceMap(map => map.InputMaps, InputConfigurationValidation.MissingData,

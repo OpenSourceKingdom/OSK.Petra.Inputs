@@ -1,12 +1,12 @@
 ﻿using OSK.Operations.Outputs;
 using OSK.Operations.Outputs.Models;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Ports;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 

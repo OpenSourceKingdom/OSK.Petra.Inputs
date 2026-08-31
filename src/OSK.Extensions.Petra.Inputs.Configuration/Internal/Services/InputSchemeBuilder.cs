@@ -1,8 +1,8 @@
 ﻿using OSK.Extensions.Petra.Inputs.Configuration.Ports;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using System;
 using System.Collections.Generic;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 
@@ -26,12 +26,8 @@ internal class InputSchemeBuilder(string name): IInputSchemeBuilder
         return this;
     }
 
-    public IInputSchemeBuilder WithMap(DeviceIdentity deviceIdentity, IInput input, string actionName)
+    public IInputSchemeBuilder WithMap(DeviceIdentity deviceIdentity, long inputId, string actionName)
     {
-        if (input is null)
-        {
-            throw new ArgumentNullException(nameof(input));
-        }
         if (string.IsNullOrWhiteSpace(actionName))
         {
             throw new ArgumentNullException(nameof(actionName));
@@ -43,7 +39,7 @@ internal class InputSchemeBuilder(string name): IInputSchemeBuilder
             _deviceBuilderLookup[deviceIdentity] = deviceBuilder;
         }
 
-        deviceBuilder.AddMap(input, actionName);
+        deviceBuilder.AddMap(inputId, actionName);
         return this;
     }
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.Configuration;
 
@@ -24,12 +24,14 @@ public class InputSystemConfiguration
     /// <param name="inputConfigurations">The configurations of topologies that is supported</param>
     /// <param name="definitions">The input definitions the input system will use to map inputs and actions</param>
     /// <param name="joinPolicy">The policy the input system uses for new users, devices, and the like</param>
-    public InputSystemConfiguration(IEnumerable<InputConfiguration> inputConfigurations, IEnumerable<ActionDefinition> definitions, InputSystemJoinPolicy joinPolicy)
+    public InputSystemConfiguration(IEnumerable<InputConfiguration> inputConfigurations, IEnumerable<ActionDefinition> definitions, InputSystemJoinPolicy joinPolicy,
+        InputCapabilityOptionConfiguration capabilityOptionConfiguration)
     {
         _inputConfigurationLookup = inputConfigurations?.Where(configuration => configuration is not null).ToDictionary(configuration => configuration.Id) ?? [];
         _inputDefinitionLookup = definitions?.Where(definition => definition?.Name is not null).ToDictionary(definition => definition.Name, StringComparer.OrdinalIgnoreCase) ?? [];
         _topologyLookup = inputConfigurations is null ? [] : [.. inputConfigurations.SelectMany(config => config.TopologyNames)];
         JoinPolicy = joinPolicy ?? throw new ArgumentNullException(nameof(joinPolicy));
+        CapabilityConfiguration = capabilityOptionConfiguration ?? throw new ArgumentNullException(nameof(capabilityOptionConfiguration));
     }
 
     #endregion
@@ -72,6 +74,8 @@ public class InputSystemConfiguration
         => !string.IsNullOrWhiteSpace(definitionName) && _inputDefinitionLookup.TryGetValue(definitionName, out var definition)
             ? definition
             : null;
+
+    public InputCapabilityOptionConfiguration CapabilityConfiguration { get; }
 
     #endregion
 }

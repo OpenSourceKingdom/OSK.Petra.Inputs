@@ -1,8 +1,8 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
 using System.Collections.Generic;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
@@ -53,8 +53,8 @@ internal class UserInputContext(int userId)
         }
     }
 
-    public bool IsSuppressed(int actionGroup)
-        => (_suppressedActions.TryGetValue(actionGroup, out var isSuppressed) && isSuppressed) || _globalActionSuppression;
+    public bool IsSuppressed(int? actionGroup)
+        => _globalActionSuppression || (actionGroup.HasValue && _suppressedActions.TryGetValue(actionGroup.Value, out var isSuppressed) && isSuppressed);
 
     public DeviceInputContext GetOrAddDevice(RuntimeDeviceIdentifier deviceIdentifier, Func<RuntimeDeviceIdentifier, IDeviceDescriptor> deviceFactory)
     {

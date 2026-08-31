@@ -1,6 +1,8 @@
-﻿namespace OSK.Petra.Inputs.Capabilities.Pointer;
+﻿using OSK.Petra.Inputs.Abstractions;
 
-public class PointerCapabilityOptions
+namespace OSK.Petra.Inputs.Capabilities.Pointer;
+
+public class PointerCapabilityOptions: CapabilityOptions
 {
     /// <summary>
     /// Sets the maximum number of entries any particular pointer will track beyond the current position.

@@ -2,7 +2,7 @@
 
 namespace OSK.Petra.Inputs.Notifications;
 
-public class UnpairedDeviceInputNotification(RuntimeDeviceIdentifier device, int inputId): DeviceNotification(device)
+public class UnpairedDeviceInputNotification(RuntimeDeviceIdentifier device, long inputId): DeviceNotification(device)
 {
-    public int InputId => inputId;
+    public long InputId => inputId;
 }

@@ -4,7 +4,6 @@ using OSK.Operations.Outputs;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Notifications;
@@ -14,11 +13,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 
 internal partial class SchemeService(IInputSystemConfigurationProvider configurationProvider, ISchemeRepository schemeRepository, IUserManager userManager, IInputSystemNotifier systemNotifier,
-    IDeviceCatalogProvider deviceCatalogProvider, IServiceProvider serviceProvider, ILogger logger): IInternalSchemeService
+    IDeviceCatalogProvider deviceCatalogProvider, IServiceProvider serviceProvider, ILogger<SchemeService> logger): IInternalSchemeService
 {
     #region Variables
 

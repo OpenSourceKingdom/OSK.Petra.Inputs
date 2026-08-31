@@ -1,7 +1,7 @@
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using Moq;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests.Inputs;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Devices;
 
 public class DeviceDescriptorExtensionsTests
 {
@@ -12,7 +12,7 @@ public class DeviceDescriptorExtensionsTests
     {
         // Arrange
         var mock = new Mock<IDeviceDescriptor>();
-        mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, DeviceNames.Generic));
+        mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, DeviceIdentities.GenericDeviceName));
 
         // Act/Assert
         Assert.True(mock.Object.IsGeneric());

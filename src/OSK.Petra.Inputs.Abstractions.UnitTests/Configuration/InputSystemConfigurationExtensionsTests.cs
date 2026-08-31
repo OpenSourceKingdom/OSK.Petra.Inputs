@@ -1,5 +1,5 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
@@ -60,7 +60,7 @@ public class InputSystemConfigurationExtensionsTests
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Generic"),
                 InputMaps = [new InputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
-                    new _Helpers.MockInput(1))]
+                    1)]
             }
         };
         var schemeGeneric = new InputScheme("Default", "Generic", deviceMapsGeneric, isDefault: true, isCustom: false);
@@ -70,9 +70,9 @@ public class InputSystemConfigurationExtensionsTests
 
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
 
-        var genericConfig = new InputSystemConfiguration(new[] { inputConfig }, new[] { definition }, joinPolicy);
+        var genericConfig = new InputSystemConfiguration(new[] { inputConfig }, new[] { definition }, joinPolicy, new([]));
 
         var identity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Steam, "Steam Keyboard");
 
@@ -96,7 +96,7 @@ public class InputSystemConfigurationExtensionsTests
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Xbox Keyboard"),
                 InputMaps = [new InputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
-                    new _Helpers.MockInput(1))]
+                    1)]
             }
         };
         var schemeXbox = new InputScheme("Default", "Default", deviceMapsXbox, isDefault: true, isCustom: false);
@@ -106,9 +106,9 @@ public class InputSystemConfigurationExtensionsTests
 
         var actions = new[] { new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }) };
         var definition = new ActionDefinition("Default", actions, isDefault: true);
-        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DeviceJoinBehavior = DevicePairingBehavior.Balanced };
+        var joinPolicy = new InputSystemJoinPolicy { MaxUsers = 4, UserJoinBehavior = UserJoinBehavior.DeviceActivation, DevicePairingBehavior = DevicePairingBehavior.Balanced };
 
-        return new InputSystemConfiguration(new[] { inputConfig }, new[] { definition }, joinPolicy);
+        return new InputSystemConfiguration(new[] { inputConfig }, new[] { definition }, joinPolicy, new([]));
     }
 
     #endregion

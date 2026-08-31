@@ -2,13 +2,13 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Services;
 using OSK.Petra.Inputs.Notifications;
 using OSK.Petra.Inputs.Options;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.UnitTests._Helpers;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Services;
 
@@ -198,11 +198,11 @@ public class UserManagerTests
         {
             MaxUsers = 4,
             UserJoinBehavior = UserJoinBehavior.DeviceActivation,
-            DeviceJoinBehavior = DevicePairingBehavior.Balanced
+            DevicePairingBehavior = DevicePairingBehavior.Balanced
         };
 
         _mockConfigProvider.SetupGet(m => m.Configuration)
-            .Returns(new InputSystemConfiguration(new[] { config }, new[] { def1, def2 }, joinPolicy));
+            .Returns(new InputSystemConfiguration(new[] { config }, new[] { def1, def2 }, joinPolicy, new([])));
 
         // Act
         var result = _userManager.CreateUser(new UserJoinOptions() { ActiveDefinitionName = "Secondary" });

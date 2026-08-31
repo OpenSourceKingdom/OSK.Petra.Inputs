@@ -4,24 +4,31 @@ using OSK.Extensions.Petra.Inputs.Configuration.Attributes;
 using OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 using OSK.Extensions.Petra.Inputs.Configuration.Ports;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
 using System.Linq;
 using System.Reflection;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration;
 
 public static class InputSystemBuilderExtensions
 {
-    extension(IInputSystemBuilder builder)
+    extension(IInputSystemConfigurationBuilder builder)
     {
         #region Definitions
 
-        /// <inheritdoc cref="WithDefinition(IInputSystemBuilder, string, Type)"/>
-        public IInputSystemBuilder WithDefinition<TDefinition>(string name)
+        /// <inheritdoc cref="WithDefinition(IInputSystemConfigurationBuilder, string, Type, Action{IActionDefinitionBuilder})"/>
+        public IInputSystemConfigurationBuilder WithDefinition<TDefinition>(string name)
             where TDefinition : class
-            => builder.WithDefinition(name, typeof(TDefinition));
+            => builder.WithDefinition(name, typeof(TDefinition), _ => { });
+
+        public IInputSystemConfigurationBuilder WithDefinition<TDefinition>(string name, Action<IActionDefinitionBuilder> definitionBuilderConfigurator)
+            where TDefinition : class
+            => builder.WithDefinition(name, typeof(TDefinition), definitionBuilderConfigurator);
+
+        public IInputSystemConfigurationBuilder WithDefinition(string name, Type definitionType)
+            => builder.WithDefinition(name, definitionType, _ => { });
 
         /// <summary>
         /// The extension searches for methods based on their return type being void and taking
@@ -34,24 +41,22 @@ public static class InputSystemBuilderExtensions
         /// <param name="definitionType">
         /// The definition type that will be used to get the methods for. This service needs to be registered on the DI chain that the input system uses.
         /// </param>
+        /// <param name="definitionBuilderConfigurator">Configure the definition builder</param>
         /// <returns>The builder for chaining</returns>
-        public IInputSystemBuilder WithDefinition(string name, Type definitionType)
+        public IInputSystemConfigurationBuilder WithDefinition(string name, Type definitionType, Action<IActionDefinitionBuilder> definitionBuilderConfigurator)
         {
             if (definitionType is null)
             {
                 throw new ArgumentNullException(nameof(definitionType));
             }
-
-            var methodsToRegister = definitionType.GetMethods().Where(method =>
+            if (definitionBuilderConfigurator is null)
             {
-                var methodParameters = method.GetParameters();
-                return methodParameters.Length is 1 && methodParameters[0].ParameterType == typeof(IInputEventContext)
-                 && method.ReturnParameter.ParameterType == typeof(void);
-            });
+                throw new ArgumentNullException(nameof(definitionBuilderConfigurator));
+            }
 
             var definitionBuilder = new ActionDefinitionBuilder(name);
 
-            foreach (var method in methodsToRegister)
+            foreach (var method in definitionType.GetActionMethods())
             {
                 var inputActionAttribute = method.GetCustomAttribute<InputActionAttribute>();
                 var inputActionName = string.IsNullOrWhiteSpace(inputActionAttribute?.ActionName)
@@ -64,6 +69,8 @@ public static class InputSystemBuilderExtensions
                     inputEventContext => invoker.FastInvoke(inputEventContext.Services.GetRequiredService(definitionType), [inputEventContext]),
                     inputActionAttribute?.Description, inputActionAttribute?.InternalActionGroup));
             }
+
+            definitionBuilderConfigurator(definitionBuilder);
 
             var output = definitionBuilder.Build();
             builder.WithActionDefinition(output.Definition);

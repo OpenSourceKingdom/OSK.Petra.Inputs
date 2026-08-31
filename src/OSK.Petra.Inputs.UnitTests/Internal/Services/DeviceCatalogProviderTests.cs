@@ -1,7 +1,7 @@
 using Moq;
 using OSK.Operations.Outputs;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Internal.Services;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Services;
 

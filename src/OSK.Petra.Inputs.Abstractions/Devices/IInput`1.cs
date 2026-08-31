@@ -1,4 +1,4 @@
-﻿namespace OSK.Petra.Inputs.Abstractions.Inputs;
+﻿namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 public interface IInput<TSettings>: IInput
     where TSettings: IInputSettings

@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OSK.Petra.Inputs.Abstractions.Inputs;
+namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 public abstract class DeviceDescriptor<TInput>: IDeviceDescriptor
     where TInput: class, IInput
 {
     #region Variables
 
-    private readonly Dictionary<int, TInput> _inputLookup;
+    private readonly Dictionary<long, TInput> _inputLookup;
 
     #endregion
 
@@ -30,7 +30,7 @@ public abstract class DeviceDescriptor<TInput>: IDeviceDescriptor
 
     IReadOnlyCollection<IInput> IDeviceDescriptor.Inputs => Inputs;
 
-    public IInput? GetInput(int id)
+    public IInput? GetInput(long id)
         => _inputLookup.TryGetValue(id, out var input) ? input : null;
 
     #endregion

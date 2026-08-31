@@ -1,13 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using OSK.Petra.Inputs.Abstractions;
-using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Exceptions;
 using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Services;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.UnitTests._Helpers;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Services;
 
@@ -24,46 +22,6 @@ public class InputSystemConfiguratorTests
     public InputSystemConfiguratorTests()
     {
         _configurator = new InputSystemConfigurator();
-    }
-
-    #endregion
-
-    #region UseConfiguration
-
-    [Fact]
-    public void UseConfiguration_NullConfiguration_ThrowsArgumentNullException()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _configurator.UseConfiguration(null!));
-    }
-
-    [Fact]
-    public void UseConfiguration_ValidConfiguration_ReturnsSelf()
-    {
-        // Arrange
-        var config = TestConfigurationHelper.CreateValidConfiguration();
-
-        // Act
-        var result = _configurator.UseConfiguration(config);
-
-        // Assert
-        Assert.Same(_configurator, result);
-    }
-
-    [Fact]
-    public void UseConfiguration_InvalidConfiguration_ThrowsInputSystemValidationException()
-    {
-        // Arrange
-        var joinPolicy = new InputSystemJoinPolicy
-        {
-            MaxUsers = 0,
-            UserJoinBehavior = UserJoinBehavior.DeviceActivation,
-            DeviceJoinBehavior = DevicePairingBehavior.Balanced
-        };
-        var invalidConfig = new InputSystemConfiguration([], [], joinPolicy);
-
-        // Act & Assert
-        Assert.Throws<InputSystemValidationException>(() => _configurator.UseConfiguration(invalidConfig));
     }
 
     #endregion
@@ -120,20 +78,9 @@ public class InputSystemConfiguratorTests
     #region ConfigureServices
 
     [Fact]
-    public void ConfigureServices_NoConfiguration_ThrowsArgumentNullException()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _configurator.ConfigureServices(services));
-    }
-
-    [Fact]
     public void ConfigureServices_Default_SetsExpectedServices()
     {
         // Arrange
-        _configurator.UseConfiguration(TestConfigurationHelper.CreateValidConfiguration());
         var services = new ServiceCollection();
 
         // Act
@@ -177,7 +124,6 @@ public class InputSystemConfiguratorTests
     public void ConfigureServices_WithCustomSchemeRepository_UsesCustomType()
     {
         // Arrange
-        _configurator.UseConfiguration(TestConfigurationHelper.CreateValidConfiguration());
         var services = new ServiceCollection();
 
         // Act
@@ -194,7 +140,6 @@ public class InputSystemConfiguratorTests
     public void ConfigureServices_WithDeviceProvider_RegistersTransient()
     {
         // Arrange
-        _configurator.UseConfiguration(TestConfigurationHelper.CreateValidConfiguration());
         var services = new ServiceCollection();
 
         // Act

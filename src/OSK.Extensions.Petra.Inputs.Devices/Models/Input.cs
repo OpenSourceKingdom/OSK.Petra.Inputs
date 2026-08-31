@@ -1,10 +1,10 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
+﻿using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Models;
 
-public abstract class Input(int id): IInput
+public abstract class Input(long id): IInput
 {
-    public int Id => id;
+    public long Id => id;
 
     public abstract InputGlyph GetGlyph();
 }

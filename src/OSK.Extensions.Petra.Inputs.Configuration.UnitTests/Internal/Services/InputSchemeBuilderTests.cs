@@ -1,7 +1,7 @@
 using Moq;
 using OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.UnitTests.Internal.Services;
 
@@ -46,13 +46,6 @@ public class InputSchemeBuilderTests
     #endregion
 
     #region WithMap
-
-    [Fact]
-    public void WithMap_NullInput_ThrowsArgumentNullException()
-    {
-        // Arrange/Act/Assert
-        Assert.Throws<ArgumentNullException>(() => _builder.WithMap(new DeviceIdentity(), null!, "Abc"));
-    }
 
     [Theory]
     [InlineData(null)]

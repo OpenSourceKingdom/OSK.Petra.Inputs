@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Options;
-using OSK.Petra.Inputs.Abstractions;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+﻿using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
+using OSK.Petra.Inputs.Abstractions.Devices;
+using OSK.Petra.Inputs.Ports;
 
 namespace OSK.Petra.Inputs.Capabilities.Power;
 
-public class PowerCapability(IOptions<PowerCapabilityOptions> options) : InputCapability<PowerEvent, PowerSettings>
+public class PowerCapability(ICapabilityOptions<PowerCapabilityOptions> options) : InputCapability<PowerEvent, PowerSettings>
 {
     #region InputCapability Overrides
 

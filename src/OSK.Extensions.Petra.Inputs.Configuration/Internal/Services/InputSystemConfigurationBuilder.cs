@@ -7,11 +7,10 @@ using System.Linq;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 
-internal class InputSystemBuilder : IInputSystemBuilder
+internal class InputSystemConfigurationBuilder : IInputSystemConfigurationBuilder
 {
     #region Variables
 
-    private Type? _schemeRepositoryType;
     private readonly Dictionary<string, ActionDefinition> _definitionLookup = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
@@ -21,20 +20,16 @@ internal class InputSystemBuilder : IInputSystemBuilder
     ///   - Scheme Name
     /// </summary>
     private readonly Dictionary<string, Dictionary<string, Dictionary<string, InputScheme>>> _schemeLookup = [];
-    private Action<InputSystemJoinPolicy>? _joinPolicyConfigurator;
+
+    private readonly Dictionary<Type, CapabilityOptions> _capabilityOptions = [];
+
+    private InputSystemJoinPolicy? _joinPolicy;
 
     #endregion
 
     #region IInputSystemConfigurationBuilder
 
-    public IInputSystemBuilder UseSchemeRepository<T>() 
-        where T : ISchemeRepository
-    {
-        _schemeRepositoryType = typeof(T);
-        return this;
-    }
-
-    public IInputSystemBuilder WithActionDefinition(ActionDefinition definition)
+    public IInputSystemConfigurationBuilder WithActionDefinition(ActionDefinition definition)
     {
         if (definition is null)
         {
@@ -55,7 +50,7 @@ internal class InputSystemBuilder : IInputSystemBuilder
         return this;
     }
 
-    public IInputSystemBuilder WithInputScheme(InputScheme scheme)
+    public IInputSystemConfigurationBuilder WithInputScheme(InputScheme scheme)
     {
         if (scheme is null)
         {
@@ -94,14 +89,30 @@ internal class InputSystemBuilder : IInputSystemBuilder
         return this;
     }
 
-    public IInputSystemBuilder WithJoinPolicy(Action<InputSystemJoinPolicy> policyConfigurator)
+    public IInputSystemConfigurationBuilder WithJoinPolicy(InputSystemJoinPolicy joinPolicy)
     {
-        if (policyConfigurator is null)
+        if (joinPolicy is null)
         {
-            throw new ArgumentNullException(nameof(policyConfigurator));
+            throw new ArgumentNullException(nameof(joinPolicy));
         }
 
-        _joinPolicyConfigurator = policyConfigurator;
+        _joinPolicy = joinPolicy;
+
+        return this;
+    }
+
+    public IInputSystemConfigurationBuilder WithCapabilityOptions<TOptions>(Action<TOptions> optionsConfigurator)
+        where TOptions : CapabilityOptions, new()
+    {
+        if (optionsConfigurator is null)
+        {
+            throw new ArgumentNullException(nameof(optionsConfigurator));
+        }
+
+        var options = new TOptions();
+        optionsConfigurator(options);
+
+        _capabilityOptions[typeof(TOptions)] = options;
 
         return this;
     }
@@ -109,8 +120,6 @@ internal class InputSystemBuilder : IInputSystemBuilder
     #endregion
 
     #region Helpers
-
-    internal Type? ScheemRepositoryType => _schemeRepositoryType;
 
     internal InputSystemConfiguration BuildConfiguration()
     {
@@ -126,15 +135,16 @@ internal class InputSystemBuilder : IInputSystemBuilder
             return configuration;
         });
 
-        var joinPolicy = new InputSystemJoinPolicy()
+        var joinPolicy = _joinPolicy ?? new InputSystemJoinPolicy()
         {
             MaxUsers = 1,
-            DeviceJoinBehavior = DevicePairingBehavior.Balanced,
+            DevicePairingBehavior = DevicePairingBehavior.Balanced,
             UserJoinBehavior = UserJoinBehavior.DeviceActivation
         };
-        _joinPolicyConfigurator?.Invoke(joinPolicy);
 
-        return new InputSystemConfiguration(inputConfigurations, _definitionLookup.Values, joinPolicy);
+        var capabilityOptionConfiguration = new InputCapabilityOptionConfiguration(_capabilityOptions.Values);
+
+        return new InputSystemConfiguration(inputConfigurations, _definitionLookup.Values, joinPolicy, capabilityOptionConfiguration);
     }
 
     #endregion

@@ -1,9 +1,10 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
+﻿using OSK.Petra.Inputs.Abstractions;
+using OSK.Petra.Inputs.Abstractions.Devices;
 using System;
 
 namespace OSK.Petra.Inputs.Capabilities.Power;
 
-public class PowerCapabilityOptions
+public class PowerCapabilityOptions: CapabilityOptions
 {
     /// <summary>
     /// The amount of time the input phase may remain inactive before the interaction

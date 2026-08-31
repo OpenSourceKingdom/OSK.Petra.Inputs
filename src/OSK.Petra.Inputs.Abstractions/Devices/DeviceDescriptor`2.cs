@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OSK.Petra.Inputs.Abstractions.Inputs;
+namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 public abstract class DeviceDescriptor<TEnum, TInput> : DeviceDescriptor<TInput>
     where TEnum : Enum

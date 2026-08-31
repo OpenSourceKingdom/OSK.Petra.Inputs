@@ -1,4 +1,4 @@
-﻿namespace OSK.Petra.Inputs.Abstractions.Inputs;
+﻿namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 public class InputGlyph
 {
@@ -6,5 +6,5 @@ public class InputGlyph
 
     public required IInput Input { get; init; }
 
-    public required string Symbol { get; init; }
+    public required string Text { get; init; }
 }

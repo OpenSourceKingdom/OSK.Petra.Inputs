@@ -1,13 +1,13 @@
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.UnitTests._Helpers;
 
 public class TestInput : IInput
 {
-    public int Id { get; }
+    public long Id { get; }
     private readonly string _glyphSymbol;
 
-    public TestInput(int id, string glyphSymbol = "X")
+    public TestInput(long id, string glyphSymbol = "X")
     {
         Id = id;
         _glyphSymbol = glyphSymbol;
@@ -17,6 +17,6 @@ public class TestInput : IInput
     {
         DeviceIdentity = default,
         Input = this,
-        Symbol = _glyphSymbol
+        Text = _glyphSymbol
     };
 }

@@ -1,6 +1,6 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
@@ -29,9 +29,8 @@ public class DeviceInputMapTests
     public void Constructor_DeviceIdentityAndMaps_SetsValuesAsExpected()
     {
         // Arrange
-        var input = new MockInput(1);
         var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {});
-        var inputMaps = new List<InputActionMap> { new InputActionMap(action, input) };
+        var inputMaps = new List<InputActionMap> { new InputActionMap(action, 1) };
 
         // Act
         var map = new DeviceInputMap { DeviceIdentity = _keyboardIdentity, InputMaps = inputMaps };
@@ -48,12 +47,11 @@ public class DeviceInputMapTests
     public void GetInputMap_ExistingId_ReturnsMap()
     {
         // Arrange
-        var input = new MockInput(1);
         var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {});
         var map = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = [new InputActionMap(action, input)]
+            InputMaps = [new InputActionMap(action, 1)]
         };
 
         // Act
@@ -67,12 +65,11 @@ public class DeviceInputMapTests
     public void GetInputMap_NonExistentId_ReturnsNull()
     {
         // Arrange
-        var input = new MockInput(1);
         var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {});
         var map = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = [new InputActionMap(action, input)]
+            InputMaps = [new InputActionMap(action, 1)]
         };
 
         // Act

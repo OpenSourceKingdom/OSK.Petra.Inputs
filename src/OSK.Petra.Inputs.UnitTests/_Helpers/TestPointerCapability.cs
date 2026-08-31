@@ -8,7 +8,7 @@ public class TestablePointerCapability : PointerCapability
     public bool ProcessCalled { get; private set; }
     public TimeSpan ReceivedDeltaTime { get; private set; }
 
-    public TestablePointerCapability() : base(Microsoft.Extensions.Options.Options.Create(new PointerCapabilityOptions())) { }
+    public TestablePointerCapability() : base(TestConfigurationHelper.CreateOptions<PointerCapabilityOptions>()) { }
 
     protected override void Process(IDeviceInputContext context, IInputState state, PointerEvent pointerEvent, PointerSettings settings, TimeSpan deltaTime)
     {

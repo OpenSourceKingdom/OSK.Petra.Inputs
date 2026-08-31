@@ -1,5 +1,5 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Capabilities.Pointer;
+﻿using OSK.Petra.Inputs.Capabilities.Pointer;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Models;
 
@@ -7,17 +7,17 @@ public abstract class PointerInput: Input, IInput<PointerSettings>
 {
     #region Constructors
 
-    protected PointerInput(int id)
-    : this(id, false)
+    protected PointerInput(long id)
+        : this(id, .1f)
     {
     }
 
-    protected PointerInput(int id, bool allowReactivation)
-        : base(id)
+    protected PointerInput(long id, float distanceThreshold)
+    : base(id)
     {
         Settings = new PointerSettings()
         {
-            DistanceThreshold = .1f
+            DistanceThreshold = distanceThreshold
         };
     }
 

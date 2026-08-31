@@ -1,6 +1,6 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
 
@@ -97,14 +97,13 @@ public class InputSchemeTests
     public void GetInputMap_ValidTopologyAndInputId_ReturnsMap()
     {
         // Arrange
-        var input = new MockInput(1);
         var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {});
         var deviceMaps = new List<DeviceInputMap>
         {
             new DeviceInputMap
             {
                 DeviceIdentity = _keyboardIdentity,
-                InputMaps = [new InputActionMap(action, input)]
+                InputMaps = [new InputActionMap(action, 1)]
             }
         };
         var scheme = new InputScheme("Default", "MyScheme", deviceMaps, isDefault: true, isCustom: false);
@@ -120,14 +119,13 @@ public class InputSchemeTests
     public void GetInputMap_BadInputId_ReturnsNull()
     {
         // Arrange
-        var input = new MockInput(1);
         var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { });
         var deviceMaps = new List<DeviceInputMap>
         {
             new DeviceInputMap
             {
                 DeviceIdentity = _keyboardIdentity,
-                InputMaps = [new InputActionMap(action, input)]
+                InputMaps = [new InputActionMap(action, 1)]
             }
         };
         var scheme = new InputScheme("Default", "MyScheme", deviceMaps, isDefault: true, isCustom: false);

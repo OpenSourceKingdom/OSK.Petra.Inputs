@@ -18,5 +18,5 @@ public class InputSystemJoinPolicy
     /// <summary>
     /// The specific type of behavior the input system will use when interacting with new devices
     /// </summary>
-    public DevicePairingBehavior DeviceJoinBehavior { get; init; }
+    public DevicePairingBehavior DevicePairingBehavior { get; init; }
 }

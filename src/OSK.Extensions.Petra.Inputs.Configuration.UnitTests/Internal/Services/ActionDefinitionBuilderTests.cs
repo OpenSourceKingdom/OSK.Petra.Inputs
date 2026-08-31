@@ -2,7 +2,7 @@ using Moq;
 using OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 using OSK.Extensions.Petra.Inputs.Configuration.Ports;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.UnitTests.Internal.Services;
 

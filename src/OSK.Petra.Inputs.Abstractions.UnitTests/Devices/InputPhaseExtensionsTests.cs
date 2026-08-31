@@ -1,6 +1,6 @@
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
-namespace OSK.Petra.Inputs.Abstractions.UnitTests.Inputs;
+namespace OSK.Petra.Inputs.Abstractions.UnitTests.Devices;
 
 public class InputPhaseExtensionsTests
 {

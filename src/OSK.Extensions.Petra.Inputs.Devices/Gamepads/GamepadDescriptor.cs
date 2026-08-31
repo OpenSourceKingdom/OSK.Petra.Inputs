@@ -1,4 +1,4 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
+﻿using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Gamepads;
 
@@ -12,7 +12,7 @@ public abstract class GamepadDescriptor: DeviceDescriptor<IGamepadInput>
     }
 
     public GamepadDescriptor(DeviceFamily family)
-        : this(family, DeviceNames.Generic)
+        : this(family, DeviceIdentities.GenericDeviceName)
     {
     }
 

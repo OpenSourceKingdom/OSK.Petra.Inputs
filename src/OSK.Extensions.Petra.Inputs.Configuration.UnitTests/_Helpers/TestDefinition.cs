@@ -1,6 +1,6 @@
 ﻿using OSK.Extensions.Petra.Inputs.Configuration.Attributes;
-using OSK.Petra.Inputs.Abstractions.Inputs;
 using OSK.Petra.Inputs.Abstractions.Runtime;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.UnitTests._Helpers;
 

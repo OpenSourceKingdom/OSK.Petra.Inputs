@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Options;
-using OSK.Petra.Inputs.Abstractions;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+﻿using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
+using OSK.Petra.Inputs.Abstractions.Devices;
+using OSK.Petra.Inputs.Ports;
 
 namespace OSK.Petra.Inputs.Capabilities.Pointer;
 
-public class PointerCapability(IOptions<PointerCapabilityOptions> options) : InputCapability<PointerEvent, PointerSettings>
+public class PointerCapability(ICapabilityOptions<PointerCapabilityOptions> options) : InputCapability<PointerEvent, PointerSettings>
 {
     #region InputCapability Overrides
 
@@ -24,7 +24,7 @@ public class PointerCapability(IOptions<PointerCapabilityOptions> options) : Inp
             return;
         }
 
-         details.UpdatePosition(pointerEvent.Position, state.Duration);
+        details.UpdatePosition(pointerEvent.Position, state.Duration);
     }
 
     #endregion

@@ -1,41 +1,24 @@
 using OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
-using OSK.Extensions.Petra.Inputs.Configuration.UnitTests._Helpers;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.UnitTests.Internal.Services;
 
-public class InputSystemBuilderTests
+public class InputSystemConfigurationBuilderTests
 {
     #region Variables
 
-    private readonly InputSystemBuilder _builder;
+    private readonly InputSystemConfigurationBuilder _builder;
     private readonly DeviceIdentity _keyboardIdentity;
-    private readonly DeviceIdentity _mouseIdentity;
 
     #endregion
 
     #region Constructors
 
-    public InputSystemBuilderTests()
+    public InputSystemConfigurationBuilderTests()
     {
-        _builder = new InputSystemBuilder();
+        _builder = new InputSystemConfigurationBuilder();
         _keyboardIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "TestKeyboard");
-        _mouseIdentity = new DeviceIdentity(DeviceTopologyName.Mouse, DeviceFamily.Generic, "TestMouse");
-    }
-
-    #endregion
-
-    #region UseSchemeRepository
-
-    [Fact]
-    public void UseSchemeRepository_SetsType()
-    {
-        // Arrange/Act
-        _builder.UseSchemeRepository<TestSchemeRepository>();
-
-        // Assert
-        Assert.Equal(typeof(TestSchemeRepository), _builder.ScheemRepositoryType);
     }
 
     #endregion
@@ -223,34 +206,28 @@ public class InputSystemBuilderTests
 
     #endregion
 
-    #region WithJoinPolicy_NullConfigurator
+    #region WithJoinPolicy
 
     [Fact]
-    public void WithJoinPolicy_NullConfigurator_ThrowsArgumentNullException()
+    public void WithJoinPolicy_NullPolicy_ThrowsArgumentNullException()
     {
-        // Arrange
-        Action<InputSystemJoinPolicy>? configurator = null;
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _builder.WithJoinPolicy(configurator!));
+        // Arrange/Act/Assert
+        Assert.Throws<ArgumentNullException>(() => _builder.WithJoinPolicy(null!));
     }
 
     [Fact]
     public void WithJoinPolicy_SetsConfigurator()
     {
         // Arrange
-        InputSystemJoinPolicy? capturedPolicy = null;
+        var policy = new InputSystemJoinPolicy();
 
         // Act
-        _builder.WithJoinPolicy(policy =>
-        {
-            capturedPolicy = policy;
-        });
+        _builder.WithJoinPolicy(policy);
 
         var config = _builder.BuildConfiguration();
 
         // Assert
-        Assert.NotNull(capturedPolicy);
+        Assert.Same(policy, config.JoinPolicy);
     }
 
     #endregion
@@ -287,7 +264,7 @@ public class InputSystemBuilderTests
 
         // Assert
         Assert.Equal(1, config.JoinPolicy.MaxUsers);
-        Assert.Equal(DevicePairingBehavior.Balanced, config.JoinPolicy.DeviceJoinBehavior);
+        Assert.Equal(DevicePairingBehavior.Balanced, config.JoinPolicy.DevicePairingBehavior);
         Assert.Equal(UserJoinBehavior.DeviceActivation, config.JoinPolicy.UserJoinBehavior);
     }
 

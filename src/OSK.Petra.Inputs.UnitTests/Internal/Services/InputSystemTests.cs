@@ -3,7 +3,6 @@ using OSK.Operations.Outputs;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Services;
-using OSK.Petra.Inputs.Notifications;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.UnitTests._Helpers;
 
@@ -117,11 +116,16 @@ public class InputSystemTests
 
     #region PauseInput
 
-    [Fact]
-    public void PauseInput_GetDefault_ReturnsFalse()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void PauseInput_ReturnsInputServiceValue(bool isPaused)
     {
-        // Arrange/Act/Assert
-        Assert.False(_inputSystem.PauseInput);
+        // Arrange
+        _mockInputService.SetupGet(m => m.PauseInput).Returns(isPaused);
+
+        // Act/Assert
+        Assert.Equal(isPaused, _inputSystem.PauseInput);
     }
 
     [Fact]
@@ -131,60 +135,17 @@ public class InputSystemTests
         _inputSystem.PauseInput = true;
 
         // Assert
-        Assert.True(_inputSystem.PauseInput);
         _mockInputService.VerifySet(s => s.PauseInput = true, Times.Once);
     }
 
     [Fact]
     public void PauseInput_SetToFalse_SetsInternalAndDelegates()
     {
-        // Arrange
-        _inputSystem.PauseInput = true;
-
-        _mockInputService.Reset();
-
-        // Act
-        _inputSystem.PauseInput = false;
-
-        // Assert
-        Assert.False(_inputSystem.PauseInput);
-        _mockInputService.VerifySet(s => s.PauseInput = false, Times.Once);
-    }
-
-    [Fact]
-    public void PauseInput_SetSameValue_DoesNotNotify()
-    {
-        // Arrange/Act - set to true twice
-        _inputSystem.PauseInput = true;
-        _mockSystemNotifier.Invocations.Clear();
-        _inputSystem.PauseInput = true;
-
-        // Assert
-        _mockSystemNotifier.Verify(n => n.Notify(It.IsAny<InputMonitorStatusChangedNotification>()), Times.Never);
-    }
-
-    [Fact]
-    public void PauseInput_SetTrue_RaisesMonitorStatusChangedNotification()
-    {
         // Arrange/Act
-        _inputSystem.PauseInput = true;
-
-        // Assert
-        _mockSystemNotifier.Verify(n => n.Notify(It.Is<InputMonitorStatusChangedNotification>(x => !x.IsMonitoringInput)), Times.Once);
-    }
-
-    [Fact]
-    public void PauseInput_SetFalse_RaisesMonitorStatusChangedNotification()
-    {
-        // Arrange
-        _inputSystem.PauseInput = true;
-        _mockSystemNotifier.Invocations.Clear();
-
-        // Act
         _inputSystem.PauseInput = false;
 
         // Assert
-        _mockSystemNotifier.Verify(n => n.Notify(It.Is<InputMonitorStatusChangedNotification>(x => x.IsMonitoringInput)), Times.Once);
+        _mockInputService.VerifySet(s => s.PauseInput = false, Times.Once);
     }
 
     #endregion
@@ -202,7 +163,7 @@ public class InputSystemTests
             .Returns(Task.FromResult(Out.Success()));
 
         // Act
-        var result = await _inputSystem.InitializeAsync(TestContext.Current.CancellationToken);
+        var result = await _inputSystem.InitializeAsync(new InputSystemConfiguration([], [], new(), new([])), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -219,7 +180,7 @@ public class InputSystemTests
             .Returns(Task.FromResult(Out.InvalidRequest()));
 
         // Act
-        var result = await _inputSystem.InitializeAsync(TestContext.Current.CancellationToken);
+        var result = await _inputSystem.InitializeAsync(TestConfigurationHelper.CreateValidConfiguration(), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -238,27 +199,22 @@ public class InputSystemTests
             .Returns(Task.FromResult(Out.InvalidRequest()));
 
         // Act
-        var result = await _inputSystem.InitializeAsync(TestContext.Current.CancellationToken);
+        var result = await _inputSystem.InitializeAsync(TestConfigurationHelper.CreateValidConfiguration(), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.False(result.IsSuccessful);
     }
 
     [Fact]
-    public async Task InitializeAsync_InvalidConfiguration_ThrowsInvalidOperationException()
+    public async Task InitializeAsync_InputSystemConfigurationProviderThrowsOnSet_ThrowsError()
     {
         // Arrange
-        var joinPolicy = new InputSystemJoinPolicy
-        {
-            MaxUsers = 0,
-            UserJoinBehavior = UserJoinBehavior.DeviceActivation,
-            DeviceJoinBehavior = DevicePairingBehavior.Balanced
-        };
-        var invalidConfig = new InputSystemConfiguration([], [], joinPolicy);
-        _mockConfigProvider.SetupGet(m => m.Configuration).Returns(invalidConfig);
+        _mockConfigProvider
+            .SetupSet(provider => provider.Configuration = It.IsAny<InputSystemConfiguration>())
+            .Throws<InvalidOperationException>();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _inputSystem.InitializeAsync(TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _inputSystem.InitializeAsync(TestConfigurationHelper.CreateValidConfiguration(), TestContext.Current.CancellationToken));
     }
 
     #endregion
@@ -269,7 +225,8 @@ public class InputSystemTests
     public void Update_WhenPaused_DoesNotDelegateToInputService()
     {
         // Arrange
-        _inputSystem.PauseInput = true;
+        _mockInputService.SetupGet(m => m.PauseInput)
+            .Returns(true);
 
         // Act
         _inputSystem.Update(TimeSpan.FromSeconds(1));

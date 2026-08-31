@@ -1,4 +1,4 @@
-﻿namespace OSK.Petra.Inputs.Abstractions.Inputs;
+﻿namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 /// <summary>
 /// An input for an <see cref="IDeviceDescriptor"/>
@@ -8,7 +8,7 @@ public interface IInput
     /// <summary>
     /// The device id for this input
     /// </summary>
-    int Id { get; }
+    long Id { get; }
 
     /// <summary>
     /// Gets the glyph information to show a user

@@ -1,4 +1,4 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
+﻿using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Keyboards;
 
@@ -12,7 +12,7 @@ public abstract class KeyboardDescriptor: DeviceDescriptor<IKeyboardInput>
     }
 
     public KeyboardDescriptor(DeviceFamily family)
-        : this(family, DeviceNames.Generic)
+        : this(family, DeviceIdentities.GenericDeviceName)
     {
     }
 

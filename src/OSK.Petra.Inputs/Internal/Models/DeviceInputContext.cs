@@ -1,7 +1,7 @@
-﻿using OSK.Petra.Inputs.Abstractions.Inputs;
-using OSK.Petra.Inputs.Abstractions.Runtime;
+﻿using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
 using System.Collections.Generic;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
@@ -9,7 +9,7 @@ internal class DeviceInputContext(int userId, RuntimeDeviceIdentifier deviceIden
 {
     #region Variables
 
-    private readonly Dictionary<int, InputState> _inputStates = [];
+    private readonly Dictionary<long, InputState> _inputStates = [];
     private readonly Dictionary<Type, ICapabilityFeature> _features = [];
 
     #endregion

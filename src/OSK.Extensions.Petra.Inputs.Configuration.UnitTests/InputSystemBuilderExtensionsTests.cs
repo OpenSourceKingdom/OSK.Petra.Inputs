@@ -1,7 +1,7 @@
 using OSK.Extensions.Petra.Inputs.Configuration.Internal.Services;
 using OSK.Extensions.Petra.Inputs.Configuration.UnitTests._Helpers;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.Inputs;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.UnitTests;
 
@@ -9,7 +9,7 @@ public class InputSystemBuilderExtensionsTests
 {
     #region Variables
 
-    private readonly InputSystemBuilder _builder;
+    private readonly InputSystemConfigurationBuilder _builder;
 
     #endregion
 
@@ -17,7 +17,7 @@ public class InputSystemBuilderExtensionsTests
 
     public InputSystemBuilderExtensionsTests()
     {
-        _builder = new InputSystemBuilder();
+        _builder = new InputSystemConfigurationBuilder();
     }
 
     #endregion
