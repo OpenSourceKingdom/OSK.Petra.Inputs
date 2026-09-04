@@ -65,7 +65,7 @@ internal class VirtualInputContext : IVirtualInputContext
     #region Api
 
     public IEnumerable<InputState> GetInputStateSnapshot()
-        => [];
+        => _states.Values;
 
     public void Initialize(InputScheme? scheme)
     {

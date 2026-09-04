@@ -62,4 +62,6 @@ public interface IInputSystem
     /// </remarks>
     /// <param name="deltaTime">the time that has passed since the last update</param>
     void Update(TimeSpan deltaTime);
+
+    bool AreUserActionsSurpressed(int userId, int actionGroupId);
 }

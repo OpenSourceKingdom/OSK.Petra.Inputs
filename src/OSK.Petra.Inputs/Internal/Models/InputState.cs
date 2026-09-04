@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using OSK.Petra.Inputs.Abstractions.Devices;
+using System.Linq;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
@@ -14,6 +15,8 @@ internal abstract class InputState(IInput input) : IInputState
     private readonly Dictionary<Type, ICapabilityDetails> _detailLookup = [];
 
     private bool _hasStatusBeenSet;
+
+    private List<IInputState> _consumedStates = [];
 
     #endregion
 
@@ -62,21 +65,9 @@ internal abstract class InputState(IInput input) : IInputState
         }
 
         state.InputConsumer = Input;
+        state.Disposed += DisposeWithConsumed;
 
-        state.Disposed += _ =>
-        {
-            if (!IsDisposed)
-            {
-                Dispose();
-            }
-        };
-        Disposed += _ =>
-        {
-            if (!state.IsDisposed)
-            {
-                state.Dispose();
-            }
-        };
+        _consumedStates.Add(state);
 
         return true;
     }
@@ -98,19 +89,30 @@ internal abstract class InputState(IInput input) : IInputState
 
     public void Dispose()
     {
+        DisposeWithConsumed(null);
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private void DisposeWithConsumed(IInputState? disposingState)
+    {
         if (IsDisposed)
         {
             return;
+        }
+
+        foreach (var state in _consumedStates.Where(s => disposingState is null || s != disposingState))
+        {
+            state.Disposed -= DisposeWithConsumed;
+            state.InputConsumer = null;
         }
 
         OnDispose();
         IsDisposed = true;
         Disposed?.Invoke(this);
     }
-
-    #endregion
-
-    #region Helpers
 
     public abstract InputOriginationSource GetOriginationSource();
 

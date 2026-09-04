@@ -19,8 +19,8 @@ internal partial class InputService
     [LoggerMessage(eventId: 4, LogLevel.Debug, "A new input device, '{deviceIdentifier}', sent input and no user was found to possess it, new user being created due to policy's settings.")]
     private static partial void LogNewUserCreatedDebug(ILogger logger, RuntimeDeviceIdentifier deviceIdentifier);
 
-    [LoggerMessage(eventId: 5, LogLevel.Debug, "Input processing pause state changed, tracking input: {pause}")]
-    private static partial void LogTogglePauseDebug(ILogger logger, bool pause);
+    [LoggerMessage(eventId: 5, LogLevel.Debug, "Input monitoring state changed, input system monitoring input: {isMonitoring}")]
+    private static partial void LogInputMonitoringStatusChanged(ILogger logger, bool isMonitoring);
 
     [LoggerMessage(eventId: 6, LogLevel.Information, "Input was received for input device '{deviceIdentifier}' but it is not a supported input device, ignoring input processing.")]
     private static partial void LogUnsupportedInputDeviceInformation(ILogger logger, RuntimeDeviceIdentifier deviceIdentifier);

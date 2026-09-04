@@ -4,6 +4,7 @@ using System;
 using OSK.Petra.Inputs.Abstractions.Devices;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.Internal.Models;
+using Microsoft.Extensions.Logging;
 
 namespace OSK.Petra.Inputs.Capabilities.Pointer;
 

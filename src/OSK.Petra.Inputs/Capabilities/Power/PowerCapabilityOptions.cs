@@ -17,5 +17,5 @@ public class PowerCapabilityOptions: CapabilityOptions
     /// The minimum amount of time an input must remain in the <see cref="InputPhase.Start"/>
     /// phase before transitioning to <see cref="InputPhase.Active"/>.
     /// </summary>
-    public TimeSpan ActiveTimeThreshold { get; set; }
+    public TimeSpan ActiveTimeThreshold { get; set; } = TimeSpan.FromSeconds(.1);
 }

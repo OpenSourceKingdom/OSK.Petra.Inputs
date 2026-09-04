@@ -27,7 +27,7 @@ public class PointerDetails(Vector2 startPosition, int maxRecords, float moveThr
 
     #region Api
 
-    internal void UpdatePosition(Vector2 position, TimeSpan time)
+    internal bool UpdatePosition(Vector2 position, TimeSpan time)
     {
         if ((CurrentPosition - position).LengthSquared() < moveThreshold)
         {
@@ -35,7 +35,7 @@ public class PointerDetails(Vector2 startPosition, int maxRecords, float moveThr
                 ? PointerMovement.Stop
                 : PointerMovement.Idle;
 
-            return;
+            return false;
         }
 
         if (maxRecords > 0)
@@ -58,6 +58,8 @@ public class PointerDetails(Vector2 startPosition, int maxRecords, float moveThr
                 _records.Dequeue();
             }
         }
+
+        return true;
 
         CurrentPosition = position;
         Movement = Movement is PointerMovement.Idle || Movement is PointerMovement.Stop

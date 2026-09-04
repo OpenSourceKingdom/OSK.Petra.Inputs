@@ -28,6 +28,9 @@ internal class InputSystem(IInputSystemConfigurationProvider configurationProvid
         set => inputService.PauseInput = value;
     }
 
+    public bool AreUserActionsSurpressed(int userId, int actionGroupId)
+        => inputService.AreUserActionsSurpressed(userId, actionGroupId);
+
     public async Task<Output> InitializeAsync(InputSystemConfiguration configuration, CancellationToken cancellationToken = default)
     {
         configurationProvider.Configuration = configuration;

@@ -17,7 +17,13 @@ public class PowerCombinationInput(IEnumerable<DeviceInputIdentifier> inputIdent
 
     #region IPowerCombinationInput
 
-    public IReadOnlyCollection<DeviceInputIdentifier> InputIdentifiers { get; } = inputIdentifiers is null ? [] : [.. inputIdentifiers.Distinct().OrderBy(id => id.DeviceIdentity).ThenBy(id => id.InputId)];
+    public IReadOnlyCollection<DeviceInputIdentifier> InputIdentifiers { get; } = inputIdentifiers is null 
+        ? [] 
+        : [.. inputIdentifiers.Distinct()
+                              .OrderBy(id => id.DeviceIdentity.TopologyName.Name)
+                              .ThenBy(id => id.DeviceIdentity.DeviceFamily.Name)
+                              .ThenBy(id => id.DeviceIdentity.Name)
+                              .ThenBy(id => id.InputId)];
 
     public override async Task<IEnumerable<InputGlyph>> GetGlyphsAsync(DeviceCatalog deviceCatalog, CancellationToken cancellationToken = default)
     {

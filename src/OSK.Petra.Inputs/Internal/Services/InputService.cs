@@ -79,12 +79,18 @@ internal partial class InputService : IInputService
             }
 
             _inputPaused = value;
-            _systemNotifier.Notify(new InputMonitorStatusChangedNotification(!value));
-            LogTogglePauseDebug(_logger, _inputPaused);
+            _systemNotifier.Notify(new InputMonitorStatusChangedNotification(isMonitoringInput: !_inputPaused));
+            LogInputMonitoringStatusChanged(_logger, !_inputPaused);
+
+            // Clear out input states if state monitoring has changed
+            foreach (var context in _userContexts.Values)
+            {
+                context.Scheme = null;
+            }
         }
     }
 
-    public bool IsUserActionsSurpressed(int userId, int actionGroupId)
+    public bool AreUserActionsSurpressed(int userId, int actionGroupId)
         => _globalActionSupression
             ? true
             : _userContexts.TryGetValue(userId, out var userContext) && userContext.IsSuppressed(actionGroupId);
@@ -269,7 +275,7 @@ internal partial class InputService : IInputService
             userContext = AddInputContext(user, setSchemeOutput.Data);
         }
 
-        if (setSchemeOutput.StatusCode.Status == OutputStatus.Updated)
+        if (setSchemeOutput.StatusCode.Status == OutputStatus.Updated || userContext.Scheme is null)
         {
             userContext.Scheme = setSchemeOutput.Data;
         }

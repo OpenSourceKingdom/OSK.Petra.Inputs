@@ -11,7 +11,7 @@ internal interface IInputService
 
     void Update(TimeSpan delta);
 
-    bool IsUserActionsSurpressed(int userId, int actionGroupId);
+    bool AreUserActionsSurpressed(int userId, int actionGroupId);
 
     Task<Output> InitializeAsync(CancellationToken cancellationToken = default);
 }
