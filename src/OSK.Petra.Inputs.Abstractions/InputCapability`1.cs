@@ -10,7 +10,7 @@ public abstract class InputCapability<TInputEvent, TSettings> : InputCapability<
 {
     #region InputCapability Overrides
 
-    protected override void Process(IDeviceInputContext context, IInputState state, TInputEvent inputEvent, TimeSpan deltaTime)
+    protected override void Process(IUserInputContext context, IInputState state, TInputEvent inputEvent, TimeSpan deltaTime)
     {
         var settings = state.Input is IInput<TSettings> settingsInput
             ? settingsInput.Settings
@@ -23,7 +23,7 @@ public abstract class InputCapability<TInputEvent, TSettings> : InputCapability<
 
     #region Helpers
 
-    protected abstract void Process(IDeviceInputContext context, IInputState state, TInputEvent inputEvent, TSettings inputSettings, TimeSpan deltaTime);
+    protected abstract void Process(IUserInputContext context, IInputState state, TInputEvent inputEvent, TSettings inputSettings, TimeSpan deltaTime);
 
     #endregion
 }

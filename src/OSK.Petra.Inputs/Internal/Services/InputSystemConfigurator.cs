@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Collections.Generic;
 using OSK.Petra.Inputs.Capabilities;
 using OSK.Petra.Inputs.Abstractions.Devices;
-using OSK.Petra.Inputs.Abstractions.Runtime;
 
 namespace OSK.Petra.Inputs.Internal.Services;
 

@@ -2,6 +2,6 @@
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Keyboards;
 
-public interface IKeyboardInput: IInput
+public interface IKeyboardInput: IDeviceInput
 {
 }

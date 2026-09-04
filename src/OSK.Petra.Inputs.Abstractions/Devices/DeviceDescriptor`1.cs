@@ -5,7 +5,7 @@ using System.Linq;
 namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 public abstract class DeviceDescriptor<TInput>: IDeviceDescriptor
-    where TInput: class, IInput
+    where TInput: class, IDeviceInput
 {
     #region Variables
 
@@ -28,9 +28,9 @@ public abstract class DeviceDescriptor<TInput>: IDeviceDescriptor
 
     public DeviceIdentity Identity { get; }
 
-    IReadOnlyCollection<IInput> IDeviceDescriptor.Inputs => Inputs;
+    IReadOnlyCollection<IDeviceInput> IDeviceDescriptor.Inputs => Inputs;
 
-    public IInput? GetInput(long id)
+    public IDeviceInput? GetInput(long id)
         => _inputLookup.TryGetValue(id, out var input) ? input : null;
 
     #endregion

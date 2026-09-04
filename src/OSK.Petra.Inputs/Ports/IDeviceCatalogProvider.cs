@@ -1,6 +1,6 @@
 ﻿using OSK.Hexagonal.MetaData;
 using OSK.Operations.Outputs.Models;
-using OSK.Petra.Inputs.Models;
+using OSK.Petra.Inputs.Abstractions.Devices;
 using System.Threading;
 using System.Threading.Tasks;
 

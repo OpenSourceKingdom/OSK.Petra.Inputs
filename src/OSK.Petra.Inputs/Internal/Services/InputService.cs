@@ -5,7 +5,6 @@ using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal.Models;
-using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Notifications;
 using OSK.Petra.Inputs.Options;
 using OSK.Petra.Inputs.Ports;
@@ -92,13 +91,10 @@ internal partial class InputService : IInputService
 
     public void Update(TimeSpan delta)
     {
-        foreach (var userDeviceContextPairs in _userContexts.Values.Select(userContext => userContext.DeviceInputContexts.Select(deviceContext => new { UserContext = userContext, DeviceContext = deviceContext })))
+        foreach (var userInputPair in _userContexts.Values.SelectMany(userContext => userContext.GetInputStateSnapshot().Select(state => new { UserContext = userContext, InputState = state })))
         {
-            foreach (var data in userDeviceContextPairs.SelectMany(pair => pair.DeviceContext.GetInputStateSnapshot().Select(state => new { pair.UserContext, pair.DeviceContext, State = state })))
-            {
-                data.State.Duration = data.State.Duration.Add(delta);
-                ProcessInput(data.UserContext, data.DeviceContext, data.State, delta);
-            }
+            userInputPair.InputState.Duration = userInputPair.InputState.Duration.Add(delta);
+            ProcessInput(userInputPair.UserContext, userInputPair.InputState, delta);
         }
     }
 
@@ -121,7 +117,7 @@ internal partial class InputService : IInputService
     private IDeviceDescriptor? GetDeviceOrGeneric(DeviceIdentity deviceIdentity)
     {
         Debug.Assert(_topologyCatalog is not null);
-        var topologyPage = _topologyCatalog.GetPage(deviceIdentity.TopologyName);
+        var topologyPage = _topologyCatalog.GetPage(deviceIdentity);
         if (topologyPage is null)
         {
             return null;
@@ -135,14 +131,14 @@ internal partial class InputService : IInputService
         }
 
         // Attempt family match
-        matchedDevice = topologyPage.Devices.FirstOrDefault(device => device.Identity.DeviceFamily == deviceIdentity.DeviceFamily && device.IsGeneric());
+        matchedDevice = topologyPage.Devices.FirstOrDefault(device => device.Identity.DeviceFamily == deviceIdentity.DeviceFamily && device.IsGenericDevice());
         if (matchedDevice is not null)
         {
             return matchedDevice;
         }
 
         // Generic topology match
-        return topologyPage.Devices.FirstOrDefault(device => device.IsGeneric());
+        return topologyPage.Devices.FirstOrDefault(device => device.IsGenericDevice());
     }
 
     internal bool IsGlobalInputSuppressed => _globalActionSupression;
@@ -283,7 +279,7 @@ internal partial class InputService : IInputService
         var input = deviceContext.DeviceDescriptor.GetInput(inputNotification.InputId);
         if (input is null)
         {
-            LogUnsupportedInputInformation(_logger, inputNotification.DeviceIdentifier, input?.GetGlyph().Text ?? "<>");
+            LogUnsupportedInputInformation(_logger, inputNotification.DeviceIdentifier, "");
             _systemNotifier.Notify(new UnrecognizedDeviceInputNotification(inputNotification.DeviceIdentifier, input?.Id));
             return;
         }
@@ -301,16 +297,16 @@ internal partial class InputService : IInputService
         var inputState = deviceContext.GetOrCreateState(input);
         inputState.LastReceivedEvents = inputNotification.InputEvents;
 
-        ProcessInput(userContext, deviceContext, inputState, inputNotification.DeltaTime);
+        ProcessInput(userContext, inputState, inputNotification.DeltaTime);
     }
 
-    private void ProcessInput(UserInputContext userContext, DeviceInputContext deviceContext, InputState inputState, TimeSpan deltaTime)
+    private void ProcessInput(UserInputContext userContext, InputState inputState, TimeSpan deltaTime)
     {
         foreach (var inputEvent in inputState.LastReceivedEvents)
         {
             foreach (var capability in _capabilities.Where(capability => capability.CanProcess(inputEvent)))
             {
-                capability.Process(deviceContext, inputState, inputEvent, deltaTime);
+                capability.Process(userContext, inputState, inputEvent, deltaTime);
                 if (inputState.IsDisposed)
                 {
                     return;
@@ -318,12 +314,21 @@ internal partial class InputService : IInputService
             }
         }
 
-        var action = userContext.Scheme?.GetInputMap(deviceContext.DeviceIdentifier.DeviceIdentity, inputState.Input.Id)?.Action;
-        if (action is not null && !userContext.IsSuppressed(action.ActionGroup) && action.TriggerPhases.Contains(inputState.Phase))
+        if (!inputState.IsConsumed())
         {
-            action.ActionExecutor(new InputEventContext(userContext.UserId, deviceContext.DeviceIdentifier, deviceContext, inputState, deltaTime, _serviceProvider));
-            LogInputActionTriggeredDebug(_logger, userContext.UserId, deviceContext.DeviceIdentifier, inputState.Input.GetGlyph().Text, action.Name);
-            _systemNotifier.Notify(new ActionExecutedNotification(userContext.UserId, userContext.Scheme!.DefinitionName, action.Name));
+            var originationSource = inputState.GetOriginationSource();
+            var action = originationSource switch
+            {
+                DeviceOriginationSource deviceOrigination => userContext.Scheme?.GetDeviceInputMap(deviceOrigination.DeviceIdentifier.DeviceIdentity, deviceOrigination.Input.Id)?.Action,
+                VirtualOriginationSource virtualOrigination => userContext.Scheme?.GetVirtualInputMap(virtualOrigination.VirtualInput)?.Action,
+                _ => null
+            };
+            if (action is not null && !userContext.IsSuppressed(action.ActionGroup) && action.TriggerPhases.Contains(inputState.Phase))
+            {
+                action.ActionExecutor(new InputEventContext(userContext.UserId, userContext, originationSource, inputState, deltaTime, _serviceProvider));
+                LogInputActionTriggeredDebug(_logger, userContext.UserId, originationSource is DeviceOriginationSource deviceSource ? deviceSource.DeviceIdentifier.ToString() : "Virtual Input", userContext.Scheme?.Name ?? "{Unknown}", action.Name);
+                _systemNotifier.Notify(new ActionExecutedNotification(userContext.UserId, userContext.Scheme!.DefinitionName, action.Name));
+            }
         }
 
         inputState.Reset();

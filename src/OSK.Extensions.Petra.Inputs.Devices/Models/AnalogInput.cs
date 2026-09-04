@@ -3,7 +3,7 @@ using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Models;
 
-public abstract class AnalogInput : Input, IInput<PowerSettings>
+public abstract class AnalogInput : DeviceInput, IInput<PowerSettings>
 {
     #region Constructors
 

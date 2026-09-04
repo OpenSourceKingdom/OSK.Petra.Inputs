@@ -354,8 +354,8 @@ public class SchemeServiceTests
                 { 
                     DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Generic"),
                     InputMaps = [
-                         new InputActionMap(new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }, "Moves the cursor"), 0),
-                         new InputActionMap(new InputAction("Click", new HashSet<InputPhase> { InputPhase.Start, InputPhase.End }, ctx => { }, "Clicks"), 0)
+                         new DeviceInputActionMap(new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }, "Moves the cursor"), 0),
+                         new DeviceInputActionMap(new InputAction("Click", new HashSet<InputPhase> { InputPhase.Start, InputPhase.End }, ctx => { }, "Clicks"), 0)
                     ]
                 },
                 new DeviceInputMap()

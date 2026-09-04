@@ -10,7 +10,7 @@ public class TestablePointerCapability : PointerCapability
 
     public TestablePointerCapability() : base(TestConfigurationHelper.CreateOptions<PointerCapabilityOptions>()) { }
 
-    protected override void Process(IDeviceInputContext context, IInputState state, PointerEvent pointerEvent, PointerSettings settings, TimeSpan deltaTime)
+    protected override void Process(IUserInputContext context, IInputState state, PointerEvent pointerEvent, PointerSettings settings, TimeSpan deltaTime)
     {
         ProcessCalled = true;
         ReceivedDeltaTime = deltaTime;

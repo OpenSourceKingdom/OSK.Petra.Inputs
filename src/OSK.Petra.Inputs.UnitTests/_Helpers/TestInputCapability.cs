@@ -9,7 +9,7 @@ public class TestableInputCapability : InputCapability<PowerEvent>
     public bool AbstractProcessCalled { get; private set; }
     public TimeSpan ReceivedDeltaTime { get; private set; }
 
-    protected override void Process(IDeviceInputContext context, IInputState state, PowerEvent powerEvent, TimeSpan deltaTime)
+    protected override void Process(IUserInputContext context, IInputState state, PowerEvent powerEvent, TimeSpan deltaTime)
     {
         AbstractProcessCalled = true;
         ReceivedDeltaTime = deltaTime;

@@ -1,6 +1,4 @@
-using Moq;
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
@@ -549,7 +547,7 @@ public class InputSystemConfigurationValidatorTests
             new DeviceInputMap
             {
                 DeviceIdentity = _keyboardIdentity,
-                InputMaps = [new InputActionMap(
+                InputMaps = [new DeviceInputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }),
                     1)]
             }
@@ -589,7 +587,7 @@ public class InputSystemConfigurationValidatorTests
             new DeviceInputMap
             {
                 DeviceIdentity = _keyboardIdentity,
-                InputMaps = [new InputActionMap(
+                InputMaps = [new DeviceInputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }),
                     1)]
             }
@@ -627,7 +625,7 @@ public class InputSystemConfigurationValidatorTests
             new DeviceInputMap
             {
                 DeviceIdentity = _keyboardIdentity,
-                InputMaps = [new InputActionMap(
+                InputMaps = [new DeviceInputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => { }),
                     1)]
             }
@@ -679,7 +677,7 @@ public class InputSystemConfigurationValidatorTests
                 DeviceIdentity = _keyboardIdentity,
                 InputMaps = new[]
                 {
-                    new InputActionMap(actions[0], 1)
+                    new DeviceInputActionMap(actions[0], 1)
                 }
             },
             new DeviceInputMap
@@ -687,7 +685,7 @@ public class InputSystemConfigurationValidatorTests
                 DeviceIdentity = _mouseIdentity,
                 InputMaps = new[]
                 {
-                    new InputActionMap(actions[1], 2)
+                    new DeviceInputActionMap(actions[1], 2)
                 }
             }
         };

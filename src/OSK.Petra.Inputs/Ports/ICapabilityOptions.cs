@@ -1,7 +1,4 @@
 ﻿using OSK.Petra.Inputs.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OSK.Petra.Inputs.Ports;
 

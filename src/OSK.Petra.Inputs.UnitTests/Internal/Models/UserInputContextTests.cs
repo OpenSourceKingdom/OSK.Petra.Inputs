@@ -4,6 +4,7 @@ using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.UnitTests._Helpers;
 using OSK.Petra.Inputs.Abstractions.Devices;
+using OSK.Petra.Inputs.Internal.Services;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Models;
 
@@ -28,7 +29,7 @@ public class UserInputContextTests
 
         var deviceMaps = new[]
         {
-            new DeviceInputMap { DeviceIdentity = deviceIdentity, InputMaps = Array.Empty<InputActionMap>() }
+            new DeviceInputMap { DeviceIdentity = deviceIdentity, InputMaps = Array.Empty<DeviceInputActionMap>() }
         };
         _scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: false);
 
@@ -49,7 +50,7 @@ public class UserInputContextTests
         // Arrange/Act/Assert
         Assert.Equal(_userId, _context.UserId);
         Assert.Same(_scheme, _context.Scheme);
-        Assert.Empty(_context.DeviceInputContexts);
+        Assert.Empty(_context.GetInputStateSnapshot());
         Assert.Null(_context.EditorInputCaptureTimeout);
     }
 
@@ -103,26 +104,6 @@ public class UserInputContextTests
 
         // Assert
         Assert.Same(first, second);
-    }
-
-    #endregion
-
-    #region DeviceInputContexts
-
-    [Fact]
-    public void DeviceInputContexts_WithDevices_ReturnsAll()
-    {
-        // Arrange
-        var device1 = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 100);
-        var device2 = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard, deviceId: 200);
-        _context.GetOrAddDevice(device1, _ => Mock.Of<IDeviceDescriptor>());
-        _context.GetOrAddDevice(device2, _ => Mock.Of<IDeviceDescriptor>());
-
-        // Act
-        var devices = _context.DeviceInputContexts;
-
-        // Assert
-        Assert.Equal(2, devices.Count());
     }
 
     #endregion

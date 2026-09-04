@@ -26,6 +26,8 @@ public interface ISchemeService
 
     InputScheme? GetActiveSchemeForUser(int userId);
 
+    Task<IEnumerable<InputGlyph>> GetGlyphsForUserActionAsync(int userId, string actionName, CancellationToken cancellationToken = default);
+
     Output<InputScheme> SetActiveSchemeForDevice(int userId, DeviceIdentity deviceIdentity);
 
     IEnumerable<InputScheme> GetInputSchemes(string inputConfigurationId, string definitionName);

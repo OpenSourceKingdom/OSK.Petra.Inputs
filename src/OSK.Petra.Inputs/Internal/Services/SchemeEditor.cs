@@ -230,7 +230,7 @@ internal class SchemeEditor: ISchemeEditor
         UpdateSelectedScheme(isNew: isNew, readOnlyOverride: readOnlyOverride);
     }
 
-    private void CaptureInput(int userId, DeviceIdentity deviceIdentity, IInput input)
+    private void CaptureInput(int userId, DeviceIdentity deviceIdentity, IDeviceInput input)
     {
         if (input is null)
         {
@@ -249,7 +249,7 @@ internal class SchemeEditor: ISchemeEditor
         {
             return;
         }
-        if (!expectedDevice.IsGeneric() && expectedDevice.Identity != deviceIdentity)
+        if (!expectedDevice.IsGenericDevice() && expectedDevice.Identity != deviceIdentity)
         {
             return;
         }
@@ -336,8 +336,8 @@ internal class SchemeEditor: ISchemeEditor
         var schemeName = isNew ? "New Scheme" : SchemeNavigator.Current.Name;
         var currentMaps = isNew
             ? []
-            : SchemeNavigator.Current.DeviceMaps.Select(deviceMap => new DeviceMapPairing<InputActionMap>(deviceMap.DeviceIdentity, deviceMap.InputMaps));
-        var availableInputs = _deviceSchemeDescriptors.Select(kvp => new DeviceMapPairing<IInput>(kvp.Value.Identity, kvp.Value.Inputs));
+            : SchemeNavigator.Current.DeviceMaps.Select(deviceMap => new DeviceMapPairing<DeviceInputActionMap>(deviceMap.DeviceIdentity, deviceMap.InputMaps));
+        var availableInputs = _deviceSchemeDescriptors.Select(kvp => new DeviceMapPairing<IDeviceInput>(kvp.Value.Identity, kvp.Value.Inputs));
 
         _selectedScheme = new SelectedScheme(SchemeNavigator.Current.Name, readOnlyOverride.GetValueOrDefault(!SchemeNavigator.Current.IsCustom), isPreferred, isNew, DefinitionNavigator.Current.Actions, availableInputs, currentMaps);
     }

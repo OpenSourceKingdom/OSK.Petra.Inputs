@@ -11,7 +11,7 @@ public abstract class InputCapability<TInputEvent> : IInputCapability
     public bool CanProcess(IInputEvent inputEvent)
         => inputEvent is TInputEvent;
 
-    public void Process(IDeviceInputContext context, IInputState state, IInputEvent inputEvent, TimeSpan deltaTime)
+    public void Process(IUserInputContext context, IInputState state, IInputEvent inputEvent, TimeSpan deltaTime)
     {
         if (context is not null && state is not null && inputEvent is TInputEvent typeedEvent)
         {
@@ -23,7 +23,7 @@ public abstract class InputCapability<TInputEvent> : IInputCapability
 
     #region Helpers
 
-    protected abstract void Process(IDeviceInputContext context, IInputState state, TInputEvent inputEvent, TimeSpan deltaTime);
+    protected abstract void Process(IUserInputContext context, IInputState state, TInputEvent inputEvent, TimeSpan deltaTime);
 
     #endregion
 }

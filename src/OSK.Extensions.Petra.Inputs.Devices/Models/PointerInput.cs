@@ -3,7 +3,7 @@ using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Models;
 
-public abstract class PointerInput: Input, IInput<PointerSettings>
+public abstract class PointerInput: DeviceInput, IInput<PointerSettings>
 {
     #region Constructors
 

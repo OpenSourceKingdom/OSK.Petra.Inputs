@@ -2,9 +2,9 @@
 
 namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
-public static class DeviceInputContextExtensions
+public static class UserInputContextExtensions
 {
-    extension(IDeviceInputContext context)
+    extension(IUserInputContext context)
     {
         public TFeature GetOrCreateFeature<TFeature>()
             where TFeature : ICapabilityFeature, new()

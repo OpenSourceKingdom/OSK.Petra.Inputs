@@ -76,6 +76,53 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
         return Out.Success((ISchemeEditor)editor);
     }
 
+    public async Task<IEnumerable<InputGlyph>> GetGlyphsForUserActionAsync(int userId, string actionName, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(actionName))
+        {
+            return [];
+        }
+
+        var getDeviceCatalog = await deviceCatalogProvider.GetCatalogAsync(cancellationToken);
+        if (!getDeviceCatalog.IsSuccessful)
+        {
+            return [];
+        }
+
+        var activeScheme = GetActiveSchemeForUser(userId);
+        if (activeScheme is null)
+        {
+            return [];
+        }
+
+        var matchedInputs = activeScheme.DeviceMaps.SelectMany(deviceMap => deviceMap.InputMaps.Select(map => new { deviceMap.DeviceIdentity, InputMap = map }))
+                                                   .Where(deviceMapPair => deviceMapPair.InputMap.Action.Name.Equals(actionName, StringComparison.OrdinalIgnoreCase));
+        if (matchedInputs.Any())
+        {
+            var matchedDeviceInput = matchedInputs.First();
+
+            var device = getDeviceCatalog.Data.GetDevice(matchedDeviceInput.DeviceIdentity);
+            if (device is null)
+            {
+                return [];
+            }
+
+            var deviceInput = device.GetInput(matchedDeviceInput.InputMap.InputId);
+            return deviceInput is null
+                ? []
+                : [await deviceInput.GetGlyphAsync(cancellationToken)];
+        }
+
+        var virtualInputs = activeScheme.VirtualMaps.Where(map => map.Action.Name.Equals(actionName, StringComparison.OrdinalIgnoreCase));
+        if (!virtualInputs.Any())
+        {
+            return [];
+        }
+
+        var matchedVirtualInput = virtualInputs.First();
+        return await matchedVirtualInput.VirtualInput.GetGlyphsAsync(getDeviceCatalog.Data, cancellationToken);
+    }
+
     public InputScheme? GetActiveSchemeForUser(int userId)
     {
         var user = userManager.GetUser(userId);
@@ -108,7 +155,7 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
         }
 
         var definition = configurationProvider.Configuration.GetDefinition(user.ActiveDefinitionName) ?? configurationProvider.Configuration.Definitions.First(definition => definition.IsDefault);
-        activeScheme = GetActiveScheme(userId, definition, inputConfiguration, deviceIdentity);
+        activeScheme = GetActiveScheme(userId, definition, inputConfiguration);
         _activeUserSchemesLookup[userId] = activeScheme;
 
         if (logger.IsEnabled(LogLevel.Information))
@@ -294,7 +341,7 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
             ? schemeLookup.Values
             : [];
 
-    private InputScheme GetActiveScheme(int userId, ActionDefinition definition, InputConfiguration inputConfiguration, DeviceIdentity deviceIdentity)
+    private InputScheme GetActiveScheme(int userId, ActionDefinition definition, InputConfiguration inputConfiguration)
     {
         var preferredScheme = GetPreferredInputScheme(userId, inputConfiguration.Id, definition.Name);
 

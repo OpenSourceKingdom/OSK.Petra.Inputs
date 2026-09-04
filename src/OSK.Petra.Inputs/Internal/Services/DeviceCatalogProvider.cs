@@ -1,6 +1,5 @@
 ﻿using OSK.Operations.Outputs;
 using OSK.Operations.Outputs.Models;
-using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Ports;
 using System.Collections.Generic;
 using System.Linq;

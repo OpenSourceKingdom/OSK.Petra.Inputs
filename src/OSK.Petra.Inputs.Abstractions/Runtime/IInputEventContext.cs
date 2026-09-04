@@ -1,5 +1,4 @@
 ﻿using System;
-using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
@@ -15,14 +14,12 @@ public interface IInputEventContext
     /// </summary>
     public TimeSpan DeltaTime { get; }
 
-    RuntimeDeviceIdentifier DeviceIdentifier { get; }
-
-    IInput Input { get; }
+    public InputOriginationSource OriginationSource { get; }
 
     TDetails? GetInputDetails<TDetails>()
         where TDetails: ICapabilityDetails;
 
-    TFeature? GetDeviceFeature<TFeature>()
+    TFeature? GetInputFeature<TFeature>()
         where TFeature: ICapabilityFeature;
 
     /// <summary>

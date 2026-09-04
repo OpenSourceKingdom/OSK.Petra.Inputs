@@ -3,6 +3,7 @@ using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
 using OSK.Petra.Inputs.Abstractions.Devices;
 using OSK.Petra.Inputs.Ports;
+using OSK.Petra.Inputs.Internal.Models;
 
 namespace OSK.Petra.Inputs.Capabilities.Pointer;
 
@@ -10,21 +11,26 @@ public class PointerCapability(ICapabilityOptions<PointerCapabilityOptions> opti
 {
     #region InputCapability Overrides
 
-    protected override void Process(IDeviceInputContext context, IInputState state, PointerEvent pointerEvent, PointerSettings settings, TimeSpan deltaTime)
+    protected override void Process(IUserInputContext context, IInputState state, PointerEvent pointerEvent, PointerSettings settings, TimeSpan deltaTime)
     {
-        var details = state.GetOrCreateDetails(() => new PointerDetails(pointerEvent.Position, options.Value.MaxPositionEntries, settings.DistanceThreshold));
-        if (state.IsNewActivation)
+        switch (state)
         {
-            var feature = context.GetOrCreateFeature<PointerFeature>();
+            case DeviceInputState deviceInputState:
+                var details = deviceInputState.GetOrCreateDetails(() => new PointerDetails(pointerEvent.Position, options.Value.MaxPositionEntries, settings.DistanceThreshold));
+                if (deviceInputState.IsNewActivation)
+                {
+                    var feature = context.GetOrCreateFeature<PointerFeature>();
 
-            feature.AddDetails(state, details);
+                    feature.AddDetails(deviceInputState, details);
 
-            // Pointers are always active, if they exist. 
-            state.CombinePhase(InputPhase.Active);
-            return;
+                    // Pointers are always active, if they exist. 
+                    deviceInputState.CombinePhase(InputPhase.Active);
+                    return;
+                }
+
+                details.UpdatePosition(pointerEvent.Position, deviceInputState.Duration);
+                break;
         }
-
-        details.UpdatePosition(pointerEvent.Position, state.Duration);
     }
 
     #endregion

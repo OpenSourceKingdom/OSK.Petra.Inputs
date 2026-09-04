@@ -8,7 +8,7 @@ public static class InputSchemeBuilderExtensions
     extension(IInputSchemeBuilder schemeBuilder)
     {
         public IInputSchemeBuilder WithMap<TInput>(DeviceIdentity deviceIdentity, TInput input, string actionName)
-            where TInput : IInput
+            where TInput : IDeviceInput
             => schemeBuilder.WithMap(deviceIdentity, input.Id, actionName);
     }
 }

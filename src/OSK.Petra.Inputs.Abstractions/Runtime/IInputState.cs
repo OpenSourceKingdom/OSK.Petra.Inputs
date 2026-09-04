@@ -7,9 +7,9 @@ public interface IInputState: IDisposable
 {
     event Action<IInputState>? Disposed;
 
-    bool IsNewActivation { get; }
+    bool IsDisposed { get; }
 
-    RuntimeDeviceIdentifier DeviceIdentifier { get; }
+    bool IsNewActivation { get; }
 
     IInput Input { get; }
 
@@ -17,7 +17,11 @@ public interface IInputState: IDisposable
 
     TimeSpan Duration { get; }
 
+    public IInput? InputConsumer { get; set; }
+
     void CombinePhase(InputPhase phase);
+
+    bool TryConsume(IInputState state); 
 
     void SetDetails<TDetail>(TDetail detail)
         where TDetail: ICapabilityDetails;

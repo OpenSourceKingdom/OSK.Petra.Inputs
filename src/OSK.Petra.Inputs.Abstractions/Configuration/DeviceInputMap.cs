@@ -10,7 +10,7 @@ public class DeviceInputMap
 {
     #region Variables
 
-    private readonly Dictionary<long, InputActionMap> _inputMapLookup = [];
+    private readonly Dictionary<long, DeviceInputActionMap> _inputMapLookup = [];
 
     #endregion
 
@@ -24,7 +24,7 @@ public class DeviceInputMap
     /// <summary>
     /// The collection of input maps this device map supports
     /// </summary>
-    public required IReadOnlyCollection<InputActionMap> InputMaps 
+    public required IReadOnlyCollection<DeviceInputActionMap> InputMaps 
     {
         get => _inputMapLookup.Values;
         init
@@ -41,7 +41,7 @@ public class DeviceInputMap
     /// </summary>
     /// <param name="inputId">The unique id for the input on the device</param>
     /// <returns>The map for the input if is a configured input, otherwise null</returns>
-    public InputActionMap? GetInputMap(long inputId)
+    public DeviceInputActionMap? GetInputMap(long inputId)
         => _inputMapLookup.TryGetValue(inputId, out var map)
             ? map
             : null;

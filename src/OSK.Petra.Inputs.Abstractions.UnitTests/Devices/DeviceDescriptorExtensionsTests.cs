@@ -15,7 +15,7 @@ public class DeviceDescriptorExtensionsTests
         mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, DeviceIdentities.GenericDeviceName));
 
         // Act/Assert
-        Assert.True(mock.Object.IsGeneric());
+        Assert.True(mock.Object.IsGenericDevice());
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public class DeviceDescriptorExtensionsTests
         mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "GENERIC"));
 
         // Act/Assert
-        Assert.True(mock.Object.IsGeneric());
+        Assert.True(mock.Object.IsGenericDevice());
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class DeviceDescriptorExtensionsTests
         mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Xbox Controller"));
 
         // Act/Assert
-        Assert.False(mock.Object.IsGeneric());
+        Assert.False(mock.Object.IsGenericDevice());
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class DeviceDescriptorExtensionsTests
         mock.Setup(d => d.Identity).Returns(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Xbox Controller"));
 
         // Act/Assert
-        Assert.False(mock.Object.IsGeneric());
+        Assert.False(mock.Object.IsGenericDevice());
     }
 
     #endregion

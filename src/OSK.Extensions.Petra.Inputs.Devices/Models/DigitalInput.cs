@@ -2,7 +2,7 @@
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Models;
 
-public abstract class DigitalInput : Input, IPowerInput
+public abstract class DigitalInput : DeviceInput, IPowerInput
 {
     #region Constructors
 

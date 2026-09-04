@@ -1,8 +1,10 @@
 ﻿using OSK.Petra.Inputs.Abstractions;
-using OSK.Petra.Inputs.Abstractions.Runtime;
-using System;
 using OSK.Petra.Inputs.Abstractions.Devices;
+using OSK.Petra.Inputs.Abstractions.Runtime;
+using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.Ports;
+using System;
+using System.Linq;
 
 namespace OSK.Petra.Inputs.Capabilities.Power;
 
@@ -10,10 +12,70 @@ public class PowerCapability(ICapabilityOptions<PowerCapabilityOptions> options)
 {
     #region InputCapability Overrides
 
-    protected override void Process(IDeviceInputContext context, IInputState state, PowerEvent powerEvent, PowerSettings settings, TimeSpan deltaTime)
+    protected override void Process(IUserInputContext context, IInputState state, PowerEvent powerEvent, PowerSettings settings, TimeSpan deltaTime)
     {
         var details = state.GetOrCreateDetails<PowerDetails>();
 
+        ProcessPowerInput(context, state, powerEvent, details, settings);
+        ProcessCombinationInputs(context, state, powerEvent, details, settings);
+
+        details.TimeSinceLastActivation += deltaTime;
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private void ProcessCombinationInputs(IUserInputContext context, IInputState currentState, PowerEvent powerEvent, PowerDetails details, PowerSettings settings)
+    {
+        if (currentState is not DeviceInputState deviceInputState)
+        {
+            return;
+        }
+
+        if (deviceInputState.IsConsumed())
+        {
+            if (deviceInputState.InputConsumer is IPowerCombinationInput powerCombinationInput
+                    && context.VirtualInputContext.TryGetState(powerCombinationInput, out var currentCombinationState))
+            {
+                currentCombinationState.CombinePhase(deviceInputState.Phase);
+            }
+            return;
+        }
+
+        DeviceInputIdentifier deviceInputIdentifier = new(deviceInputState.DeviceIdentifier.DeviceIdentity, deviceInputState.DeviceInput.Id);
+
+        // Only check for combinations that are not currently triggered.
+        foreach (var combinationInput in context.VirtualInputContext.GetInputs<IPowerCombinationInput>().Where(input => !context.VirtualInputContext.TryGetState(input, out _)))
+        {
+            if (!combinationInput.InputIdentifiers.Any(identifier => identifier.Matches(deviceInputIdentifier)))
+            {
+                continue;
+            }
+
+            var combinationInputStates = combinationInput.InputIdentifiers
+                                                         .Where(identifier => !identifier.Matches(deviceInputIdentifier))
+                                                         .Select(identifier => context.TryGetInputState(identifier.DeviceIdentity, identifier.InputId, out var state) && !state.IsConsumed() ? state : null)
+                                                         .Where(state => state is not null)
+                                                         .Append(currentState)
+                                                         .ToArray();
+
+            // All inputs must be activated, and not consumed, in order to activate the combination
+            if (combinationInputStates.Length != combinationInput.InputIdentifiers.Count)
+            {
+                continue;
+            }
+
+            var combinationState = context.VirtualInputContext.GetOrCreateState(combinationInput, () => [PowerEvent.Full()]);
+            foreach (var combinationInputState in combinationInputStates)
+            {
+                combinationState.TryConsume(combinationInputState!);
+            }
+        }
+    }
+
+    private void ProcessPowerInput(IUserInputContext context, IInputState state, PowerEvent powerEvent, PowerDetails details, PowerSettings settings)
+    {
         switch (state.Phase)
         {
             case InputPhase.End:
@@ -42,8 +104,6 @@ public class PowerCapability(ICapabilityOptions<PowerCapabilityOptions> options)
                     : 1;
                 break;
         }
-
-        details.TimeSinceLastActivation += deltaTime;
     }
 
     #endregion

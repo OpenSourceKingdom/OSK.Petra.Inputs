@@ -18,6 +18,9 @@ public readonly struct PowerEvent(PowerAxis axis, float power): IInputEvent
     public static PowerEvent Zero(PowerAxis axis)
         => new(axis, 0);
 
+    public static PowerEvent Activate(float power)
+        => Activate(PowerAxis.Neutral, power);
+
     public static PowerEvent Activate(PowerAxis axis, float power)
         => new(axis, power < 0 ? 0 : power > 1 ? 1 : power);
 

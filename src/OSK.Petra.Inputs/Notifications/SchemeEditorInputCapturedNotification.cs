@@ -2,11 +2,11 @@
 
 namespace OSK.Petra.Inputs.Notifications;
 
-internal class SchemeEditorInputCapturedNotification(int userId, DeviceIdentity deviceIdentity, IInput input): SchemeEditorNotification
+internal class SchemeEditorInputCapturedNotification(int userId, DeviceIdentity deviceIdentity, IDeviceInput input): SchemeEditorNotification
 {
     public int UserId => userId;
 
     public DeviceIdentity DeviceIdentity => deviceIdentity;
 
-    public IInput Input => input;
+    public IDeviceInput Input => input;
 }

@@ -58,7 +58,7 @@ public class InputSystemConfigurationExtensionsTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Generic"),
-                InputMaps = [new InputActionMap(
+                InputMaps = [new DeviceInputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
                     1)]
             }
@@ -94,7 +94,7 @@ public class InputSystemConfigurationExtensionsTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Xbox Keyboard"),
-                InputMaps = [new InputActionMap(
+                InputMaps = [new DeviceInputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
                     1)]
             }

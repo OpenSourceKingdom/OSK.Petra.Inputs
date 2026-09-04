@@ -5,13 +5,11 @@ using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
-internal class InputState(IInput input, DeviceInputContext deviceContext) : IInputState
+internal abstract class InputState(IInput input) : IInputState
 {
     #region Variables
 
     internal IInputEvent[] LastReceivedEvents { get; set; } = [];
-
-    internal bool IsDisposed { get; private set; }
 
     private readonly Dictionary<Type, ICapabilityDetails> _detailLookup = [];
 
@@ -23,7 +21,9 @@ internal class InputState(IInput input, DeviceInputContext deviceContext) : IInp
 
     public event Action<IInputState>? Disposed;
 
-    public RuntimeDeviceIdentifier DeviceIdentifier => deviceContext.DeviceIdentifier;
+    public bool IsDisposed { get; private set; }
+
+    public IInput? InputConsumer { get; set; }
 
     public IInput Input => input;
 
@@ -50,6 +50,37 @@ internal class InputState(IInput input, DeviceInputContext deviceContext) : IInp
         _detailLookup[typeof(TDetails)] = detail;
     }
 
+    public bool TryConsume(IInputState state)
+    {
+        if (InputConsumer is not null)
+        {
+            return false;
+        }
+        if (state.InputConsumer is not null)
+        {
+            return state.InputConsumer == Input;
+        }
+
+        state.InputConsumer = Input;
+
+        state.Disposed += _ =>
+        {
+            if (!IsDisposed)
+            {
+                Dispose();
+            }
+        };
+        Disposed += _ =>
+        {
+            if (!state.IsDisposed)
+            {
+                state.Dispose();
+            }
+        };
+
+        return true;
+    }
+
     public void CombinePhase(InputPhase phase)
     {
         Phase = _hasStatusBeenSet
@@ -67,11 +98,23 @@ internal class InputState(IInput input, DeviceInputContext deviceContext) : IInp
 
     public void Dispose()
     {
-        deviceContext.RemoveState(this);
-        IsDisposed = true;
+        if (IsDisposed)
+        {
+            return;
+        }
 
+        OnDispose();
+        IsDisposed = true;
         Disposed?.Invoke(this);
     }
+
+    #endregion
+
+    #region Helpers
+
+    public abstract InputOriginationSource GetOriginationSource();
+
+    protected abstract void OnDispose();
 
     #endregion
 }

@@ -2,6 +2,6 @@
 
 namespace OSK.Petra.Inputs.Capabilities.Power;
 
-public interface IPowerInput: IInput<PowerSettings>
+public interface IPowerInput: IDeviceInput, IInput<PowerSettings>
 {
 }

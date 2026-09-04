@@ -3,6 +3,7 @@ using OSK.Petra.Inputs.Abstractions.Runtime;
 using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.UnitTests._Helpers;
 using OSK.Petra.Inputs.Abstractions.Devices;
+using OSK.Petra.Inputs.Internal.Services;
 
 namespace OSK.Petra.Inputs.UnitTests.Internal.Models;
 
@@ -10,10 +11,10 @@ public class InputStateTests
 {
     #region Variables
 
-    private readonly Mock<IInput> _mockInput;
+    private readonly Mock<IDeviceInput> _mockInput;
     private readonly RuntimeDeviceIdentifier _deviceIdentifier;
 
-    private InputState _state;
+    private DeviceInputState _state;
 
     #endregion
 
@@ -21,14 +22,14 @@ public class InputStateTests
 
     public InputStateTests()
     {
-        _mockInput = new Mock<IInput>();
+        _mockInput = new Mock<IDeviceInput>();
         _mockInput.SetupGet(m => m.Id).Returns(1);
         var deviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test");
         _deviceIdentifier = new RuntimeDeviceIdentifier(100, deviceIdentity);
 
 
-        var deviceContext = new DeviceInputContext(1, _deviceIdentifier, Mock.Of<IDeviceDescriptor>());
-        _state = new InputState(_mockInput.Object, deviceContext);
+        var deviceContext = new DeviceInputContext(_deviceIdentifier, Mock.Of<IDeviceDescriptor>());
+        _state = new (deviceContext, _mockInput.Object);
     }
 
     #endregion
@@ -223,8 +224,8 @@ public class InputStateTests
     public void Dispose_RemovesFromDeviceContext()
     {
         // Arrange
-        var deviceContext = new DeviceInputContext(1, _deviceIdentifier, Mock.Of<IDeviceDescriptor>());
-        var state = new InputState(_mockInput.Object, deviceContext);
+        var deviceContext = new DeviceInputContext(_deviceIdentifier, Mock.Of<IDeviceDescriptor>());
+        var state = new DeviceInputState(deviceContext, _mockInput.Object);
 
         // Act
         state.Dispose();

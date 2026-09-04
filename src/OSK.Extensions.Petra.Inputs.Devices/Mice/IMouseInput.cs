@@ -2,6 +2,6 @@
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Mice;
 
-public interface IMouseInput: IInput
+public interface IMouseInput: IDeviceInput
 {
 }

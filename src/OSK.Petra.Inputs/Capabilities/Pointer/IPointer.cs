@@ -2,6 +2,6 @@
 
 namespace OSK.Petra.Inputs.Capabilities.Pointer;
 
-public interface IPointer: IInput<PointerSettings>
+public interface IPointer: IDeviceInput, IInput<PointerSettings>
 {
 }

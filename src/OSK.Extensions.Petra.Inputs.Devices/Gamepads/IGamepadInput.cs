@@ -2,6 +2,6 @@
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Gamepads;
 
-public interface IGamepadInput: IInput
+public interface IGamepadInput: IDeviceInput
 {
 }

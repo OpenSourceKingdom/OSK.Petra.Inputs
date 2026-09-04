@@ -9,4 +9,6 @@ public interface IInputSchemeBuilder
     IInputSchemeBuilder MakeDefault();
 
     IInputSchemeBuilder WithMap(DeviceIdentity deviceIdentity, long inputId, string actionName);
+
+    IInputSchemeBuilder WithVirtualInput(IVirtualInput virtualInput, string actionName);
 }

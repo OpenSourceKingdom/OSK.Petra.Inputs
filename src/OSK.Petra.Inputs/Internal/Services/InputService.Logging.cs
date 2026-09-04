@@ -28,8 +28,8 @@ internal partial class InputService
     [LoggerMessage(eventId: 7, LogLevel.Information, "Input was received for input device '{deviceIdentifier}' but the input '{inputSymbol}' is not supported for the device, ignoring input processing.")]
     private static partial void LogUnsupportedInputInformation(ILogger logger, RuntimeDeviceIdentifier deviceIdentifier, string inputSymbol);
 
-    [LoggerMessage(eventId: 8, LogLevel.Debug, "Input received, from device {deviceIdentifier}, for user {userId} has triggered an action '{actionName}' for input scheme {activeScheme}.")]
-    private static partial void LogInputActionTriggeredDebug(ILogger logger, int userId, RuntimeDeviceIdentifier deviceIdentifier, string activeScheme, string actionName);
+    [LoggerMessage(eventId: 8, LogLevel.Debug, "Input received, from source {originationSource}, for user {userId} has triggered an action '{actionName}' for input scheme {activeScheme}.")]
+    private static partial void LogInputActionTriggeredDebug(ILogger logger, int userId, string originationSource, string activeScheme, string actionName);
 
     [LoggerMessage(eventId: 9, LogLevel.Warning, "An attempt was made to pair device {deviceIdentifier} to user {userId} but it failed.")]
     private static partial void LogDevicePairingFailedWarning(ILogger logger, int userId, RuntimeDeviceIdentifier deviceIdentifier);

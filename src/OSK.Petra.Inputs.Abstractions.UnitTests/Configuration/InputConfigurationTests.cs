@@ -1,5 +1,4 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
@@ -284,7 +283,7 @@ public class InputConfigurationTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Keyboard"),
-                InputMaps = [new InputActionMap(
+                InputMaps = [new DeviceInputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
                     1)]
             }
@@ -310,7 +309,7 @@ public class InputConfigurationTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.PlayStation, "Xbox Keyboard"),
-                InputMaps = [new InputActionMap(
+                InputMaps = [new DeviceInputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
                     1)]
             }
@@ -336,7 +335,7 @@ public class InputConfigurationTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Generic Keyboard"),
-                InputMaps = [new InputActionMap(
+                InputMaps = [new DeviceInputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
                     1)]
             }
@@ -362,7 +361,7 @@ public class InputConfigurationTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Xbox, "Xbox Keyboard"),
-                InputMaps = [new InputActionMap(
+                InputMaps = [new DeviceInputActionMap(
                     new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {}),
                     1)]
             }

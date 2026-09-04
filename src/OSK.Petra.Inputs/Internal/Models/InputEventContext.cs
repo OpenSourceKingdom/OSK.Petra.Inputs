@@ -1,10 +1,10 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Runtime;
 using System;
-using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Internal.Models;
 
-internal class InputEventContext(int userId, RuntimeDeviceIdentifier deviceIdentifier, DeviceInputContext deviceContext, InputState state, TimeSpan deltaTime, IServiceProvider services) : IInputEventContext
+internal class InputEventContext(int userId, IUserInputContext userInputContext, InputOriginationSource originationSource, InputState state, TimeSpan deltaTime,
+    IServiceProvider services) : IInputEventContext
 {
     #region IInputEventContext
 
@@ -12,15 +12,13 @@ internal class InputEventContext(int userId, RuntimeDeviceIdentifier deviceIdent
 
     public TimeSpan DeltaTime => deltaTime;
 
-    public RuntimeDeviceIdentifier DeviceIdentifier => deviceIdentifier;
-
-    public IInput Input => state.Input;
+    public InputOriginationSource OriginationSource => originationSource;
 
     public IServiceProvider Services => services;
 
-    public TFeature? GetDeviceFeature<TFeature>()
+    public TFeature? GetInputFeature<TFeature>()
         where TFeature : ICapabilityFeature
-        => deviceContext.GetFeature<TFeature>();
+        => userInputContext.GetFeature<TFeature>();
 
     public TDetails? GetInputDetails<TDetails>() 
         where TDetails : ICapabilityDetails

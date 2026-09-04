@@ -144,14 +144,14 @@ public class InputSystemConfigurationBuilderTests
         var map1 = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = Array.Empty<InputActionMap>()
+            InputMaps = Array.Empty<DeviceInputActionMap>()
         };
         var scheme1 = new InputScheme("TestDef", "MyScheme", new[] { map1 }, false, false);
 
         var map2 = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = Array.Empty<InputActionMap>()
+            InputMaps = Array.Empty<DeviceInputActionMap>()
         };
         var scheme2 = new InputScheme("TestDef", "MyScheme", new[] { map2 }, false, false);
 
@@ -168,14 +168,14 @@ public class InputSystemConfigurationBuilderTests
         var map1 = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = Array.Empty<InputActionMap>()
+            InputMaps = Array.Empty<DeviceInputActionMap>()
         };
         var scheme1 = new InputScheme("TestDef", "MyScheme", new[] { map1 }, false, false);
 
         var map2 = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = Array.Empty<InputActionMap>()
+            InputMaps = Array.Empty<DeviceInputActionMap>()
         };
         var scheme2 = new InputScheme("TestDef", "MyScHeMe", new[] { map2 }, false, false);
 
@@ -192,7 +192,7 @@ public class InputSystemConfigurationBuilderTests
         var map = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = Array.Empty<InputActionMap>()
+            InputMaps = Array.Empty<DeviceInputActionMap>()
         };
         var scheme = new InputScheme("TestDef", "MyScheme", new[] { map }, false, false);
 
@@ -241,7 +241,7 @@ public class InputSystemConfigurationBuilderTests
         var map = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = Array.Empty<InputActionMap>()
+            InputMaps = Array.Empty<DeviceInputActionMap>()
         };
         var scheme = new InputScheme("TestDef", "MyScheme", new[] { map }, false, false);
 
@@ -291,7 +291,7 @@ public class InputSystemConfigurationBuilderTests
         var map = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = Array.Empty<InputActionMap>()
+            InputMaps = Array.Empty<DeviceInputActionMap>()
         };
         var scheme = new InputScheme("TestDef", "MyScheme", new[] { map }, false, false);
 

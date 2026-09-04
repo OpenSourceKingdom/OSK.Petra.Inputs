@@ -24,6 +24,7 @@ public class InputSystemConfiguration
     /// <param name="inputConfigurations">The configurations of topologies that is supported</param>
     /// <param name="definitions">The input definitions the input system will use to map inputs and actions</param>
     /// <param name="joinPolicy">The policy the input system uses for new users, devices, and the like</param>
+    /// <param name="capabilityOptionConfiguration">The configuration containing custom options for the capabilities available in the input system</param>
     public InputSystemConfiguration(IEnumerable<InputConfiguration> inputConfigurations, IEnumerable<ActionDefinition> definitions, InputSystemJoinPolicy joinPolicy,
         InputCapabilityOptionConfiguration capabilityOptionConfiguration)
     {

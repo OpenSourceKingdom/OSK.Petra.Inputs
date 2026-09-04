@@ -207,7 +207,7 @@ public class SelectedSchemeTests
         var unsupportedIdentity = new DeviceIdentity(DeviceTopologyName.Gamepad, DeviceFamily.Generic, "Gamepad");
 
         // Act
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(2);
         var result = scheme.SetInputMap(unsupportedIdentity, _testAction, mockInput.Object);
 
@@ -220,7 +220,7 @@ public class SelectedSchemeTests
     {
         // Arrange
         var scheme = CreateScheme(isReadonly: false);
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(2);
 
         // Act
@@ -248,7 +248,7 @@ public class SelectedSchemeTests
     {
         // Arrange
         var scheme = CreateScheme(isReadonly: true);
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(2);
 
         // Act
@@ -263,7 +263,7 @@ public class SelectedSchemeTests
     {
         // Arrange
         var scheme = CreateScheme(isReadonly: false);
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(2);
 
         // Act
@@ -280,7 +280,7 @@ public class SelectedSchemeTests
         var existingAction = new InputAction("Existing", new HashSet<InputPhase> { InputPhase.Start }, ctx => { });
         var scheme = CreateSchemeWithMapping();
         // Replace the action in the scheme with our existing action
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(3);
 
         // Act
@@ -337,12 +337,12 @@ public class SelectedSchemeTests
     private SelectedScheme CreateScheme(bool isReadonly = false, bool isNew = false, bool isPreferred = false)
     {
         var availableActions = new[] { _testAction };
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(1);
 
         var availableInputs = new[]
         {
-            new DeviceMapPairing<IInput>(_deviceIdentity, new[] { mockInput.Object })
+            new DeviceMapPairing<IDeviceInput>(_deviceIdentity, new[] { mockInput.Object })
         };
 
         return new SelectedScheme(
@@ -358,18 +358,18 @@ public class SelectedSchemeTests
     private SelectedScheme CreateSchemeWithMapping(bool isReadOnly = false)
     {
         var availableActions = new[] { _testAction };
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(1);
 
         var availableInputs = new[]
         {
-            new DeviceMapPairing<IInput>(_deviceIdentity, new[] { mockInput.Object })
+            new DeviceMapPairing<IDeviceInput>(_deviceIdentity, new[] { mockInput.Object })
         };
 
-        var actionMap = new InputActionMap(_testAction, mockInput.Object.Id);
+        var actionMap = new DeviceInputActionMap(_testAction, mockInput.Object.Id);
         var deviceMapPairings = new[]
         {
-            new DeviceMapPairing<InputActionMap>(_deviceIdentity, new[] { actionMap })
+            new DeviceMapPairing<DeviceInputActionMap>(_deviceIdentity, new[] { actionMap })
         };
 
         return new SelectedScheme(

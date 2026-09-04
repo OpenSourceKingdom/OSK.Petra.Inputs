@@ -54,7 +54,7 @@ public class InputSchemeBuilderTests
     public void WithMap_EmptyActionName_ThrowsArgumentNullException(string? name)
     {
         // Arrange/Act/Assert
-        Assert.Throws<ArgumentNullException>(() => _builder.WithMap(new DeviceIdentity(), Mock.Of<IInput>(), name!));
+        Assert.Throws<ArgumentNullException>(() => _builder.WithMap(new DeviceIdentity(), Mock.Of<IDeviceInput>(), name!));
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class InputSchemeBuilderTests
         var identity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test");
 
         // Act
-        _builder.WithMap(identity, Mock.Of<IInput>(), "Abc");
+        _builder.WithMap(identity, Mock.Of<IDeviceInput>(), "Abc");
 
         // Assert
         var scheme = _builder.Build(new ActionDefinition("Abc", [new InputAction("Abc", new HashSet<InputPhase>(), _ => { })], false));
@@ -75,8 +75,8 @@ public class InputSchemeBuilderTests
     public void WithMap_MultipleDevices_AddsAll()
     {
         // Arrange/Act
-        _builder.WithMap(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test"), Mock.Of<IInput>(), "Abc");
-        _builder.WithMap(new DeviceIdentity(DeviceTopologyName.Mouse, DeviceFamily.Generic, "Test"), Mock.Of<IInput>(), "Def");
+        _builder.WithMap(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test"), Mock.Of<IDeviceInput>(), "Abc");
+        _builder.WithMap(new DeviceIdentity(DeviceTopologyName.Mouse, DeviceFamily.Generic, "Test"), Mock.Of<IDeviceInput>(), "Def");
 
         // Assert
         var scheme = _builder.Build(new ActionDefinition("Abc", [

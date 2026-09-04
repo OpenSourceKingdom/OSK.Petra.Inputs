@@ -6,9 +6,9 @@ internal class TestDescriptor(DeviceIdentity identity) : IDeviceDescriptor
 {
     public DeviceIdentity Identity => identity;
 
-    public IReadOnlyCollection<IInput> Inputs => [];
+    public IReadOnlyCollection<IDeviceInput> Inputs => [];
 
-    public IInput? GetInput(long id)
+    public IDeviceInput? GetInput(long id)
     {
         return null;
     }

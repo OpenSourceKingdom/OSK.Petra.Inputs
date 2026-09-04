@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using OSK.Petra.Inputs.Abstractions.Devices;
 
-namespace OSK.Petra.Inputs.Models;
+namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 public class DevicePage(DeviceTopologyName topologyName, IEnumerable<IDeviceDescriptor> deviceDescriptors)
 {

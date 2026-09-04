@@ -8,7 +8,7 @@ public class DeviceInputContextExtensionsTests
 {
     #region Variables
 
-    private readonly Mock<IDeviceInputContext> _mockContext;
+    private readonly Mock<IUserInputContext> _mockContext;
 
     #endregion
 
@@ -16,7 +16,7 @@ public class DeviceInputContextExtensionsTests
 
     public DeviceInputContextExtensionsTests()
     {
-        _mockContext = new Mock<IDeviceInputContext>();
+        _mockContext = new Mock<IUserInputContext>();
     }
 
     #endregion

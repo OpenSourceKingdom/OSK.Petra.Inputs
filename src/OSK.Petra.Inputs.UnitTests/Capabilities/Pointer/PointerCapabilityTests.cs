@@ -13,7 +13,7 @@ public class PointerCapabilityTests
     #region Variables
 
     private readonly Mock<IPointer> _mockInput;
-    private readonly Mock<IDeviceInputContext> _mockContext;
+    private readonly Mock<IUserInputContext> _mockContext;
     private readonly Mock<IInputState> _mockState;
     private readonly PointerCapability _capability;
 
@@ -26,7 +26,7 @@ public class PointerCapabilityTests
         _mockInput = new Mock<IPointer>();
         _mockInput.SetupGet(m => m.Settings).Returns(new PointerSettings());
 
-        _mockContext = new Mock<IDeviceInputContext>();
+        _mockContext = new Mock<IUserInputContext>();
         _mockState = new Mock<IInputState>();
         _mockState.SetupGet(m => m.IsNewActivation).Returns(true);
 
@@ -54,7 +54,7 @@ public class PointerCapabilityTests
     public void CanProcess_InputIsNotPointer_ReturnsFalse()
     {
         // Arrange
-        var mockNonPointer = new Mock<IInput>();
+        var mockNonPointer = new Mock<IDeviceInput>();
 
         // Act
         var result = _capability.CanProcess(new PowerEvent());
@@ -92,27 +92,13 @@ public class PointerCapabilityTests
     public void Process_StateInputIsNotPointer_DoesNotProcess()
     {
         // Arrange
-        var mockNonPointer = new Mock<IInput>();
+        var mockNonPointer = new Mock<IDeviceInput>();
         _mockState.SetupGet(m => m.Input).Returns(mockNonPointer.Object);
 
         // Act
         _capability.Process(_mockContext.Object, _mockState.Object, new PointerEvent(), TimeSpan.Zero);
 
         // Assert - no exception thrown
-    }
-
-    [Fact]
-    public void Process_NewActivation_CombinesActivePhase()
-    {
-        // Arrange
-        _mockState.SetupGet(m => m.Input).Returns(_mockInput.Object);
-        _mockState.SetupGet(m => m.IsNewActivation).Returns(true);
-
-        // Act
-        _capability.Process(_mockContext.Object, _mockState.Object, new PointerEvent(), TimeSpan.Zero);
-
-        // Assert
-        _mockState.Verify(s => s.CombinePhase(InputPhase.Active), Times.Once);
     }
 
     [Fact]

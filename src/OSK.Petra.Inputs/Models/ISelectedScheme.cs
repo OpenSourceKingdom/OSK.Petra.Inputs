@@ -32,12 +32,12 @@ public interface ISelectedScheme
     /// <summary>
     /// The pairs of map input glyphs to actions
     /// </summary>
-    IReadOnlyList<DeviceMapPairing<InputActionMap>> ConfiguredInputMaps { get; }
+    IReadOnlyList<DeviceMapPairing<DeviceInputActionMap>> ConfiguredInputMaps { get; }
 
     /// <summary>
     /// The list of unpaired inputs
     /// </summary>
-    IReadOnlyList<DeviceMapPairing<IInput>> UnpairedInputs { get; }
+    IReadOnlyList<DeviceMapPairing<IDeviceInput>> UnpairedInputs { get; }
 
     /// <summary>
     /// The list of unpaired actions that must be paired before saving
@@ -68,7 +68,7 @@ public interface ISelectedScheme
     /// <param name="deviceIdentity">The device that is being given a map</param>
     /// <param name="action">The action to pair with the inputs</param>
     /// <param name="input">The input being mapped to the action</param>
-    Output SetInputMap(DeviceIdentity deviceIdentity, InputAction action, IInput input);
+    Output SetInputMap(DeviceIdentity deviceIdentity, InputAction action, IDeviceInput input);
 
     /// <summary>
     /// Clears the configured maps on the scheme

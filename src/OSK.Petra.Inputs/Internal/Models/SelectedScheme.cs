@@ -14,10 +14,10 @@ internal class SelectedScheme: ISelectedScheme
     #region Variables
 
     private readonly HashSet<DeviceIdentity> _deviceIdentities;
-    private readonly Dictionary<string, Tuple<DeviceIdentity, InputActionMap>> _configuredMaps;
+    private readonly Dictionary<string, Tuple<DeviceIdentity, DeviceInputActionMap>> _configuredMaps;
 
     private readonly Dictionary<string, InputAction> _availableActionLookup;
-    private readonly Dictionary<DeviceIdentity, Dictionary<long, IInput>> _availableInputLookup;
+    private readonly Dictionary<DeviceIdentity, Dictionary<long, IDeviceInput>> _availableInputLookup;
 
     internal bool InitiallyPreferred { get; }
 
@@ -25,8 +25,8 @@ internal class SelectedScheme: ISelectedScheme
 
     #region Constructors
 
-    public SelectedScheme(string name, bool isReadOnly, bool isPreferred, bool isNew, IEnumerable<InputAction> availableActions, IEnumerable<DeviceMapPairing<IInput>> availableInputs, 
-        IEnumerable<DeviceMapPairing<InputActionMap>> deviceMapPairings)
+    public SelectedScheme(string name, bool isReadOnly, bool isPreferred, bool isNew, IEnumerable<InputAction> availableActions, IEnumerable<DeviceMapPairing<IDeviceInput>> availableInputs, 
+        IEnumerable<DeviceMapPairing<DeviceInputActionMap>> deviceMapPairings)
     {
         Name = name;
         IsNew = isNew;
@@ -59,10 +59,10 @@ internal class SelectedScheme: ISelectedScheme
 
     public bool IsPreferred { get; private set; }
 
-    public IReadOnlyList<DeviceMapPairing<InputActionMap>> ConfiguredInputMaps 
-        => [.. _configuredMaps.Values.GroupBy(v => v.Item1).Select(inputMapGroup => new DeviceMapPairing<InputActionMap>(inputMapGroup.Key, inputMapGroup.Select(v => v.Item2)))];
+    public IReadOnlyList<DeviceMapPairing<DeviceInputActionMap>> ConfiguredInputMaps 
+        => [.. _configuredMaps.Values.GroupBy(v => v.Item1).Select(inputMapGroup => new DeviceMapPairing<DeviceInputActionMap>(inputMapGroup.Key, inputMapGroup.Select(v => v.Item2)))];
 
-    public IReadOnlyList<DeviceMapPairing<IInput>> UnpairedInputs 
+    public IReadOnlyList<DeviceMapPairing<IDeviceInput>> UnpairedInputs 
         => [.. _availableInputLookup.Select(deviceInputKvp => 
         {
             var mappedDeviceInputs = _configuredMaps.Values.Where(map => map.Item1 == deviceInputKvp.Key).Select(deviceActionMapTuple => deviceActionMapTuple.Item2.InputId);
@@ -70,7 +70,7 @@ internal class SelectedScheme: ISelectedScheme
                 ? deviceInputKvp.Value.Values.Where(input => !mappedDeviceInputs.Contains(input.Id))
                 : deviceInputKvp.Value.Values;
 
-            return new DeviceMapPairing<IInput>(deviceInputKvp.Key, availableDeviceInputs);
+            return new DeviceMapPairing<IDeviceInput>(deviceInputKvp.Key, availableDeviceInputs);
         }).Where(pairing => pairing.Items.Any())];
 
     public IReadOnlyList<InputAction> UnpairedActions => [.. _availableActionLookup.Values.Where(action => !_configuredMaps.TryGetValue(action.Name, out _))];
@@ -97,7 +97,7 @@ internal class SelectedScheme: ISelectedScheme
         return Out.Success();
     }
 
-    public Output SetInputMap(DeviceIdentity deviceIdentity, InputAction action, IInput input)
+    public Output SetInputMap(DeviceIdentity deviceIdentity, InputAction action, IDeviceInput input)
     {
         if (!_deviceIdentities.Contains(deviceIdentity))
         {
@@ -136,7 +136,7 @@ internal class SelectedScheme: ISelectedScheme
             _configuredMaps.Remove(foundInput.Value.Item2.Action.Name);
         }
 
-        _configuredMaps[action.Name] = new(deviceIdentity, new InputActionMap(action, input.Id));
+        _configuredMaps[action.Name] = new(deviceIdentity, new DeviceInputActionMap(action, input.Id));
 
         return Out.Success();
     }

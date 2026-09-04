@@ -1,5 +1,4 @@
 using System;
-using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.Configuration;
 
@@ -7,7 +6,7 @@ namespace OSK.Petra.Inputs.Abstractions.Configuration;
 /// Represents a mapping between an action name and a concrete input instance for a device map.
 /// This is used in configuration-level device maps and schemes.
 /// </summary>
-public readonly struct InputActionMap
+public readonly struct DeviceInputActionMap
 {
     #region Variables
 
@@ -25,7 +24,7 @@ public readonly struct InputActionMap
 
     #region Constructors
 
-    public InputActionMap(InputAction action, long inputId)
+    public DeviceInputActionMap(InputAction action, long inputId)
     {
         Action = action ?? throw new ArgumentNullException(nameof(action));
         InputId = inputId;

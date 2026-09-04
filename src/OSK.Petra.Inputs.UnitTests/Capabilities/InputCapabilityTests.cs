@@ -11,13 +11,13 @@ public class InputCapabilityTests
 {
     #region Variables
 
-    private readonly Mock<IDeviceInputContext> _mockContext;
+    private readonly Mock<IUserInputContext> _mockContext;
     private readonly Mock<IInputState> _mockState;
     private readonly TestableInputCapability _capability;
 
     public InputCapabilityTests()
     {
-        _mockContext = new Mock<IDeviceInputContext>();
+        _mockContext = new Mock<IUserInputContext>();
         _mockState = new Mock<IInputState>();
         _capability = new TestableInputCapability();
     }
@@ -86,7 +86,7 @@ public class InputCapabilityTests
     public void Process_StateInputNotTInput_DoesNotCallAbstractProcess()
     {
         // Arrange
-        _mockState.Setup(s => s.Input).Returns(Mock.Of<IInput>());
+        _mockState.Setup(s => s.Input).Returns(Mock.Of<IDeviceInput>());
 
         // Act
         _capability.Process(_mockContext.Object, _mockState.Object, new PointerEvent(), TimeSpan.Zero);

@@ -1,5 +1,4 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
@@ -30,7 +29,7 @@ public class DeviceInputMapTests
     {
         // Arrange
         var action = new InputAction("Move", new HashSet<InputPhase> { InputPhase.Start }, ctx => {});
-        var inputMaps = new List<InputActionMap> { new InputActionMap(action, 1) };
+        var inputMaps = new List<DeviceInputActionMap> { new DeviceInputActionMap(action, 1) };
 
         // Act
         var map = new DeviceInputMap { DeviceIdentity = _keyboardIdentity, InputMaps = inputMaps };
@@ -51,7 +50,7 @@ public class DeviceInputMapTests
         var map = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = [new InputActionMap(action, 1)]
+            InputMaps = [new DeviceInputActionMap(action, 1)]
         };
 
         // Act
@@ -69,7 +68,7 @@ public class DeviceInputMapTests
         var map = new DeviceInputMap
         {
             DeviceIdentity = _keyboardIdentity,
-            InputMaps = [new InputActionMap(action, 1)]
+            InputMaps = [new DeviceInputActionMap(action, 1)]
         };
 
         // Act

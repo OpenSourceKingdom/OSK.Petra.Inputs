@@ -25,7 +25,7 @@ internal class DeviceMapBuilder(DeviceIdentity identity)
             throw new ArgumentNullException(nameof(definition));
         }
 
-        List<InputActionMap> actionMaps = [];
+        List<DeviceInputActionMap> actionMaps = [];
         foreach (var kvp in _maps)
         {
             var action = definition.GetAction(kvp.Value);

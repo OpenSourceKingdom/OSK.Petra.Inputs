@@ -12,7 +12,7 @@ public class PowerCapabilityTests
     #region Variables
 
     private readonly Mock<IPowerInput> _mockInput;
-    private readonly Mock<IDeviceInputContext> _mockContext;
+    private readonly Mock<IUserInputContext> _mockContext;
     private readonly Mock<IInputState> _mockState;
     private readonly PowerCapability _capability;
 
@@ -25,7 +25,7 @@ public class PowerCapabilityTests
         _mockInput = new Mock<IPowerInput>();
         _mockInput.SetupGet(m => m.Settings).Returns(new PowerSettings());
 
-        _mockContext = new Mock<IDeviceInputContext>();
+        _mockContext = new Mock<IUserInputContext>();
         _mockState = new Mock<IInputState>();
         _mockState.SetupGet(m => m.Phase).Returns(InputPhase.Start);
         _mockState.SetupGet(m => m.Duration).Returns(TimeSpan.FromSeconds(1));
@@ -83,7 +83,7 @@ public class PowerCapabilityTests
     public void Process_StateInputIsNotPower_DoesNotProcess()
     {
         // Arrange
-        var mockNonPower = new Mock<IInput>();
+        var mockNonPower = new Mock<IDeviceInput>();
         _mockState.SetupGet(m => m.Input).Returns(mockNonPower.Object);
 
         // Act

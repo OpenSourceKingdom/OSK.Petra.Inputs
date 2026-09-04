@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OSK.Petra.Inputs.Abstractions.Devices;
+using System;
 
 namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
@@ -6,6 +7,9 @@ public static class InputStateExtensions
 {
     extension(IInputState state)
     {
+        public bool IsConsumed()
+            => state.InputConsumer is not null;
+
         public TDetails GetOrCreateDetails<TDetails>()
             where TDetails : ICapabilityDetails, new()
             => state.GetOrCreateDetails(() => new TDetails());

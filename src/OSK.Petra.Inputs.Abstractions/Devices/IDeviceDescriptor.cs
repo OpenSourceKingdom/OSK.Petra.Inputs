@@ -6,7 +6,7 @@ public interface IDeviceDescriptor
 {
     DeviceIdentity Identity { get; }
 
-    IReadOnlyCollection<IInput> Inputs { get; }
+    IReadOnlyCollection<IDeviceInput> Inputs { get; }
 
-    IInput? GetInput(long id);
+    IDeviceInput? GetInput(long id);
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace OSK.Petra.Inputs.Abstractions.Runtime;
 
@@ -12,7 +9,7 @@ public static class InputEventContextExtensions
         public bool TryGetDeviceFeature<TFeature>([NotNullWhen(true)] out TFeature? feature)
             where TFeature: ICapabilityFeature
         {
-            feature = context.GetDeviceFeature<TFeature>();
+            feature = context.GetInputFeature<TFeature>();
             return feature is not null;
         }
 

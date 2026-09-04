@@ -188,7 +188,7 @@ public class ActionDefinitionBuilderTests
         _builder.WithAction(new InputAction("Abc", new HashSet<InputPhase>() { InputPhase.Start }, _ => { }));
         _builder.WithScheme("MyScheme", schemeBuilder =>
         {
-            schemeBuilder.WithMap(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test"), Mock.Of<IInput>(), "Abc");
+            schemeBuilder.WithMap(new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Test"), Mock.Of<IDeviceInput>(), "Abc");
         });
 
         // Assert

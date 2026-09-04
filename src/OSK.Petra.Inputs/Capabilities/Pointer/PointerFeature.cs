@@ -1,4 +1,5 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Runtime;
+using OSK.Petra.Inputs.Internal.Models;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -35,7 +36,7 @@ public class PointerFeature: ICapabilityFeature
 
     #region Helpers
 
-    internal void AddDetails(IInputState state, PointerDetails pointerDetails)
+    internal void AddDetails(DeviceInputState state, PointerDetails pointerDetails)
     {
         state.Disposed += RemoveDetails;
 
@@ -45,15 +46,19 @@ public class PointerFeature: ICapabilityFeature
             nextId++;
         }
 
-        _pointerLookup[nextId] = new DevicePointer(nextId, state.DeviceIdentifier, state.Input.Id, pointerDetails);
+        _pointerLookup[nextId] = new DevicePointer(nextId, state.DeviceIdentifier, state.DeviceInput.Id, pointerDetails);
     }
 
     private void RemoveDetails(IInputState state)
     {
-        var kvpQuery = _pointerLookup.Where(pointerKvp => pointerKvp.Value.DeviceIdentifier == state.DeviceIdentifier && pointerKvp.Value.DevicePointerId == state.Input.Id);
-        if (kvpQuery.Any())
+        if (state is DeviceInputState deviceInputState)
         {
-            _pointerLookup.Remove(kvpQuery.First().Key);
+            var kvpQuery = _pointerLookup.Where(pointerKvp 
+                => pointerKvp.Value.DeviceIdentifier == deviceInputState.DeviceIdentifier && pointerKvp.Value.DevicePointerId == deviceInputState.DeviceInput.Id);
+            if (kvpQuery.Any())
+            {
+                _pointerLookup.Remove(kvpQuery.First().Key);
+            }
         }
     }
 

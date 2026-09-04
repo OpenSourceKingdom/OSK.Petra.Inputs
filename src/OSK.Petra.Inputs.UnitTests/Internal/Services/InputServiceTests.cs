@@ -8,7 +8,6 @@ using OSK.Petra.Inputs.Capabilities.Pointer;
 using OSK.Petra.Inputs.Internal;
 using OSK.Petra.Inputs.Internal.Models;
 using OSK.Petra.Inputs.Internal.Services;
-using OSK.Petra.Inputs.Models;
 using OSK.Petra.Inputs.Notifications;
 using OSK.Petra.Inputs.Ports;
 using OSK.Petra.Inputs.UnitTests._Helpers;
@@ -240,7 +239,7 @@ public class InputServiceTests
             .Returns(1);
         var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
 
-        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
+        mockInput.Setup(m => m.GetGlyphAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
 
         var mockDevice = new Mock<IDeviceDescriptor>();
         mockDevice.Setup(m => m.GetInput(It.IsAny<long>()))
@@ -260,7 +259,7 @@ public class InputServiceTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Keyboard"),
-                InputMaps = new[] { new InputActionMap(action, 1) }
+                InputMaps = new[] { new DeviceInputActionMap(action, 1) }
             }
         };
         var scheme = new InputScheme("Default", "Default", deviceMaps, isDefault: true, isCustom: false);
@@ -286,7 +285,7 @@ public class InputServiceTests
     public async Task ProcessDeviceNotification_UnsupportedTopology_NotifyUnrecognizedDevice()
     {
         // Arrange
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id)
             .Returns(1);
 
@@ -311,13 +310,13 @@ public class InputServiceTests
     {
         // Arrange
         var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(1);
-        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
+        mockInput.Setup(m => m.GetGlyphAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
 
         var mockDevice = new Mock<IDeviceDescriptor>();
         mockDevice.Setup(m => m.GetInput(It.IsAny<long>()))
-            .Returns((IInput?)null);
+            .Returns((IDeviceInput?)null);
         mockDevice.SetupGet(m => m.Identity)
             .Returns(deviceIdentifier.DeviceIdentity);
 
@@ -334,7 +333,7 @@ public class InputServiceTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Keyboard"),
-                InputMaps = new[] { new InputActionMap(action, 1) }
+                InputMaps = new[] { new DeviceInputActionMap(action, 1) }
             }
         };
 
@@ -370,9 +369,9 @@ public class InputServiceTests
     {
         // Arrange
         var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(1);
-        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
+        mockInput.Setup(m => m.GetGlyphAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
 
         var mockDevice = new Mock<IDeviceDescriptor>();
         mockDevice.Setup(m => m.GetInput(It.IsAny<long>()))
@@ -409,9 +408,9 @@ public class InputServiceTests
     {
         // Arrange
         var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(1);
-        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
+        mockInput.Setup(m => m.GetGlyphAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
 
         var mockDevice = new Mock<IDeviceDescriptor>();
         mockDevice.Setup(m => m.GetInput(It.IsAny<long>()))
@@ -456,7 +455,7 @@ public class InputServiceTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Keyboard"),
-                InputMaps = new[] { new InputActionMap(action, 1) }
+                InputMaps = new[] { new DeviceInputActionMap(action, 1) }
             }
         };
 
@@ -481,9 +480,9 @@ public class InputServiceTests
 
         var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
 
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(1);
-        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
+        mockInput.Setup(m => m.GetGlyphAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
 
         var notification = new DeviceInputNotification(deviceIdentifier, mockInput.Object.Id, TimeSpan.Zero);
 
@@ -500,9 +499,9 @@ public class InputServiceTests
         // Arrange
 
         var deviceIdentifier = TestConfigurationHelper.CreateDeviceIdentifier(DeviceTopologyName.Keyboard);
-        var mockInput = new Mock<IInput>();
+        var mockInput = new Mock<IDeviceInput>();
         mockInput.SetupGet(m => m.Id).Returns(1);
-        mockInput.Setup(m => m.GetGlyph()).Returns(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
+        mockInput.Setup(m => m.GetGlyphAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new InputGlyph() { DeviceIdentity = deviceIdentifier.DeviceIdentity, Input = mockInput.Object, Text = "A" });
 
         var mockDevice = new Mock<IDeviceDescriptor>();
         mockDevice.Setup(m => m.Identity)
@@ -523,7 +522,7 @@ public class InputServiceTests
             new DeviceInputMap
             {
                 DeviceIdentity = new DeviceIdentity(DeviceTopologyName.Keyboard, DeviceFamily.Generic, "Keyboard"),
-                InputMaps = new[] { new InputActionMap(action, 1) }
+                InputMaps = new[] { new DeviceInputActionMap(action, 1) }
             }
         };
 

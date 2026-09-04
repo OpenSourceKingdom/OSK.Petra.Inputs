@@ -30,7 +30,7 @@ public static class TestConfigurationHelper
                 DeviceIdentity = KeyboardIdentity,
                 InputMaps = new[]
                 {
-                    new InputActionMap(actions[0], 0)
+                    new DeviceInputActionMap(actions[0], 0)
                 }
             },
             new DeviceInputMap
@@ -38,7 +38,7 @@ public static class TestConfigurationHelper
                 DeviceIdentity = MouseIdentity,
                 InputMaps = new[]
                 {
-                    new InputActionMap(actions[1], 0)
+                    new DeviceInputActionMap(actions[1], 0)
                 }
             }
         };

@@ -4,7 +4,7 @@ public class InputGlyph
 {
     public required DeviceIdentity DeviceIdentity { get; set; }
 
-    public required IInput Input { get; init; }
+    public required IDeviceInput Input { get; init; }
 
     public required string Text { get; init; }
 }

@@ -345,14 +345,62 @@ public static class InputSystemConfigurationValidator
             }
         }
 
+        var virtualMapValidation = ValidateVirtualMaps(definition, scheme);
+        if (!virtualMapValidation.IsValid)
+        {
+            return virtualMapValidation;
+        }
+
         var duplicateActions = scheme.DeviceMaps.SelectMany(map => map.InputMaps)
-            .GroupBy(map => map.Action)
+            .GroupBy(map => map.Action.Name)
             .Where(actionMapGroup => actionMapGroup.Count() > 1)
             .Select(actionMapGroup => actionMapGroup.Key);
         if (duplicateActions.Any())
         {
             return InputConfigurationValidationResult.ForScheme(scheme => scheme.DeviceMaps, InputConfigurationValidation.DuplicateData,
                 $"There are {duplicateActions.Count()} input maps that share the same action name across the device maps for scheme {scheme.Name} on input definition {definition.Name}, the action names are: {string.Join(", ", duplicateActions)}");
+        }
+
+        duplicateActions = scheme.DeviceMaps.SelectMany(deviceMap => deviceMap.InputMaps.Select(map => map.Action.Name))
+                                            .Concat(scheme.VirtualMaps.Select(map => map.Action.Name))
+                                            .GroupBy(actionName => actionName)
+                                            .Where(actionMapGroup => actionMapGroup.Count() > 1)
+                                            .Select(actionMapGroup => actionMapGroup.Key);
+        if (duplicateActions.Any())
+        {
+            return InputConfigurationValidationResult.ForScheme(scheme => scheme, InputConfigurationValidation.DuplicateData,
+                $"There are {duplicateActions.Count()} input maps that share the same action name across the device and virtual maps for scheme {scheme.Name} on input definition {definition.Name}, the action names are: {string.Join(", ", duplicateActions)}");
+        }
+
+        return InputConfigurationValidationResult.Success();
+    }
+
+    private static InputConfigurationValidationResult ValidateVirtualMaps(ActionDefinition definition, InputScheme scheme)
+    {
+        var duplicateInputs = scheme.VirtualMaps.Select(map => map.VirtualInput)
+                                                .GroupBy(input => input)
+                                                .Where(group => group.Count() > 1);
+
+        if (duplicateInputs.Any())
+        {
+            return InputConfigurationValidationResult.ForScheme(scheme => scheme.VirtualMaps, InputConfigurationValidation.DuplicateData,
+                $"There are {duplicateInputs.Count()} duplicate virtual inputs with scheme {scheme.Name} on input definition {definition.Name}.");
+        }
+
+        var inputsMissingActions = scheme.VirtualMaps.Where(map => map.Action is null);
+        if (inputsMissingActions.Any())
+        {
+            return InputConfigurationValidationResult.ForScheme(scheme => scheme.VirtualMaps, InputConfigurationValidation.MissingData,
+                $"There are {inputsMissingActions.Count()} virtual input maps missing actions with scheme {scheme.Name} on input definition {definition.Name}.");
+        }
+
+        var duplicateActionNames = scheme.VirtualMaps.GroupBy(map => map.Action.Name)
+                                                     .Where(mapGroup => mapGroup.Count() > 1)
+                                                     .Select(mapGroup => mapGroup.Key);
+        if (duplicateActionNames.Any())
+        {
+            return InputConfigurationValidationResult.ForScheme(map => map.VirtualMaps, InputConfigurationValidation.DuplicateData,
+                $"There are {duplicateActionNames.Count()} duplicate action names for virtual inputs with scheme {scheme.Name} on input defintion {definition.Name}, the action names are: {string.Join(", ", duplicateActionNames)}.");
         }
 
         return InputConfigurationValidationResult.Success();
@@ -383,7 +431,7 @@ public static class InputSystemConfigurationValidator
                 $"There are {inputsMissingActions.Count()} input maps missing actions for device map {deviceMap.DeviceIdentity} with scheme {scheme.Name} on input definition {definition.Name}, the input map ids are: {string.Join(", ", inputsMissingActions)}.");
         }
 
-        var duplicateActionNames = deviceMap.InputMaps.GroupBy(map => map.Action)
+        var duplicateActionNames = deviceMap.InputMaps.GroupBy(map => map.Action.Name)
             .Where(mapGroup => mapGroup.Count() > 1)
             .Select(mapGroup => mapGroup.Key);
         if (duplicateActionNames.Any())

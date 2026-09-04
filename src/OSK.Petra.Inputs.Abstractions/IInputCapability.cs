@@ -7,5 +7,5 @@ public interface IInputCapability
 {
     bool CanProcess(IInputEvent inputEvent);
 
-    void Process(IDeviceInputContext context, IInputState state, IInputEvent inputEvent, TimeSpan deltaTime);
+    void Process(IUserInputContext context, IInputState state, IInputEvent inputEvent, TimeSpan deltaTime);
 }

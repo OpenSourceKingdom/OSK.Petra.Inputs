@@ -9,6 +9,7 @@ public class InputScheme
     #region Variables
 
     private readonly Dictionary<DeviceTopologyName, DeviceInputMap> _deviceMapLookup;
+    private readonly Dictionary<IVirtualInput, VirtualInputActionMap> _virtualMapLookup;
 
     #endregion
 
@@ -20,7 +21,7 @@ public class InputScheme
 
     }
 
-    public InputScheme(string definitionName, string name, IEnumerable<DeviceInputMap> deviceMaps, IEnumerable<VirtualInputMap> virtualMaps, bool isDefault, bool isCustom)
+    public InputScheme(string definitionName, string name, IEnumerable<DeviceInputMap> deviceMaps, IEnumerable<VirtualInputActionMap> virtualMaps, bool isDefault, bool isCustom)
     {
         DefinitionName = definitionName;
         Name = name;
@@ -28,9 +29,7 @@ public class InputScheme
         IsCustom = isCustom;
 
         _deviceMapLookup = deviceMaps?.Where(map => map is not null).ToDictionary(map => map.DeviceIdentity.TopologyName) ?? [];
-        VirtualMaps = virtualMaps is null
-            ? []
-            : [.. virtualMaps];
+        _virtualMapLookup = virtualMaps?.ToDictionary(map => map.VirtualInput) ?? [];
     }
 
     #endregion
@@ -59,7 +58,7 @@ public class InputScheme
     /// </summary>
     public IReadOnlyCollection<DeviceInputMap> DeviceMaps => [.. _deviceMapLookup.Values];
 
-    public IReadOnlyCollection<VirtualInputMap> VirtualMaps { get; }
+    public IReadOnlyCollection<VirtualInputActionMap> VirtualMaps => [.. _virtualMapLookup.Values];
 
     /// <summary>
     /// Attempts to get a device map for a device identity
@@ -71,8 +70,13 @@ public class InputScheme
             ? map
             : null;
 
-    public InputActionMap? GetInputMap(DeviceIdentity deviceIdentity, long inputId)
+    public DeviceInputActionMap? GetDeviceInputMap(DeviceIdentity deviceIdentity, long inputId)
         => GetDeviceMap(deviceIdentity)?.GetInputMap(inputId);
+
+    public VirtualInputActionMap? GetVirtualInputMap(IVirtualInput virtualInput)
+        => _virtualMapLookup.TryGetValue(virtualInput, out var map)
+            ? map
+            : null;
 
     public IEnumerable<DeviceIdentity> GetDeviceIdentities()
         => DeviceMaps.Select(map => map.DeviceIdentity);

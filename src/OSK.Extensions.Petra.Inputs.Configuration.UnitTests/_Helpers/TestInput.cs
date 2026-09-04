@@ -2,7 +2,7 @@ using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.UnitTests._Helpers;
 
-public class TestInput : IInput
+public class TestInput : IDeviceInput
 {
     public long Id { get; }
     private readonly string _glyphSymbol;
@@ -13,10 +13,11 @@ public class TestInput : IInput
         _glyphSymbol = glyphSymbol;
     }
 
-    public InputGlyph GetGlyph() => new InputGlyph
-    {
-        DeviceIdentity = default,
-        Input = this,
-        Text = _glyphSymbol
-    };
+    public Task<InputGlyph> GetGlyphAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult(new InputGlyph
+        {
+            DeviceIdentity = default,
+            Input = this,
+            Text = _glyphSymbol
+        }); 
 }

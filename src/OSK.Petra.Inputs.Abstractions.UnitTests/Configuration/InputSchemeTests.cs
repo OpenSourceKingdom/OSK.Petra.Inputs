@@ -1,5 +1,4 @@
 using OSK.Petra.Inputs.Abstractions.Configuration;
-using OSK.Petra.Inputs.Abstractions.UnitTests._Helpers;
 using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions.UnitTests.Configuration;
@@ -103,13 +102,13 @@ public class InputSchemeTests
             new DeviceInputMap
             {
                 DeviceIdentity = _keyboardIdentity,
-                InputMaps = [new InputActionMap(action, 1)]
+                InputMaps = [new DeviceInputActionMap(action, 1)]
             }
         };
         var scheme = new InputScheme("Default", "MyScheme", deviceMaps, isDefault: true, isCustom: false);
 
         // Act
-        var result = scheme.GetInputMap(_keyboardIdentity, 1);
+        var result = scheme.GetDeviceInputMap(_keyboardIdentity, 1);
 
         // Assert
         Assert.NotNull(result);
@@ -125,13 +124,13 @@ public class InputSchemeTests
             new DeviceInputMap
             {
                 DeviceIdentity = _keyboardIdentity,
-                InputMaps = [new InputActionMap(action, 1)]
+                InputMaps = [new DeviceInputActionMap(action, 1)]
             }
         };
         var scheme = new InputScheme("Default", "MyScheme", deviceMaps, isDefault: true, isCustom: false);
 
         // Act
-        var result = scheme.GetInputMap(_keyboardIdentity, 2);
+        var result = scheme.GetDeviceInputMap(_keyboardIdentity, 2);
 
         // Assert
         Assert.Null(result);
@@ -148,7 +147,7 @@ public class InputSchemeTests
         var scheme = new InputScheme("Default", "MyScheme", deviceMaps, isDefault: true, isCustom: false);
 
         // Act
-        var result = scheme.GetInputMap(_keyboardIdentity, 99);
+        var result = scheme.GetDeviceInputMap(_keyboardIdentity, 99);
 
         // Assert
         Assert.Null(result);

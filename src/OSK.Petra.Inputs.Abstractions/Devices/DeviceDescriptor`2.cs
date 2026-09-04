@@ -6,7 +6,7 @@ namespace OSK.Petra.Inputs.Abstractions.Devices;
 
 public abstract class DeviceDescriptor<TEnum, TInput> : DeviceDescriptor<TInput>
     where TEnum : Enum
-    where TInput : class, IInput
+    where TInput : class, IDeviceInput
 {
     #region Constructors
 
