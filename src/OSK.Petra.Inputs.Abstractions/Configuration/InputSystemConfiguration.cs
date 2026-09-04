@@ -44,6 +44,9 @@ public class InputSystemConfiguration
     /// </summary>
     public InputSystemJoinPolicy JoinPolicy { get; }
 
+    /// <summary>
+    /// The unique topologies the configured was registered to use
+    /// </summary>
     public IReadOnlyCollection<DeviceTopologyName> DeviceTopologies => [.. _topologyLookup];
 
     /// <summary>
@@ -58,11 +61,21 @@ public class InputSystemConfiguration
     public IReadOnlyList<ActionDefinition> Definitions
         => [.. _inputDefinitionLookup.Values];
 
+    /// <summary>
+    /// Attempts to get an input configuration, given the configuration id.
+    /// </summary>
+    /// <param name="configurationId">The unique id of the configuration</param>
+    /// <returns>The configuration if the id exists, otherwise null</returns>
     public InputConfiguration? GetInputConfiguration(string configurationId)
         => _inputConfigurationLookup.TryGetValue(configurationId, out var configuration)
             ? configuration
             : null;
 
+    /// <summary>
+    /// Checks to see if the configuration supports a given device topology
+    /// </summary>
+    /// <param name="topologyName">The name of the topology</param>
+    /// <returns>Whether the topology is supported</returns>
     public bool IsTopologySupported(DeviceTopologyName topologyName)
         => _topologyLookup.TryGetValue(topologyName, out _);
 
@@ -76,6 +89,9 @@ public class InputSystemConfiguration
             ? definition
             : null;
 
+    /// <summary>
+    /// The custom capability option configuration the input system will use, if options are set
+    /// </summary>
     public InputCapabilityOptionConfiguration CapabilityConfiguration { get; }
 
     #endregion

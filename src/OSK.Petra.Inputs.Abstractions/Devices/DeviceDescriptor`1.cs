@@ -4,6 +4,10 @@ using System.Linq;
 
 namespace OSK.Petra.Inputs.Abstractions.Devices;
 
+/// <summary>
+/// A device descriptor that utilizes a specific T input
+/// </summary>
+/// <typeparam name="TInput">A strongly typed input the device will use</typeparam>
 public abstract class DeviceDescriptor<TInput>: IDeviceDescriptor
     where TInput: class, IDeviceInput
 {
@@ -26,10 +30,13 @@ public abstract class DeviceDescriptor<TInput>: IDeviceDescriptor
 
     #region IDeviceDescriptor
 
+    /// <inheritdoc/>
     public DeviceIdentity Identity { get; }
 
+    /// <inheritdoc/>
     IReadOnlyCollection<IDeviceInput> IDeviceDescriptor.Inputs => Inputs;
 
+    /// <inheritdoc/>
     public IDeviceInput? GetInput(long id)
         => _inputLookup.TryGetValue(id, out var input) ? input : null;
 
@@ -37,12 +44,19 @@ public abstract class DeviceDescriptor<TInput>: IDeviceDescriptor
 
     #region Api
 
+    /// <summary>
+    /// The input collection of the specific strongly typed inputs
+    /// </summary>
     public IReadOnlyList<TInput> Inputs => [.. _inputLookup.Values];
 
     #endregion
 
     #region Helpers
 
+    /// <summary>
+    /// A helper meant to provide the specific inputs to the descriptor
+    /// </summary>
+    /// <returns>The actual inputs the device possesses</returns>
     protected abstract IEnumerable<TInput> GetInputs();
 
     #endregion

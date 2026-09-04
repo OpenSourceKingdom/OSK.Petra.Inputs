@@ -212,7 +212,7 @@ internal partial class SchemeService(IInputSystemConfigurationProvider configura
             return Out.InvalidRequest("Custom input schemes are not allowed with the input system. If it is desired, please register a scheme repository that can support it.");
         }
 
-        var schemeValidation = InputSystemConfigurationValidator.ValidateCustomScheme(configurationProvider.Configuration, scheme, allowDuplicateCustomScheme: savePermissions is SchemeSavePermissions.Overwrite);
+        var schemeValidation = InputSystemConfigurationValidator.ValidateCustomScheme(configurationProvider.Configuration, scheme, ignoreDuplicateSchemeValidation: savePermissions is SchemeSavePermissions.Overwrite);
         if (!schemeValidation.IsValid)
         {
             return schemeValidation.Result is InputConfigurationValidation.DuplicateData

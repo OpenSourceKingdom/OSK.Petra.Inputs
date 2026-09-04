@@ -570,7 +570,7 @@ public class InputSystemConfigurationValidatorTests
         };
 
         // Act
-        var result = InputSystemConfigurationValidator.ValidateCustomScheme(configuration, customScheme, allowDuplicateCustomScheme: false);
+        var result = InputSystemConfigurationValidator.ValidateCustomScheme(configuration, customScheme, ignoreDuplicateSchemeValidation: false);
 
         // Assert
         Assert.False(result.IsValid);
@@ -610,7 +610,7 @@ public class InputSystemConfigurationValidatorTests
         };
 
         // Act
-        var result = InputSystemConfigurationValidator.ValidateCustomScheme(configuration, customScheme, allowDuplicateCustomScheme: true);
+        var result = InputSystemConfigurationValidator.ValidateCustomScheme(configuration, customScheme, ignoreDuplicateSchemeValidation: true);
 
         // Assert
         Assert.True(result.IsValid);
@@ -648,7 +648,7 @@ public class InputSystemConfigurationValidatorTests
         };
 
         // Act
-        var result = InputSystemConfigurationValidator.ValidateCustomScheme(configuration, customScheme, allowDuplicateCustomScheme: true);
+        var result = InputSystemConfigurationValidator.ValidateCustomScheme(configuration, customScheme, ignoreDuplicateSchemeValidation: true);
 
         // Assert
         Assert.False(result.IsValid);

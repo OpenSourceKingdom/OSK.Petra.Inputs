@@ -2,9 +2,6 @@
 using OSK.Petra.Inputs.Abstractions.Devices;
 using OSK.Petra.Inputs.Capabilities.Pointer;
 using OSK.Petra.Inputs.Capabilities.Power;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OSK.Petra.Inputs.UnitTests.Capabilities.Power;
 

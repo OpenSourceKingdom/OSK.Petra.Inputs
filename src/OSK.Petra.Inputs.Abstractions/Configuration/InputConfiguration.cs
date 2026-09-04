@@ -13,17 +13,32 @@ public class InputConfiguration
 {
     #region Static
 
+    /// <summary>
+    /// Gets a standard unique string id for a group of device topologies, using an enumeration of device identities
+    /// </summary>
+    /// <param name="deviceIdentities">The devices to get the id for</param>
+    /// <returns>A standard unique string id for the group</returns>
     public static string GetConfigurationId(IEnumerable<DeviceIdentity> deviceIdentities)
         => GetConfigurationId(deviceIdentities.Select(identity => identity.TopologyName));
 
+    /// <summary>
+    /// Gets a standard unique string id for a group of device topologies, using a parameter collection of device identities
+    /// </summary>
+    /// <param name="deviceIdentities">The devices to get the id for</param>
+    /// <returns>A standard unique string id for the group</returns>
     public static string GetConfigurationId(params DeviceIdentity[] deviceIdentities)
         => GetConfigurationId(deviceIdentities.Select(identity => identity.TopologyName));
 
+    /// <summary>
+    /// Gets a standard unique string id for a group of device topologies
+    /// </summary>
+    /// <param name="topologies">The device topologies in the group</param>
+    /// <returns>A standard unique string id for the group</returns>
     public static string GetConfigurationId(params DeviceTopologyName[] topologies)
         => GetConfigurationId((IEnumerable<DeviceTopologyName>)topologies);
 
     /// <summary>
-    /// Gets a standard unique string id for a group of device topologies
+    /// Gets a standard unique string id for a group of device topologies, using a parameter collection of device topologies
     /// </summary>
     /// <param name="topologies">The device topologies in the group</param>
     /// <returns>A standard unique string id for the group</returns>
@@ -46,6 +61,11 @@ public class InputConfiguration
 
     #region Constructors
 
+    /// <summary>
+    /// Creates an input configuration with the given topologies
+    /// </summary>
+    /// <param name="topologyNames">The names of the device topologies the configuration will suppport</param>
+    /// <exception cref="ArgumentNullException">If the topology enumeration is null</exception>
     public InputConfiguration(IEnumerable<DeviceTopologyName> topologyNames)
     {
         TopologyNames = topologyNames is null ? throw new ArgumentNullException(nameof(topologyNames)) : [.. topologyNames];
@@ -61,6 +81,9 @@ public class InputConfiguration
     /// </summary>
     public string Id { get; }
 
+    /// <summary>
+    /// A read-only enumeration for the device topologies that the configuration supports
+    /// </summary>
     public IReadOnlyList<DeviceTopologyName> TopologyNames { get; }
 
     /// <summary>
@@ -68,6 +91,12 @@ public class InputConfiguration
     /// </summary>
     public IReadOnlyList<InputScheme> Schemes => [.. _inputSchemeLookup.Values.SelectMany(schemeLookup => schemeLookup.Values)];
 
+    /// <summary>
+    /// Attempts to get the input scheme associated with the gien <see cref="ActionDefinition"/> name and scheme name
+    /// </summary>
+    /// <param name="definitionName">The action definition name</param>
+    /// <param name="schemeName">The name of the scheme</param>
+    /// <returns>The Input Scheme, if it exists</returns>
     public InputScheme? GetScheme(string definitionName, string schemeName)
         => _inputSchemeLookup.TryGetValue(definitionName, out var schemeLookup)
             ? schemeLookup.TryGetValue(schemeName, out var scheme) ? scheme : null
@@ -130,6 +159,12 @@ public class InputConfiguration
         };
     }
 
+    /// <summary>
+    /// Adds an input scheme to the configuration
+    /// </summary>
+    /// <param name="scheme">The scheme to include in the configuration</param>
+    /// <exception cref="ArgumentNullException">If the scheme is null</exception>
+    /// <exception cref="InvalidOperationException">If validation fails for the scheme</exception>
     public void AddScheme(InputScheme scheme)
     {
         if (scheme is null)

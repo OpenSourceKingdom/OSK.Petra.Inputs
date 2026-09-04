@@ -4,6 +4,11 @@ using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Abstractions;
 
+/// <summary>
+/// A base class that provides a way to strongly type expected input events and input settings for the capability
+/// </summary>
+/// <typeparam name="TInputEvent">The type of event the capability is expected to process</typeparam>
+/// <typeparam name="TSettings">The settings the input is expected to provide</typeparam>
 public abstract class InputCapability<TInputEvent, TSettings> : InputCapability<TInputEvent>
     where TInputEvent : IInputEvent
     where TSettings : IInputSettings, new()

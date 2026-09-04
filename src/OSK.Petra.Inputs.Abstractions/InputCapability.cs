@@ -3,6 +3,10 @@ using System;
 
 namespace OSK.Petra.Inputs.Abstractions;
 
+/// <summary>
+/// A base class that provides a way to strongly type expected input events for the capability
+/// </summary>
+/// <typeparam name="TInputEvent">The type of event the capability is expected to process</typeparam>
 public abstract class InputCapability<TInputEvent> : IInputCapability
     where TInputEvent : IInputEvent
 {

@@ -21,12 +21,26 @@ public class ActionDefinition(string name, IEnumerable<InputAction> actions, boo
 
     #region Api
 
+    /// <summary>
+    /// The unique name of the definition in the input system.
+    /// </summary>
     public string Name => name;
 
+    /// <summary>
+    /// Whether this definition is the default definition to use
+    /// </summary>
     public bool IsDefault => isDefault;
 
+    /// <summary>
+    /// Gets all actions defined in this definition.
+    /// </summary>
     public IReadOnlyCollection<InputAction> Actions => _actionLookup.Values;
-    
+
+    /// <summary>
+    /// Retrieves an action by name
+    /// </summary>
+    /// <param name="name">The action name to retrieve</param>
+    /// <returns>The action if found, otherwise null</returns>
     public InputAction? GetAction(string name)
         => !string.IsNullOrWhiteSpace(name) && _actionLookup.TryGetValue(name, out var action)
             ? action

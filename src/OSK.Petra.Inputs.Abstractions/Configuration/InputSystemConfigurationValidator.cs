@@ -3,10 +3,19 @@ using System.Linq;
 
 namespace OSK.Petra.Inputs.Abstractions.Configuration;
 
+/// <summary>
+/// A tool used to validate various aspects of Input System configurations
+/// </summary>
 public static class InputSystemConfigurationValidator
 {
     #region Api
 
+    /// <summary>
+    /// Validates an entire input system configuration
+    /// </summary>
+    /// <param name="configuration">The configuration to validate in its entirety</param>
+    /// <returns>A validation result for the configuration</returns>
+    /// <exception cref="ArgumentNullException">if the configuration is null</exception>
     public static InputConfigurationValidationResult ValidateConfiguration(InputSystemConfiguration configuration)
     {
         if (configuration is null)
@@ -29,8 +38,16 @@ public static class InputSystemConfigurationValidator
         return ValidateJoinPolicy(configuration.JoinPolicy);
     }
 
+    /// <summary>
+    /// Validates a custom scheme against an input system configuration
+    /// </summary>
+    /// <param name="configuration">The input system configuration to use to validate the scheme against</param>
+    /// <param name="customScheme">The custom scheem</param>
+    /// <param name="ignoreDuplicateSchemeValidation">Determines if validation for a duplicate custom scheme can be ignored</param>
+    /// <returns>A validation result for the custom scheme against the input system configuration</returns>
+    /// <exception cref="ArgumentNullException">If either the configuration or scheme is null</exception>
     public static InputConfigurationValidationResult ValidateCustomScheme(InputSystemConfiguration configuration, CustomInputScheme customScheme,
-        bool allowDuplicateCustomScheme)
+        bool ignoreDuplicateSchemeValidation)
     {
         if (configuration is null)
         {
@@ -82,7 +99,7 @@ public static class InputSystemConfigurationValidator
                 return InputConfigurationValidationResult.ForScheme(scheme => scheme.IsCustom, InputConfigurationValidation.InvalidData,
                     $"The custom scheme {customScheme.Name} for definition {definition.Name} is not a custom scheme and can not be modified.");
             }
-            if (!allowDuplicateCustomScheme)
+            if (!ignoreDuplicateSchemeValidation)
             {
                 return InputConfigurationValidationResult.ForScheme(scheme => scheme.Name, InputConfigurationValidation.DuplicateData,
                     $"The custom scheme's name {customScheme.Name} already exists on input definition {definition.Name} and is not editable.");

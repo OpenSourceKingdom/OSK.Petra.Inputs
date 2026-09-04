@@ -23,6 +23,13 @@ public class InputConfigurationValidationResult
             Result = InputConfigurationValidation.Ok 
         };
 
+    /// <summary>
+    /// Create a validation result that is specific to the input system configuration, targeting a specific property that is on the <see cref="InputSystemConfiguration"/>/>
+    /// </summary>
+    /// <param name="propertyPath">The path to the property that will be the target of the validation result</param>
+    /// <param name="validation">The specific validation to set for the target</param>
+    /// <param name="message">A unique message that describes the reason for the validation</param>
+    /// <returns>A validation result tied to the input system property</returns>
     public static InputConfigurationValidationResult ForInputConfiguration(Expression<Func<InputConfiguration, object?>> propertyPath,
         InputConfigurationValidation validation, string? message = null)
         => ForConfiguration(ConfigurationType.InputConfiguration, propertyPath, validation, message);

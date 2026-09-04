@@ -30,9 +30,17 @@ public class CustomInputScheme
 
     #region Helpers
 
+    /// <summary>
+    /// Gets the device identities associated with this custom scheme
+    /// </summary>
+    /// <returns>The device identities</returns>
     public IEnumerable<DeviceIdentity> GetDeviceIdentities()
         => DeviceMaps.Select(map => map.DeviceIdentity);
 
+    /// <summary>
+    /// Converts this custom input scheme into an <see cref="InputScheme"/>, which is directly usable in an input system
+    /// </summary>
+    /// <returns>The converted <see cref="InputScheme"/></returns>
     public InputScheme ToInputScheme()
         => new(DefinitionName, Name, DeviceMaps, isDefault: false, isCustom: true);
 

@@ -10,7 +10,6 @@ public enum ConfigurationType
     InputAction,
     Scheme,
     DeviceMap,
-    InputMap,
     JoinPolicy,
     InputConfiguration
 }
