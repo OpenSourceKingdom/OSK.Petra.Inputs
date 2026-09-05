@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Keyboards;
 
+/// <summary>
+/// Represents a keyboard that uses <see cref="KeyboardKey"/>
+/// </summary>
+/// <typeparam name="TKey">The type of keyboard key</typeparam>
 public class KeyboardDescriptor<TKey> : KeyboardDescriptor
     where TKey: KeyboardKey
 {

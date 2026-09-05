@@ -15,7 +15,7 @@ public abstract class KeyboardDescriptor: DeviceDescriptor<IKeyboardInput>
     /// </summary>
     /// <param name="keyboardInputs">The available keyboard inputs</param>
     public KeyboardDescriptor(IEnumerable<IKeyboardInput> keyboardInputs)
-        : this(DeviceFamily.Generic)
+        : this(DeviceFamily.Generic, keyboardInputs)
     {
     }
 
