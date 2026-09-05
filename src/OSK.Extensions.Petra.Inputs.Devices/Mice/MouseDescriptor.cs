@@ -1,19 +1,21 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Devices;
+using System.Collections.Generic;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Mice;
 
 /// <summary>
 /// Represents a mouse device
 /// </summary>
-public abstract class MouseDescriptor: DeviceDescriptor<IMouseInput>
+public class MouseDescriptor: DeviceDescriptor<IMouseInput>
 {
     #region Constructors
 
     /// <summary>
     /// Create a generic mouse
     /// </summary>
-    public MouseDescriptor()
-        : this(DeviceFamily.Generic)
+    /// <param name="mouseInputs">The available mouse inputs</param>
+    public MouseDescriptor(IEnumerable<IMouseInput> mouseInputs)
+        : this(DeviceFamily.Generic, mouseInputs)
     {
     }
 
@@ -21,8 +23,9 @@ public abstract class MouseDescriptor: DeviceDescriptor<IMouseInput>
     /// Creates a generic mouse for the famly
     /// </summary>
     /// <param name="family">The device family</param>
-    public MouseDescriptor(DeviceFamily family)
-        : this(family, DeviceIdentities.GenericDeviceName)
+    /// <param name="mouseInputs">The available mouse inputs</param>
+    public MouseDescriptor(DeviceFamily family, IEnumerable<IMouseInput> mouseInputs)
+        : this(family, DeviceIdentities.GenericDeviceName, mouseInputs)
     {
     }
 
@@ -31,8 +34,9 @@ public abstract class MouseDescriptor: DeviceDescriptor<IMouseInput>
     /// </summary>
     /// <param name="family">The family for the mouse</param>
     /// <param name="deviceName">The device name</param>
-    public MouseDescriptor(DeviceFamily family, string deviceName)
-        : base(new(DeviceTopologyName.Mouse, family, deviceName))
+    /// <param name="mouseInputs">The available mouse inputs</param>
+    public MouseDescriptor(DeviceFamily family, string deviceName, IEnumerable<IMouseInput> mouseInputs)
+        : base(new(DeviceTopologyName.Mouse, family, deviceName), mouseInputs)
     {
     }
 

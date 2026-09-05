@@ -19,11 +19,10 @@ public abstract class DeviceDescriptor<TInput>: IDeviceDescriptor
 
     #region Constructors
 
-    protected DeviceDescriptor(DeviceIdentity deviceIdentity)
+    protected DeviceDescriptor(DeviceIdentity deviceIdentity, IEnumerable<TInput> inputs)
     {
         Identity = deviceIdentity;
-        var inputs = GetInputs() ?? throw new ArgumentNullException($"The loaded inputs were null for device {deviceIdentity}");
-        _inputLookup = inputs.ToDictionary(input => input.Id);
+        _inputLookup = inputs?.ToDictionary(input => input.Id) ?? throw new ArgumentNullException($"The loaded inputs were null for device {deviceIdentity}");
     }
 
     #endregion
@@ -48,16 +47,6 @@ public abstract class DeviceDescriptor<TInput>: IDeviceDescriptor
     /// The input collection of the specific strongly typed inputs
     /// </summary>
     public IReadOnlyList<TInput> Inputs => [.. _inputLookup.Values];
-
-    #endregion
-
-    #region Helpers
-
-    /// <summary>
-    /// A helper meant to provide the specific inputs to the descriptor
-    /// </summary>
-    /// <returns>The actual inputs the device possesses</returns>
-    protected abstract IEnumerable<TInput> GetInputs();
 
     #endregion
 }
