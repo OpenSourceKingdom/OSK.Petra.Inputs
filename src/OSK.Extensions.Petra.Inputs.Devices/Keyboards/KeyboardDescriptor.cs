@@ -1,4 +1,5 @@
 ﻿using OSK.Petra.Inputs.Abstractions.Devices;
+using System.Collections.Generic;
 
 namespace OSK.Extensions.Petra.Inputs.Devices.Keyboards;
 
@@ -12,7 +13,8 @@ public abstract class KeyboardDescriptor: DeviceDescriptor<IKeyboardInput>
     /// <summary>
     /// Create a generic keyboard
     /// </summary>
-    public KeyboardDescriptor()
+    /// <param name="keyboardInputs">The available keyboard inputs</param>
+    public KeyboardDescriptor(IEnumerable<IKeyboardInput> keyboardInputs)
         : this(DeviceFamily.Generic)
     {
     }
@@ -21,8 +23,9 @@ public abstract class KeyboardDescriptor: DeviceDescriptor<IKeyboardInput>
     /// Creates a generic keyboard for the famly
     /// </summary>
     /// <param name="family">The device family</param>
-    public KeyboardDescriptor(DeviceFamily family)
-        : this(family, DeviceIdentities.GenericDeviceName)
+    /// <param name="keyboardInputs">The available keyboard inputs</param>
+    public KeyboardDescriptor(DeviceFamily family, IEnumerable<IKeyboardInput> keyboardInputs)
+        : this(family, DeviceIdentities.GenericDeviceName, keyboardInputs)
     {
     }
 
@@ -31,8 +34,9 @@ public abstract class KeyboardDescriptor: DeviceDescriptor<IKeyboardInput>
     /// </summary>
     /// <param name="family">The family for the keyboard</param>
     /// <param name="deviceName">The device name</param>
-    public KeyboardDescriptor(DeviceFamily family, string deviceName)
-        : base(new(DeviceTopologyName.Keyboard, family, deviceName))
+    /// <param name="keyboardInputs">The available keyboard inputs</param>
+    public KeyboardDescriptor(DeviceFamily family, string deviceName, IEnumerable<IKeyboardInput> keyboardInputs)
+        : base(new(DeviceTopologyName.Keyboard, family, deviceName), keyboardInputs)
     {
     }
 
