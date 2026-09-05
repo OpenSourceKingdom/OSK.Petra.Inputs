@@ -61,9 +61,12 @@ public partial class PowerCapability(ICapabilityOptions<PowerCapabilityOptions> 
             // All inputs must be activated, and not consumed, in order to activate the combination
             if (combinationInputStates.Length != combinationInput.InputIdentifiers.Count)
             {
-                LogCombinationInputIgnored(logger,
-                    $"[{string.Join(", ", combinationInput.InputIdentifiers.Select(identifier => $"Device: {identifier.DeviceIdentity} Input: {identifier.InputId}"))}]",
-                    $"[{string.Join(", ", combinationInputStates.Select(state => $"Device: {state.DeviceIdentifier.DeviceIdentity} Input: {state.DeviceInput.Id}"))}]");
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    LogCombinationInputIgnored(logger,
+                        $"[{string.Join(", ", combinationInput.InputIdentifiers.Select(identifier => $"Device: {identifier.DeviceIdentity} Input: {identifier.InputId}"))}]",
+                        $"[{string.Join(", ", combinationInputStates.Select(state => $"Device: {state.DeviceIdentifier.DeviceIdentity} Input: {state.DeviceInput.Id}"))}]");
+                }
                 continue;
             }
 
@@ -117,10 +120,14 @@ public partial class PowerCapability(ICapabilityOptions<PowerCapabilityOptions> 
                     ? details.ActivationCount + 1
                     : 1;
 
-                LogInputEventProcessed(logger, state.Phase, 
-                    state.Input is IPowerCombinationInput combinationInput
-                        ? $"combination [{string.Join(", ", combinationInput.InputIdentifiers.Select(identifier => $"Device: {identifier.DeviceIdentity} Input: {identifier.InputId}"))}]"
-                        : $"single Device: {((DeviceInputState)state).DeviceIdentifier.DeviceIdentity} Input: {((DeviceInputState)state).DeviceInput.Id}");
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    LogInputEventProcessed(logger, state.Phase,
+                        state.Input is IPowerCombinationInput combinationInput
+                            ? $"combination [{string.Join(", ", combinationInput.InputIdentifiers.Select(identifier => $"Device: {identifier.DeviceIdentity} Input: {identifier.InputId}"))}]"
+                            : $"single Device: {((DeviceInputState)state).DeviceIdentifier.DeviceIdentity} Input: {((DeviceInputState)state).DeviceInput.Id}");
+                }
+
                 break;
         }
     }

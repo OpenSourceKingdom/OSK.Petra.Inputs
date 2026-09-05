@@ -233,13 +233,13 @@ public class PowerCapabilityTests
         var mockDeviceInput = new Mock<IDeviceInput>();
         mockDeviceInput.SetupGet(m => m.Id)
             .Returns(1);
-        IInputState? previousState = new DeviceInputState(new(new(1, DeviceIdentities.GenericKeyboard), Mock.Of<IDeviceDescriptor>()), mockDeviceInput.Object);
+        IInputState? previousState1 = new DeviceInputState(new(new(1, DeviceIdentities.GenericKeyboard), Mock.Of<IDeviceDescriptor>()), mockDeviceInput.Object);
 
         _mockContext
             .SetupSequence(m => m.TryGetInputState(
                 It.IsAny<DeviceIdentity>(),
                 1,
-                out previousState))
+                out previousState1))
             .Returns(true);
 
         var mockVirtualContext = new Mock<IVirtualInputContext>();
@@ -255,6 +255,15 @@ public class PowerCapabilityTests
         var mockDeviceInput2 = new Mock<IDeviceInput>();
         mockDeviceInput2.SetupGet(m => m.Id)
             .Returns(2);
+        IInputState? previousState2 = new DeviceInputState(new(new(2, DeviceIdentities.GenericKeyboard), Mock.Of<IDeviceDescriptor>()), mockDeviceInput.Object);
+
+        _mockContext
+            .SetupSequence(m => m.TryGetInputState(
+                It.IsAny<DeviceIdentity>(),
+                2,
+                out previousState2))
+            .Returns(true);
+
         var newState = new DeviceInputState(new(new(2, DeviceIdentities.GenericKeyboard), Mock.Of<IDeviceDescriptor>()), mockDeviceInput2.Object);
 
         // Act
