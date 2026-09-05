@@ -10,6 +10,9 @@ using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Petra.Inputs.Ports;
 
+/// <summary>
+/// A set of APIs that help to faciliate editing and saving of existing or new custom input schemes
+/// </summary>
 [HexagonalIntegration(HexagonalIntegrationType.LibraryProvided, HexagonalIntegrationType.UnderDevelopment)]
 public interface ISchemeEditor
 {
@@ -44,9 +47,15 @@ public interface ISchemeEditor
     bool AllowCustomScheme { get; }
 
     /// <summary>
-    /// Gets a registry of known devices that the system supports
+    /// Gets the device registry for a specific device topology that the system
+    /// supports.
     /// </summary>
-    /// <returns>Theregistry for the device topology</returns>
+    /// <param name="topologyName">
+    /// The device topology to retrieve the registry for
+    /// </param>
+    /// <returns>
+    /// The device page/registry for the specified topology, or null if the topology is not supported
+    /// </returns>
     DevicePage? GetDevicePage(DeviceTopologyName topologyName);
 
     /// <summary>
@@ -83,9 +92,20 @@ public interface ISchemeEditor
     /// </summary>
     /// <param name="cancellationToken">A token to cancel the operation</param>
     /// <returns>An output for the success of the operation</returns>
-    Task <Output> SaveSchemeAsync(CancellationToken cancellationToken = default);
+    Task<Output> SaveSchemeAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Initiates input capture mode for a specific action, optionally with a timeout.
+    /// </summary>
+    /// <param name="action">The input action to capture input for</param>
+    /// <param name="captureTimeout">The maximum time to wait for input capture, or null for no timeout</param>
+    /// <returns>
+    /// An output describing whether input capture was successfully initiated
+    /// </returns>
     Output InitiateInputCapture(InputAction action, TimeSpan? captureTimeout = null);
 
+    /// <summary>
+    /// Aborts the current input capture operation, if one is in progress.
+    /// </summary>
     void AbortInputCapture();
 }

@@ -1,7 +1,7 @@
 ﻿namespace OSK.Petra.Inputs.Notifications;
 
 /// <summary>
-/// A generic input notification for the input system
+/// Marker interface for all input system notifications that can be transmitted through the input system notifier.
 /// </summary>
 public interface IInputSystemNotification
 {

@@ -5,18 +5,39 @@ using System.Numerics;
 
 namespace OSK.Petra.Inputs.Capabilities.Pointer;
 
-public class PointerDetails(Vector2 startPosition, int maxRecords, float moveThreshold) : ICapabilityDetails
+/// <summary>
+/// Describes pointer specific information
+/// </summary>
+/// <param name="startPosition">The starting position for the pointer</param>
+/// <param name="maxRecords">The total number of records for pointer tracking</param>
+/// <param name="distanceThreshold">the amount of distance a pointer must move to be considered a full, intentional movement</param>
+public class PointerDetails(Vector2 startPosition, int maxRecords, float distanceThreshold) : ICapabilityDetails
 {
     #region Variables
 
+    /// <summary>
+    /// The pointers original starting position when engaged
+    /// </summary>
     public Vector2 StartPosition { get; } = startPosition;
 
+    /// <summary>
+    /// The current pointer movement
+    /// </summary>
     public PointerMovement Movement { get; private set; } = PointerMovement.Idle;
 
+    /// <summary>
+    /// The current position for the pointer
+    /// </summary>
     public Vector2 CurrentPosition { get; private set; } = startPosition;
 
+    /// <summary>
+    /// The move velocity for the pointer
+    /// </summary>
     public Vector2 Velocity { get; private set; }
 
+    /// <summary>
+    /// The acceleration for the pointer
+    /// </summary>
     public Vector2 Acceleration { get; private set; }
 
     private readonly Queue<PointerRecord> _records = [];
@@ -29,7 +50,7 @@ public class PointerDetails(Vector2 startPosition, int maxRecords, float moveThr
 
     internal bool UpdatePosition(Vector2 position, TimeSpan time)
     {
-        if ((CurrentPosition - position).LengthSquared() < moveThreshold)
+        if ((CurrentPosition - position).LengthSquared() < distanceThreshold)
         {
             Movement = Movement is PointerMovement.Start || Movement is PointerMovement.Active
                 ? PointerMovement.Stop

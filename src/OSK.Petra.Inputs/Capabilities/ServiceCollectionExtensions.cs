@@ -13,6 +13,10 @@ public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
     {
+        /// <summary>
+        /// Adds standard input capabilities for an input system
+        /// </summary>
+        /// <returns>The service collection for chaining</returns>
         public IServiceCollection AddStandardInputCapabilities()
         {
             services.TryAddTransient<ICapabilityOptionsProvider, CapabilityOptionsProvider>();

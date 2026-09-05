@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace OSK.Petra.Inputs.Capabilities.Power;
 
+/// <summary>
+/// An input that is comprised of multiple device inputs.
+/// </summary>
+/// <param name="inputIdentifiers">The collection of inputs that make up the combination</param>
 public class PowerCombinationInput(IEnumerable<DeviceInputIdentifier> inputIdentifiers) : VirtualInput<PowerCombinationInput>, IPowerCombinationInput
 {
     #region VirtualInput Overrides

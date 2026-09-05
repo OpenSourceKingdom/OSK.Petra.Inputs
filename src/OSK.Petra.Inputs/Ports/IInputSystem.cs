@@ -52,7 +52,7 @@ public interface IInputSystem
     Task<Output> InitializeAsync(InputSystemConfiguration configuration, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Updates the input system using the specified delta time
+    /// Updates the input system using the specified delta time.
     /// </summary>
     /// <remarks>
     /// 💡Notes:
@@ -60,8 +60,19 @@ public interface IInputSystem
     /// <item>This process method may be ignored by the input system if the input system is pausing input</item>
     /// </list>
     /// </remarks>
-    /// <param name="deltaTime">the time that has passed since the last update</param>
+    /// <param name="deltaTime">
+    /// The elapsed time since the last update, used for input processing
+    /// calculations
+    /// </param>
     void Update(TimeSpan deltaTime);
 
+    /// <summary>
+    /// Determines whether user actions in a specific action group are currently being suppressed.
+    /// </summary>
+    /// <param name="userId">The user ID to check suppression status for</param>
+    /// <param name="actionGroupId">The action group ID to check for suppression</param>
+    /// <returns>
+    /// True if actions in the specified group are suppressed for the user; otherwise false
+    /// </returns>
     bool AreUserActionsSurpressed(int userId, int actionGroupId);
 }

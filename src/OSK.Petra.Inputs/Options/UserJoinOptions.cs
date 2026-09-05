@@ -4,17 +4,17 @@ using System.Collections.Generic;
 namespace OSK.Petra.Inputs.Options;
 
 /// <summary>
-/// Provides a set of options when a user is joining the input system
+/// Provides configuration options when a user joins the input system.
 /// </summary>
 public class UserJoinOptions
 {
     /// <summary>
-    /// The input devices to pair to the user upon creation
+    /// The input devices to automatically pair to the user upon creation.
     /// </summary>
     public IEnumerable<RuntimeDeviceIdentifier>? DevicesToPair { get; set; }
 
     /// <summary>
-    /// The preferred active definition name for the user upon creation
+    /// The preferred active action definition name to assign to the user upon creation.
     /// </summary>
     public string? ActiveDefinitionName { get; set; }
 }

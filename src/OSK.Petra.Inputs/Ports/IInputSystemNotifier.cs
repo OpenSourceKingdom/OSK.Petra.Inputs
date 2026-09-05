@@ -25,5 +25,9 @@ public interface IInputSystemNotifier
     /// </summary>
     event Action<SystemNotification> OnSystemNotification;
 
+    /// <summary>
+    /// Transmits a notification through the input system notifier.
+    /// </summary>
+    /// <param name="inputNotification">The notification to transmit</param>
     void Notify(IInputSystemNotification inputNotification);
 }

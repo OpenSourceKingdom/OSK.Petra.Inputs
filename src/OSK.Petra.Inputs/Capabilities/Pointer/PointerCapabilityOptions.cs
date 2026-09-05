@@ -2,6 +2,9 @@
 
 namespace OSK.Petra.Inputs.Capabilities.Pointer;
 
+/// <summary>
+/// Capability options to adjust processing pointers
+/// </summary>
 public class PointerCapabilityOptions: CapabilityOptions
 {
     /// <summary>

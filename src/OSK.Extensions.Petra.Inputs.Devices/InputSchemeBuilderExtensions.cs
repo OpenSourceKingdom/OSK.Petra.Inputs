@@ -12,21 +12,21 @@ public static class InputSchemeBuilderExtensions
     {
         public IInputSchemeBuilder WithKeyboard(IKeyboardInput keyboardInput, string actionName, DeviceFamily? family = null, string deviceName = DeviceIdentities.GenericDeviceName)
             => builder.WithMap(
-                DeviceIdentities.Keyboard(string.IsNullOrWhiteSpace(deviceName) ? DeviceIdentities.GenericDeviceName : deviceName, family),
+                DeviceIdentities.Keyboard(family ?? DeviceFamily.Generic, string.IsNullOrWhiteSpace(deviceName) ? DeviceIdentities.GenericDeviceName : deviceName),
                 keyboardInput.Id,
                 actionName
             );
 
         public IInputSchemeBuilder WithGamepad(IGamepadInput gamepadInput, string actionName, DeviceFamily? family = null, string deviceName = DeviceIdentities.GenericDeviceName)
             => builder.WithMap(
-                DeviceIdentities.Gamepad(string.IsNullOrWhiteSpace(deviceName) ? DeviceIdentities.GenericDeviceName : deviceName, family),
+                DeviceIdentities.Gamepad(family ?? DeviceFamily.Generic, string.IsNullOrWhiteSpace(deviceName) ? DeviceIdentities.GenericDeviceName : deviceName),
                 gamepadInput.Id,
                 actionName
             );
 
         public IInputSchemeBuilder WithMouse<TTopology>(IMouseInput mouseInput, string actionName, DeviceFamily? family = null, string deviceName = DeviceIdentities.GenericDeviceName)
             => builder.WithMap(
-                DeviceIdentities.Mouse(string.IsNullOrWhiteSpace(deviceName) ? DeviceIdentities.GenericDeviceName : deviceName, family),
+                DeviceIdentities.Mouse(family ?? DeviceFamily.Generic, string.IsNullOrWhiteSpace(deviceName) ? DeviceIdentities.GenericDeviceName : deviceName),
                 mouseInput.Id,
                 actionName
             );

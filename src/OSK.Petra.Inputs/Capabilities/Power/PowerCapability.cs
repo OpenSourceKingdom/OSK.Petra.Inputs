@@ -9,6 +9,11 @@ using System.Linq;
 
 namespace OSK.Petra.Inputs.Capabilities.Power;
 
+/// <summary>
+/// A capability that is able to process <see cref="PowerEvent"/>
+/// </summary>
+/// <param name="options">The options configuration for power input processing</param>
+/// <param name="logger">A logger to log detail input processing information</param>
 public partial class PowerCapability(ICapabilityOptions<PowerCapabilityOptions> options, ILogger<PowerCapability> logger) : InputCapability<PowerEvent, PowerSettings>
 {
     #region InputCapability Overrides

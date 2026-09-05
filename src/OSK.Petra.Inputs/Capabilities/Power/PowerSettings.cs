@@ -2,17 +2,20 @@
 
 namespace OSK.Petra.Inputs.Capabilities.Power;
 
+/// <summary>
+/// Configuration settings for power based input capabilities (e.g., buttons, triggers).
+/// </summary>
 public class PowerSettings: IInputSettings
 {
     #region Variables
 
     /// <summary>
-    /// Whether this input can be reactivated during a particular time period
+    /// Gets or sets whether this input can be reactivated within a particular time period after activation.
     /// </summary>
     public bool AllowReactivation { get; init; } = true;
 
     /// <summary>
-    /// The amount of power required for the particular input to be considered activate
+    /// Gets or sets the power threshold required for this input to be considered intentionally activated.
     /// </summary>
     public float PowerSensitivityThreshold { get; init; } = .1f;
 

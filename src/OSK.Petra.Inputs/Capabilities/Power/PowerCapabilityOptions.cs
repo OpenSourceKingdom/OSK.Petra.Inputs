@@ -4,6 +4,9 @@ using System;
 
 namespace OSK.Petra.Inputs.Capabilities.Power;
 
+/// <summary>
+/// Capability options to adjust processing power inputs
+/// </summary>
 public class PowerCapabilityOptions: CapabilityOptions
 {
     /// <summary>

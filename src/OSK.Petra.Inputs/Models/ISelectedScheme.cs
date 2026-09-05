@@ -3,34 +3,38 @@ using OSK.Hexagonal.MetaData;
 using OSK.Operations.Outputs.Models;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using OSK.Petra.Inputs.Abstractions.Devices;
+using OSK.Petra.Inputs.Ports;
 
 namespace OSK.Petra.Inputs.Models;
 
+/// <summary>
+/// Represents a scheme that is selected by an <see cref="ISchemeEditor"/>
+/// </summary>
 [HexagonalIntegration(HexagonalIntegrationType.LibraryProvided)]
 public interface ISelectedScheme
 {
     /// <summary>
-    /// The scheme can not be edited, apart from read-only safe properties, like <see cref="IsPreferred"/>
+    /// Describes if the scheme can be edited, apart from read-only safe properties, like <see cref="IsPreferred"/>
     /// </summary>
     bool IsReadonly { get; }
 
     /// <summary>
-    /// Sets the name for the input scheme
+    /// The name for the input scheme
     /// </summary>
     string Name { get; }
 
     /// <summary>
-    /// Whether the scheme is preferred
+    /// Whether the scheme is preferred by the user
     /// </summary>
     bool IsPreferred { get; }
 
     /// <summary>
-    /// Whether the scheme is a new scheme being created, that is it isn't actually saved yet
+    /// Whether the scheme is a new scheme being created, i.e. isn't actually saved yet
     /// </summary>
     bool IsNew { get; }
 
     /// <summary>
-    /// The pairs of map input glyphs to actions
+    /// The pairs of device action maps
     /// </summary>
     IReadOnlyList<DeviceMapPairing<DeviceInputActionMap>> ConfiguredInputMaps { get; }
 
@@ -52,7 +56,7 @@ public interface ISelectedScheme
     Output SetName(string name);
 
     /// <summary>
-    /// Sets the current scheme as the preferred scheme
+    /// Marks the current scheme as the preferred scheme for the user.
     /// </summary>
     void MakePreferred();
 
@@ -71,8 +75,10 @@ public interface ISelectedScheme
     Output SetInputMap(DeviceIdentity deviceIdentity, InputAction action, IDeviceInput input);
 
     /// <summary>
-    /// Clears the configured maps on the scheme
+    /// Clears all configured input maps from the scheme, i.e. resets the scheme to its original state
     /// </summary>
-    /// <returns>An output for the operation</returns>
+    /// <returns>
+    /// An output describing whether the operation succeeded
+    /// </returns>
     Output ClearConfiguredMaps();
 }

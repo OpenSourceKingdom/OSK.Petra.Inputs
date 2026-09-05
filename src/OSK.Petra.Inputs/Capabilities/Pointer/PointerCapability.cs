@@ -7,6 +7,10 @@ using OSK.Petra.Inputs.Internal.Models;
 
 namespace OSK.Petra.Inputs.Capabilities.Pointer;
 
+/// <summary>
+/// A capability that is able to process <see cref="PointerEvent"/>
+/// </summary>
+/// <param name="options"></param>
 public class PointerCapability(ICapabilityOptions<PointerCapabilityOptions> options) : InputCapability<PointerEvent, PointerSettings>
 {
     #region InputCapability Overrides
