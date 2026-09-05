@@ -21,8 +21,8 @@ public static class DeviceIdentities
     /// <param name="family">The family of gamepad</param>
     /// <param name="deviceName">The name of the device</param>
     /// <returns>The created identity</returns>
-    public static DeviceIdentity Gamepad(DeviceFamily family, string deviceName)
-        => new(DeviceTopologyName.Gamepad, family, deviceName);
+    public static DeviceIdentity Gamepad(DeviceFamily family, string? deviceName = null)
+        => new(DeviceTopologyName.Gamepad, family, string.IsNullOrWhiteSpace(deviceName) ? GenericDeviceName : deviceName);
 
     /// <summary>
     /// A keyboard that is completely generic
@@ -35,8 +35,8 @@ public static class DeviceIdentities
     /// <param name="family">The family of keyboard</param>
     /// <param name="deviceName">The name of the device</param>
     /// <returns>The created identity</returns>
-    public static DeviceIdentity Keyboard(DeviceFamily family, string deviceName)
-        => new(DeviceTopologyName.Keyboard, family, deviceName);
+    public static DeviceIdentity Keyboard(DeviceFamily family, string? deviceName = null)
+        => new(DeviceTopologyName.Keyboard, family, string.IsNullOrWhiteSpace(deviceName) ? GenericDeviceName : deviceName);
 
     /// <summary>
     /// A mouse that is completely generic
@@ -49,6 +49,6 @@ public static class DeviceIdentities
     /// <param name="family">The family of mouse</param>
     /// <param name="deviceName">The name of the device</param>
     /// <returns>The created identity</returns>
-    public static DeviceIdentity Mouse(DeviceFamily family, string deviceName)
-        => new(DeviceTopologyName.Mouse, family, deviceName);
+    public static DeviceIdentity Mouse(DeviceFamily family, string? deviceName = null)
+        => new(DeviceTopologyName.Mouse, family, string.IsNullOrWhiteSpace(deviceName) ? GenericDeviceName : deviceName);
 }

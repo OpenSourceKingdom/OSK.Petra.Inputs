@@ -80,12 +80,11 @@ public class PointerDetails(Vector2 startPosition, int maxRecords, float distanc
             }
         }
 
-        return true;
-
         CurrentPosition = position;
         Movement = Movement is PointerMovement.Idle || Movement is PointerMovement.Stop
             ? PointerMovement.Start
             : PointerMovement.Active;
+        return true;
     }
 
     #endregion

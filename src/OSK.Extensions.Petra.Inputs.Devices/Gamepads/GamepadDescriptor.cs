@@ -6,7 +6,7 @@ namespace OSK.Extensions.Petra.Inputs.Devices.Gamepads;
 /// <summary>
 /// Represents a Gamepad device
 /// </summary>
-public abstract class GamepadDescriptor: DeviceDescriptor<IGamepadInput>
+public class GamepadDescriptor: DeviceDescriptor<IGamepadInput>
 {
     #region Constructors
 

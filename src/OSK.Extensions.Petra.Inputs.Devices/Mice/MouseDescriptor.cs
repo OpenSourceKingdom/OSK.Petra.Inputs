@@ -6,7 +6,7 @@ namespace OSK.Extensions.Petra.Inputs.Devices.Mice;
 /// <summary>
 /// Represents a mouse device
 /// </summary>
-public abstract class MouseDescriptor: DeviceDescriptor<IMouseInput>
+public class MouseDescriptor: DeviceDescriptor<IMouseInput>
 {
     #region Constructors
 

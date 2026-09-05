@@ -6,7 +6,7 @@ namespace OSK.Extensions.Petra.Inputs.Devices.Keyboards;
 /// <summary>
 /// Represents a Keyboard device
 /// </summary>
-public abstract class KeyboardDescriptor: DeviceDescriptor<IKeyboardInput>
+public class KeyboardDescriptor: DeviceDescriptor<IKeyboardInput>
 {
     #region Constructors
 
