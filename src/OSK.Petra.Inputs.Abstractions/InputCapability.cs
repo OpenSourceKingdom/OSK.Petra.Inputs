@@ -1,0 +1,33 @@
+﻿using OSK.Petra.Inputs.Abstractions.Runtime;
+using System;
+
+namespace OSK.Petra.Inputs.Abstractions;
+
+/// <summary>
+/// A base class that provides a way to strongly type expected input events for the capability
+/// </summary>
+/// <typeparam name="TInputEvent">The type of event the capability is expected to process</typeparam>
+public abstract class InputCapability<TInputEvent> : IInputCapability
+    where TInputEvent : IInputEvent
+{
+    #region IInputCapability
+
+    public bool CanProcess(IInputEvent inputEvent)
+        => inputEvent is TInputEvent;
+
+    public void Process(IUserInputContext context, IInputState state, IInputEvent inputEvent, TimeSpan deltaTime)
+    {
+        if (context is not null && state is not null && inputEvent is TInputEvent typeedEvent)
+        {
+            Process(context, state, typeedEvent, deltaTime);
+        }
+    }
+
+    #endregion
+
+    #region Helpers
+
+    protected abstract void Process(IUserInputContext context, IInputState state, TInputEvent inputEvent, TimeSpan deltaTime);
+
+    #endregion
+}

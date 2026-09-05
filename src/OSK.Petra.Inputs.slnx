@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="OSK.Extensions.Petra.Inputs.Configuration.UnitTests/OSK.Extensions.Petra.Inputs.Configuration.UnitTests.csproj" Id="6edce1b6-28e1-4869-b00b-2739e26ee3b4" />
+  <Project Path="OSK.Extensions.Petra.Inputs.Configuration/OSK.Extensions.Petra.Inputs.Configuration.csproj" Id="417c78e1-fbdb-482a-a0f3-3def40167594" />
+  <Project Path="OSK.Extensions.Petra.Inputs.Devices/OSK.Extensions.Petra.Inputs.Devices.csproj" Id="cee10f98-60e8-40ed-ab72-02e716af9741" />
+  <Project Path="OSK.Petra.Inputs.Abstractions.UnitTests/OSK.Petra.Inputs.Abstractions.UnitTests.csproj" Id="f0ce6836-291d-4d30-b8c0-c6a97b12065d" />
+  <Project Path="OSK.Petra.Inputs.Abstractions/OSK.Petra.Inputs.Abstractions.csproj" />
+  <Project Path="OSK.Petra.Inputs.UnitTests/OSK.Petra.Inputs.UnitTests.csproj" Id="2a67e31b-0325-4b24-b619-3fa75546c926" />
+  <Project Path="OSK.Petra.Inputs/OSK.Petra.Inputs.csproj" />
+</Solution>

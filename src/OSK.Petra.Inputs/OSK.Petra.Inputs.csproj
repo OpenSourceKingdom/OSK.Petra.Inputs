@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<Nullable>enable</Nullable>
+		
+		<Description>Core logic for handling input from a variety of devices that can include keyboard, mouse, game pads, and more. Helps to facilitate triggering actions from game or similar input.</Description>
+		<PackageTags>OpenSourceKingdom, OpenSource, input, device, control, controller, device, game, pad, throttle, joy, stick, map, action, key, scheme, definition</PackageTags>
+		<Title>OSK.Petra.Inputs</Title>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\OSK.Petra.Inputs.Abstractions\OSK.Petra.Inputs.Abstractions.csproj" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
+		<PackageReference Include="OSK.DataStructures" Version="2.1.0" />
+		<PackageReference Include="PolySharp" Version="1.16.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+</Project>

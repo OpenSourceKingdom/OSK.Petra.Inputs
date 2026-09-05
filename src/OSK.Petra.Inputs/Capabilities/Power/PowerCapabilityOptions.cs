@@ -1,0 +1,24 @@
+﻿using OSK.Petra.Inputs.Abstractions;
+using OSK.Petra.Inputs.Abstractions.Devices;
+using System;
+
+namespace OSK.Petra.Inputs.Capabilities.Power;
+
+/// <summary>
+/// Capability options to adjust processing power inputs
+/// </summary>
+public class PowerCapabilityOptions: CapabilityOptions
+{
+    /// <summary>
+    /// The amount of time the input phase may remain inactive before the interaction
+    /// is considered fully ended. If the input is reactivated within this time window,
+    /// it is treated as a continuation of the same interaction rather than a new one.
+    /// </summary>
+    public TimeSpan? ReactivationTime { get; set; }
+
+    /// <summary>
+    /// The minimum amount of time an input must remain in the <see cref="InputPhase.Start"/>
+    /// phase before transitioning to <see cref="InputPhase.Active"/>.
+    /// </summary>
+    public TimeSpan ActiveTimeThreshold { get; set; } = TimeSpan.FromSeconds(.1);
+}
