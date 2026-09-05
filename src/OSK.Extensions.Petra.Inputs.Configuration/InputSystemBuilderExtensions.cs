@@ -23,10 +23,12 @@ public static class InputSystemBuilderExtensions
             where TDefinition : class
             => builder.WithDefinition(name, typeof(TDefinition), _ => { });
 
+        /// <inheritdoc cref="WithDefinition(IInputSystemConfigurationBuilder, string, Type, Action{IActionDefinitionBuilder})"/>
         public IInputSystemConfigurationBuilder WithDefinition<TDefinition>(string name, Action<IActionDefinitionBuilder> definitionBuilderConfigurator)
             where TDefinition : class
             => builder.WithDefinition(name, typeof(TDefinition), definitionBuilderConfigurator);
 
+        /// <inheritdoc cref="WithDefinition(IInputSystemConfigurationBuilder, string, Type, Action{IActionDefinitionBuilder})"/>
         public IInputSystemConfigurationBuilder WithDefinition(string name, Type definitionType)
             => builder.WithDefinition(name, definitionType, _ => { });
 
