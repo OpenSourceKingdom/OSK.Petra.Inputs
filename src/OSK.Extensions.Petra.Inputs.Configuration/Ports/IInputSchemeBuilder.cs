@@ -1,10 +1,12 @@
-﻿using OSK.Petra.Inputs.Abstractions.Devices;
+﻿using OSK.Hexagonal.MetaData;
+using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.Ports;
 
 /// <summary>
 /// Builder for creating an input scheme with device and virtual input mappings.
 /// </summary>
+[HexagonalIntegration(HexagonalIntegrationType.LibraryProvided)]
 public interface IInputSchemeBuilder
 {
     /// <summary>

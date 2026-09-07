@@ -1,4 +1,5 @@
-﻿using OSK.Petra.Inputs.Abstractions.Configuration;
+﻿using OSK.Hexagonal.MetaData;
+using OSK.Petra.Inputs.Abstractions.Configuration;
 using System;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration.Ports;
@@ -6,6 +7,7 @@ namespace OSK.Extensions.Petra.Inputs.Configuration.Ports;
 /// <summary>
 /// Builder for creating an action definition with actions and schemes.
 /// </summary>
+[HexagonalIntegration(HexagonalIntegrationType.LibraryProvided)]
 public interface IActionDefinitionBuilder
 {
     /// <summary>
