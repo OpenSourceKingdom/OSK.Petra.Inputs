@@ -12,7 +12,7 @@ using OSK.Petra.Inputs.Abstractions.Devices;
 
 namespace OSK.Extensions.Petra.Inputs.Configuration;
 
-public static class InputSystemBuilderExtensions
+public static class InputSystemConfigurationBuilderExtensions
 {
     extension(IInputSystemConfigurationBuilder builder)
     {

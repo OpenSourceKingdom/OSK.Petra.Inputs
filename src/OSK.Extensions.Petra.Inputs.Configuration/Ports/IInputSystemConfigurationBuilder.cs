@@ -1,4 +1,5 @@
-﻿using OSK.Petra.Inputs.Abstractions;
+﻿using OSK.Hexagonal.MetaData;
+using OSK.Petra.Inputs.Abstractions;
 using OSK.Petra.Inputs.Abstractions.Configuration;
 using System;
 
@@ -7,6 +8,7 @@ namespace OSK.Extensions.Petra.Inputs.Configuration.Ports;
 /// <summary>
 /// Builder for creating and configuring an input system configuration.
 /// </summary>
+[HexagonalIntegration(HexagonalIntegrationType.LibraryProvided)]
 public interface IInputSystemConfigurationBuilder
 {
     /// <summary>
